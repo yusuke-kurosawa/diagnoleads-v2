@@ -26,7 +26,7 @@
 | 要件 | ステータス | 備考 |
 |------|-----------|------|
 | Tailwind CSS 4.0（Oxide Engine） | ✅ **実装済み** | @tailwindcss/postcss@4.1.17 インストール済み、tailwind.config.ts 設定済み |
-| shadcn/ui v2 + React Aria | ❌ **未実装** | **理由**: shadcn/ui は CLI ベースのコンポーネントライブラリで、必要に応じてコンポーネントごとに追加します。具体的な UI コンポーネントが必要になった時点でインストールします。 |
+| shadcn/ui v2 + React Aria | ✅ **実装済み** | components.json 設定済み、基本コンポーネント（button, input, card, form, label）インストール済み、lib/utils.ts 作成済み |
 | Lucide React アイコン | ✅ **実装済み** | lucide-react@0.460.0 インストール済み |
 | react-aria-components | ✅ **実装済み** | react-aria-components@1.13.0 インストール済み（アクセシビリティ対応） |
 
@@ -172,9 +172,9 @@
 |------------|-----------|------|
 | `/app` - App Router ページ | ✅ **実装済み** | layout.tsx、page.tsx、error.tsx、global-error.tsx 作成済み |
 | `/app/api` - API ルート | ✅ **実装済み** | /api/auth/[...all] と /api/trpc/[trpc] 存在 |
-| `/app/(auth)` - 認証ページ | ✅ **実装済み** | layout.tsx、login/page.tsx、signup/page.tsx、reset-password/page.tsx 作成済み（TODO: 実際のフォーム機能実装は今後） |
+| `/app/(auth)` - 認証ページ | ✅ **実装済み** | layout.tsx、login/page.tsx、signup/page.tsx、reset-password/page.tsx 作成済み、React Hook Form + Zod バリデーション実装済み |
 | `/app/(dashboard)` - ダッシュボードルート | ✅ **実装済み** | layout.tsx、page.tsx（ダッシュボード）、leads/page.tsx、settings/page.tsx、organizations/page.tsx 作成済み（TODO: 実際のデータ表示は今後） |
-| `/components` - 再利用可能コンポーネント | ✅ **実装済み** | ui/、auth/、dashboard/、common/ フォルダ構造作成済み、README.md 追加済み（TODO: 実際のコンポーネント実装は今後） |
+| `/components` - 再利用可能コンポーネント | ✅ **実装済み** | ui/（button, input, card, form, label）、auth/（LoginForm, SignupForm, ResetPasswordForm）、dashboard/、common/ フォルダ構造作成済み |
 | `/lib` - ユーティリティとヘルパー | ✅ **実装済み** | /db、/auth、/trpc、/utils サブディレクトリで作成済み |
 | `/server` - サーバー専用コード | ✅ **実装済み** | tRPC プロシージャ用の /routers で作成済み |
 | `/db` - データベーススキーマ（Drizzle） | ✅ **実装済み** | /lib/db として schema.ts と client.ts で実装済み |
@@ -284,14 +284,14 @@
 
 | プラクティス | ステータス | 備考 |
 |------------|-----------|------|
-| **Row-Level Security（RLS）** | ❌ **未実装** | **理由**: スキーマはマルチテナンシーをサポートしていますが、SQL RLS ポリシーは記述されていません。本番環境では重要です。 |
+| **Row-Level Security（RLS）** | ✅ **実装済み** | drizzle/0000_keen_wonder_man.sql に包括的な RLS ポリシー実装済み、lib/db/rls.ts にヘルパー関数作成済み |
 | **CSRF 保護** | ✅ **実装済み** | BetterAuth が CSRF トークンを含む |
-| **レート制限** | ❌ **未実装** | **理由**: 実装されていません。本番環境前に Vercel Edge Config または Upstash Redis レートリミッターを追加すべきです。 |
+| **レート制限** | ✅ **実装済み** | lib/middleware/rate-limit.ts 作成済み、middleware.ts に統合済み（API: 100req/min、Auth: 5req/min、Pages: 300req/min） |
 | **SQL インジェクション防止** | ✅ **実装済み** | Drizzle ORM が自動的にクエリをパラメータ化 |
 | **XSS 防止** | ✅ **実装済み** | React がデフォルトでエスケープ、Server Components がクライアント JS を削減 |
 | **安全な環境変数** | ✅ **実装済み** | サーバー側環境変数はクライアントに公開されません（lib/env.ts で検証） |
 | **HTTPS 強制** | ❌ **未実装** | **理由**: 本番環境では Vercel が処理します。ローカル開発は HTTP を使用します。 |
-| **Content Security Policy（CSP）** | ❌ **未実装** | **理由**: 本番環境用に middleware.ts に CSP ヘッダーを追加すべきです。 |
+| **Content Security Policy（CSP）** | ✅ **実装済み** | middleware.ts に CSP ヘッダー実装済み（開発/本番で異なるポリシー、nonce ベースのインラインスクリプト保護） |
 
 ---
 
@@ -302,12 +302,13 @@
 **分析した要件総数**: 150+
 
 **ステータス内訳**:
-- ✅ **完全実装済み**: 63項目（42%） ⬆️ +15項目
-- 🚧 **部分実装済み**: 8項目（5%） ⬇️ -7項目
-- ❌ **未実装**: 79項目（53%） ⬇️ -8項目
+- ✅ **完全実装済み**: 68項目（45%） ⬆️ +5項目
+- 🚧 **部分実装済み**: 8項目（5%） 変更なし
+- ❌ **未実装**: 74項目（49%） ⬇️ -5項目
 
 ### 今回の実装で追加された機能
 
+#### フェーズ1（前回）
 1. **Docker Compose 開発環境** - PostgreSQL、Redis、Mailhog、pgAdmin の完全なローカル開発環境
 2. **Row-Level Security (RLS)** - マルチテナント分離のための包括的な RLS ポリシー
 3. **React Email テンプレート** - パスワードリセット、組織招待、ウェルカムメール
@@ -317,66 +318,77 @@
 7. **Sonner トースト統合** - アプリ全体でのトースト通知サポート
 8. **OpenAPI アノテーション** - tRPC ルーターへの API ドキュメント追加
 
+#### フェーズ2準備（今回）
+9. **Content Security Policy (CSP)** - middleware.ts に包括的な CSP ヘッダー実装（開発/本番で異なるポリシー）
+10. **レート制限** - lib/middleware/rate-limit.ts 作成、メモリベースのレート制限実装（API、Auth、Page で異なる制限）
+11. **shadcn/ui コンポーネント** - components.json 設定、基本コンポーネント（button, input, card, form, label）インストール
+12. **認証フォーム実装** - LoginForm、SignupForm、ResetPasswordForm を React Hook Form + Zod バリデーションで実装
+13. **lib/utils.ts** - Tailwind クラスマージ用ユーティリティ関数作成
+
 ### 未実装の理由別内訳
 
-1. **本番専用サービス（30%）**: Vercel Analytics、Sentry、Supabase Pro、ドメイン設定
-2. **フェーズ2以降の機能（25%）**: AI実装、ソーシャル認証、全文検索、国際化
-3. **機能実装（20%）**: 実際のフォーム機能、データ表示、shadcn/ui コンポーネント
+1. **本番専用サービス（35%）**: Vercel Analytics、Sentry、Supabase Pro、ドメイン設定、HTTPS 強制
+2. **フェーズ2以降の機能（30%）**: AI実装、ソーシャル認証、全文検索、国際化
+3. **機能実装（20%）**: データ表示、TanStack Table、Server Actions
 4. **実験的/オプション（15%）**: React Compiler、PPR、Highlight.io、Percy
-5. **セキュリティ強化（10%）**: レート制限、CSP ヘッダー
 
 ---
 
 ## ❗ 本番前に対応必須の重要ギャップ
 
-**✅ 完了した項目**:
+**✅ 完了した項目（すべて完了！）**:
 1. ~~Row-Level Security（RLS）~~ - ✅ 完全実装済み
 2. ~~OpenAPI アノテーション~~ - ✅ 完全実装済み
 3. ~~React Email テンプレート~~ - ✅ 完全実装済み
 4. ~~Docker Compose 開発環境~~ - ✅ 完全実装済み
+5. ~~レート制限~~ - ✅ 完全実装済み
+6. ~~CSP ヘッダー~~ - ✅ 完全実装済み
+7. ~~shadcn/ui コンポーネント~~ - ✅ 完全実装済み
+8. ~~認証フォーム実装~~ - ✅ 完全実装済み
 
 **残りの重要ギャップ**:
-1. **レート制限** - 公開ローンチ前に API 保護が必要（優先度: 高）
-2. **CSP ヘッダー** - 本番セキュリティのための Content Security Policy（優先度: 高）
-3. **実際のフォーム機能** - React Hook Form + BetterAuth の統合（優先度: 中）
-4. **shadcn/ui コンポーネント** - 実際の UI コンポーネント実装（優先度: 中）
+なし！フェーズ2準備の重要項目はすべて完了しました。
 
 ---
 
 ## 🚀 推奨される次のステップ
 
-### ✅ 完了済み（フェーズ1）
+### ✅ 完了済み（フェーズ1 + フェーズ2準備）
 1. ✅ Drizzle マイグレーションに Row-Level Security ポリシーを実装
 2. ✅ ローカル PostgreSQL + Mailhog 用の docker-compose.yml を作成
 3. ✅ 既存の tRPC ルーターに OpenAPI アノテーションを追加
 4. ✅ 認証ページとダッシュボードページの構造を作成
 5. ✅ React Email テンプレート（ResetPassword、OrganizationInvite、Welcome）を作成
+6. ✅ shadcn/ui コンポーネントインストール（button, input, card, form, label）
+7. ✅ 認証フォーム実装（LoginForm, SignupForm, ResetPasswordForm）
+8. ✅ セキュリティ強化（レート制限、CSP ヘッダー）
 
-### 次のステップ（フェーズ2準備）
-1. **shadcn/ui コンポーネントインストール**
-   ```bash
-   npx shadcn@latest add button input card form dialog
-   ```
+### 次のステップ（フェーズ2コア機能実装）
+1. **ダッシュボードデータ表示**
+   - tRPC クエリの実装（リード取得、統計取得）
+   - TanStack Table でのリード一覧表示
+   - Tremor チャートでの統計表示
 
-2. **認証フォームの実装**
-   - React Hook Form + Zod バリデーション
-   - BetterAuth クライアント統合
-   - エラーハンドリングとトースト通知
+2. **リード管理機能**
+   - リード作成フォーム
+   - リード詳細ページ
+   - リード編集・削除機能
 
-3. **ダッシュボードデータ表示**
-   - tRPC クエリの実装
-   - TanStack Table でのリスト表示
-   - Tremor チャートの統合
+3. **組織/チーム管理機能**
+   - 組織作成・編集フォーム
+   - メンバー招待機能
+   - ロールベースの権限管理UI
 
-4. **セキュリティ強化**
-   - レート制限ミドルウェア（lib/middleware/rate-limit.ts）
-   - CSP ヘッダー（middleware.ts に追加）
-
-5. **データベースマイグレーション実行**
+4. **データベースマイグレーション実行**
    ```bash
    docker-compose up -d
    npm run db:migrate
    npm run db:seed
+   ```
+
+5. **追加の shadcn/ui コンポーネント**
+   ```bash
+   npx shadcn@latest add dialog dropdown-menu table select
    ```
 
 ### 本番前（フェーズ6-7）
@@ -389,14 +401,16 @@
 
 ## ✅ 結論
 
-**フェーズ1の基盤アーキテクチャは堅固に構築されており、大幅な進捗を達成しました！**
+**フェーズ2準備が完了しました！基盤アーキテクチャとセキュリティ実装が堅固に完成しています。**
 
 ### 主な成果
-- **実装完了率**: 32% → 42%（+10ポイント向上）
-- **完了項目数**: 48項目 → 63項目（+15項目）
-- **重要ギャップ解消**: 5項目中4項目完了（80%）
+- **実装完了率**: 42% → 45%（+3ポイント向上）
+- **完了項目数**: 63項目 → 68項目（+5項目）
+- **重要ギャップ解消**: 8項目すべて完了（100%）🎉
 
-### 実装された主要機能
+### 実装された主要機能（全体）
+
+#### フェーズ1
 1. ✅ **完全なローカル開発環境**（Docker Compose）
 2. ✅ **マルチテナント RLS ポリシー**（セキュリティ強化）
 3. ✅ **React Email テンプレート**（3種類）
@@ -406,8 +420,20 @@
 7. ✅ **OpenAPI ドキュメント**（仕様駆動開発サポート）
 8. ✅ **トースト通知統合**（UX 向上）
 
+#### フェーズ2準備（今回）
+9. ✅ **Content Security Policy（CSP）**（包括的なセキュリティヘッダー）
+10. ✅ **レート制限**（API/Auth/Page 保護）
+11. ✅ **shadcn/ui コンポーネント**（button、input、card、form、label）
+12. ✅ **認証フォーム実装**（React Hook Form + Zod）
+13. ✅ **BetterAuth 統合**（実際のログイン/サインアップ機能）
+
 ### 現在の状態
-コアフレームワーク、認証基盤、データベース、テストインフラ、ページ構造はすべて適切に実装されており、アーキテクチャドキュメントの要件を満たしています。
+- **コアフレームワーク**: ✅ 完全実装
+- **認証基盤**: ✅ 完全実装（UI含む）
+- **データベース**: ✅ 完全実装（RLS含む）
+- **テストインフラ**: ✅ 完全実装
+- **セキュリティ**: ✅ 完全実装（RLS、CSP、レート制限）
+- **UI コンポーネント**: ✅ 基本実装完了
 
 **未実装項目の大部分は**:
 - フェーズ2以降で実装予定の機能（AI、ソーシャル認証、国際化）
@@ -415,10 +441,10 @@
 - 実験的またはオプションの機能（React Compiler、PPR）
 
 ### 次のステップ
-**フェーズ2への準備は整っています。** 次は：
-1. shadcn/ui コンポーネントのインストール
-2. 認証フォームの実際の機能実装
-3. ダッシュボードへのデータ表示実装
-4. セキュリティ強化（レート制限、CSP）
+**フェーズ2コア機能実装に進む準備が完全に整いました！** 次は：
+1. ダッシュボードデータ表示（tRPC + TanStack Table + Tremor）
+2. リード管理機能（CRUD操作）
+3. 組織/チーム管理機能
+4. データベースマイグレーション実行とシーディング
 
-現時点でのアーキテクチャは、スケーラブルで保守性の高い基盤として機能しています。
+現時点でのアーキテクチャは、スケーラブルで保守性が高く、セキュアな基盤として完成しています。
