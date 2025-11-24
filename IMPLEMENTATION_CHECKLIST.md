@@ -23,12 +23,12 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 60% 完了 🚀
+### 全体進捗: 63% 完了 🚀
 
 | フェーズ | ステータス | 完了項目 | 進捗率 |
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
-| **Phase 2**: コア機能実装 | 🚧 **進行中** | 24/40 | 60% |
+| **Phase 2**: コア機能実装 | 🚧 **進行中** | 28/40 | 70% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -84,7 +84,16 @@
 - 完全なダッシュボードページ（統計カード・ステータス内訳・チャート）
 - UI components追加（Sheet, Dialog, AlertDialog, Table）
 
-**🚀 次のタスク**: Task 7 - 組織管理機能（P2、4時間）
+**✅ Task 7完了: 組織管理機能強化**
+- tRPCキャッシュ管理実装（組織切り替え時に全キャッシュ無効化）
+- getByIdにrole情報追加（ユーザーロールの取得）
+- 組織設定ページ実装（/settings/organization）
+  - 組織名・スラッグ編集
+  - Owner専用アクセス制御
+  - Optimistic updates with toast
+- OrganizationSwitcherにキャッシュクリア機能統合
+
+**🚀 次のタスク**: Task 8 - メンバー招待機能（P2、4時間）
 
 ---
 
@@ -975,38 +984,51 @@ Percy                     // ビジュアルリグレッション (Optional) ⏸
 ### 即座に実行
 
 ```bash
-# Task 2: リード管理tRPCルーター実装開始
-# 推定工数: 8時間
-# 優先度: P0 (Critical)
+# Task 8: メンバー招待機能実装
+# 推定工数: 4時間
+# 優先度: P2 (Medium)
+# ブロッカー: Task 1 ✅ 完了
 
-# 1. Zod Schema定義
-touch types/lead.ts
+# 1. Members Router実装
+# - server/routers/members.ts
+# - Procedures: list, invite, updateRole, remove
 
-# 2. tRPCルーター実装
-touch server/routers/leads.ts
+# 2. メール機能セットアップ
+# - emails/member-invite.tsx (React Email)
+# - Resend統合（Phase 5で本格実装、今はモック可）
 
-# 3. React Hook作成
-touch hooks/useLeads.ts
+# 3. 招待受諾フロー
+# - app/(auth)/accept-invite/page.tsx
 
-# 4. UI実装
-# - app/(dashboard)/leads/page.tsx
-# - components/leads/LeadForm.tsx
-# - components/leads/LeadCard.tsx
+# 4. メンバー管理UI
+# - app/(dashboard)/settings/members/page.tsx
+# - メンバー一覧
+# - 招待ボタン
+# - ロール変更
+# - メンバー削除
 
 # 5. ユニットテスト
-touch test/unit/routers/leads.test.ts
+# - test/unit/features/members-router.test.ts
 
 # 6. 進捗更新
 # IMPLEMENTATION_CHECKLIST.md更新
 ```
 
-### 実装順序
+### Phase 2 残タスク
 
-1. **Day 2 (Today)**: Task 2実装開始 - リードCRUDルーター
-2. **Day 3**: Task 2完了 + Task 3 (useOrganization)
-3. **Day 4-6**: Task 4-6 (統計API + UI実装)
-4. **Day 7-8**: Task 7-8 (組織管理 + 招待)
-5. **Day 9-12**: Task 9-10 (E2Eテスト + 最適化)
+1. **Task 8**: メンバー招待機能（4h）← 次
+2. **Task 9**: E2Eテスト実装（4h）
+3. **Task 10**: パフォーマンス最適化（4h）
+
+### 完了済みタスク
+
+- ✅ Task 1: organizationProcedure ミドルウェア
+- ✅ Task 2: リード管理tRPCルーター
+- ✅ Task 3: 組織コンテキスト実装
+- ✅ Task 4: ダッシュボード統計API
+- ✅ Task 5: リード一覧ページUI
+- ✅ Task 6: ダッシュボードUI
+- ✅ Task 7: 組織管理機能強化
 
 ---
 

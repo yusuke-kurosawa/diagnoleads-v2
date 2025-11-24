@@ -32,10 +32,17 @@ export function OrganizationSwitcher() {
   const organizations = orgsData?.organizations || [];
   const currentOrg = organization || organizations.find((o) => o.id === organizationId);
 
-  const handleSelectOrganization = (orgId: string) => {
+  const utils = trpc.useContext();
+
+  const handleSelectOrganization = async (orgId: string) => {
     const selected = organizations.find((o) => o.id === orgId);
     if (selected) {
       setOrganization(orgId, selected);
+
+      // Clear all tRPC cache when switching organizations
+      // This prevents data from previous organization from showing
+      await utils.invalidate();
+
       // Navigate to dashboard of selected organization
       router.push(`/dashboard/${orgId}`);
     }

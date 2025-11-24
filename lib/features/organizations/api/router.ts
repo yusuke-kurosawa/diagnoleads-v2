@@ -20,6 +20,7 @@ export const organizationsRouter = router({
   /**
    * Get organization by ID
    * User must be a member of the organization
+   * Returns organization data with user's role
    */
   getById: protectedProcedure
     .input(getOrganizationSchema)
@@ -43,7 +44,11 @@ export const organizationsRouter = router({
         });
       }
 
-      return membership.organization;
+      return {
+        ...membership.organization,
+        role: membership.role,
+        membershipId: membership.id,
+      };
     }),
 
   /**
