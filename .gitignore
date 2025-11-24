@@ -38,6 +38,12 @@ yarn-error.log*
 *~
 
 # Drizzle
-drizzle
+# drizzle フォルダは除外するが、マイグレーションファイルは追跡する
+drizzle/*
+!drizzle/*.sql
+!drizzle/meta/
+drizzle/meta/*
+!drizzle/meta/*.json
+
 *.db
 *.db-journal
