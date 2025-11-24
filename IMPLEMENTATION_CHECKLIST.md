@@ -7,7 +7,7 @@
 >   - グループ横断レポート・分析
 >   - M&A・組織再編対応
 >   - 柔軟なデータ共有ポリシー
-> - 🤖 **AI駆動開発** - Claude Code 4.5 Sonnetによる生産性と品質の向上
+> - 🤖 **AI駆動開発** - Claude 4.5 Sonnetによる生産性と品質の向上
 > - 📋 **OpenSpec駆動開発** - 仕様を軸としたSpec駆動開発プラットフォーム
 > - 🔒 **セキュリティファースト** - Row-Level Security、CASL、CSP、Rate Limitingによる多層防御
 > - 🧪 **品質保証** - ユニットテスト70%以上、E2Eテスト完備、型安全性の徹底
@@ -130,6 +130,16 @@ graph LR
 | **ドキュメント鮮度** | 🔴 古くなりがち | 🟢 常に最新 |
 | **AI実装精度** | 🟡 曖昧さあり | 🟢 高精度 |
 | **変更追跡** | ❌ Git logのみ | ✅ 仕様履歴管理 |
+
+### OpenSpec技術スタック
+
+| ツール | バージョン | 用途 | ステータス |
+|--------|-----------|------|-----------|
+| **OpenAPI** | 3.1 | API仕様標準 | ✅ 実装済み |
+| **zod-to-openapi** | 8.1+ | Zod→OpenAPI変換 | ✅ 実装済み |
+| **trpc-openapi** | 1.2+ | tRPC→REST API変換 | ✅ 実装済み |
+| **Scalar** | v2 | API ドキュメントUI | ✅ 実装済み |
+| **openapi-typescript** | 7.4+ | OpenAPI→TypeScript型生成 | ⏸️ Phase 5 |
 
 ---
 
@@ -677,88 +687,285 @@ leads                 -- リード（organization_id でスコープ）
 
 ## 📈 Phase 3-7: 今後の実装計画
 
-### Phase 3: AI機能 (フェーズ3)
-- AIリードスコアリング
-- Anthropic Claude 3.5 Sonnet統合
-- セマンティック検索 (pgvector)
-- チャットボット (streaming)
+### Phase 3: AI機能 ⏸️ 0/25完了
 
-### Phase 4: 公開ページ (フェーズ4)
-- ランディングページ (ISR)
-- 診断フォーム (埋め込み可能)
-- SEO最適化 (Metadata API)
-- 多言語対応 (next-intl)
+**期間**: Day 13-25 (13営業日)
+**目標**: AI駆動のリードスコアリングとセマンティック検索
 
-### Phase 5: 統合・Webhook (フェーズ5)
-- REST API公開 (OpenAPI)
-- Webhook送信 (Trigger.dev)
-- 外部CRM統合
+#### 3.1 AI基盤セットアップ
 
-### Phase 6: 分析・改善 (フェーズ6)
-- Vercel Analytics
-- Sentry エラートラッキング
-- パフォーマンス最適化
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| Vercel AI SDK | 4.0+ | ⏸️ 未実装 | 4h |
+| Anthropic Claude API | 4.5 Sonnet | ⏸️ 未実装 | 2h |
+| OpenAI Embeddings | text-embedding-3-small | ⏸️ 未実装 | 3h |
+| pgvector拡張 | Latest | ⏸️ 未実装 | 2h |
+| pg_search拡張 | Latest | ⏸️ 未実装 | 2h |
 
-### Phase 7: 本番移行 (フェーズ7)
-- Vercel Pro デプロイ
-- Supabase Pro 移行
-- カスタムドメイン設定
-- 本番監視設定
+#### 3.2 AI機能実装
+
+| 機能 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| AIリードスコアリング | Claude 4.5でリード評価 | ⏸️ 未実装 | 8h |
+| セマンティック検索 | pgvectorベクトル検索 | ⏸️ 未実装 | 6h |
+| チャットボット | ストリーミング対応 | ⏸️ 未実装 | 10h |
+| 自動要約機能 | リード情報要約 | ⏸️ 未実装 | 4h |
+
+**技術スタック**:
+- Vercel AI SDK 4.0+ (ストリーミング、フック統合)
+- Anthropic Claude 4.5 Sonnet (リード分析、スコアリング)
+- OpenAI Embeddings (ベクトル化)
+- pgvector (ベクトル検索)
+- pg_search (全文検索)
+
+---
+
+### Phase 4: 公開ページ ⏸️ 0/20完了
+
+**期間**: Day 26-35 (10営業日)
+**目標**: SEO最適化された公開ページと診断フォーム
+
+#### 4.1 公開ページ実装
+
+| 項目 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| ランディングページ | ISR対応 | ⏸️ 未実装 | 8h |
+| 診断フォーム | 埋め込み可能 | ⏸️ 未実装 | 10h |
+| SEO最適化 | Metadata API | ⏸️ 未実装 | 4h |
+| OGP設定 | SNSシェア対応 | ⏸️ 未実装 | 2h |
+| 多言語対応 | next-intl統合 | ⏸️ 未実装 | 6h |
+
+#### 4.2 多言語対応
+
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| next-intl | 3.27+ | ⏸️ 未実装 | 4h |
+| 日本語ロケール | ja | ⏸️ 未実装 | 2h |
+| 英語ロケール | en | ⏸️ 未実装 | 2h |
+| 言語切り替えUI | - | ⏸️ 未実装 | 2h |
+
+**技術スタック**:
+- next-intl 3.27+ (国際化)
+- Next.js Metadata API (SEO)
+- ISR (Incremental Static Regeneration)
+
+---
+
+### Phase 5: 統合・Webhook ⏸️ 0/15完了
+
+**期間**: Day 36-43 (8営業日)
+**目標**: 外部システム連携とWebhook機能
+
+#### 5.1 API公開
+
+| 項目 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| REST API実装 | OpenAPI 3.1準拠 | ⏸️ 未実装 | 6h |
+| openapi-typescript | 型生成 | ⏸️ 未実装 | 2h |
+| API認証 | Bearer Token | ⏸️ 未実装 | 4h |
+| Rate Limiting | API別制限 | ⏸️ 未実装 | 2h |
+
+#### 5.2 バックグラウンドジョブ
+
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| Trigger.dev | v3 | ⏸️ 未実装 | 4h |
+| Webhook送信 | - | ⏸️ 未実装 | 4h |
+| リトライ機能 | - | ⏸️ 未実装 | 2h |
+
+#### 5.3 メール機能
+
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| Resend | 4.0+ | ⏸️ 未実装 | 3h |
+| React Email | 3.0+ | ⏸️ 未実装 | 3h |
+| メールテンプレート | - | ⏸️ 未実装 | 4h |
+| トランザクションメール | - | ⏸️ 未実装 | 2h |
+
+**技術スタック**:
+- Trigger.dev v3 (バックグラウンドジョブ)
+- Resend 4.0+ (メール送信)
+- React Email 3.0+ (メールテンプレート)
+- openapi-typescript 7.4+ (型生成)
+
+---
+
+### Phase 6: 分析・改善 ⏸️ 0/10完了
+
+**期間**: Day 44-48 (5営業日)
+**目標**: 本番監視とパフォーマンス最適化
+
+#### 6.1 アナリティクス・監視
+
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| Vercel Analytics | Latest | ⏸️ 未実装 | 2h |
+| Sentry | Latest | ⏸️ 未実装 | 3h |
+| Axiom | Latest | ⏸️ 未実装 | 2h |
+| Highlight.io | Latest (Optional) | ⏸️ 未実装 | 2h |
+
+#### 6.2 パフォーマンス最適化
+
+| 項目 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| 画像最適化 | Next.js Image | ⏸️ 未実装 | 2h |
+| バンドルサイズ削減 | Tree shaking | ⏸️ 未実装 | 2h |
+| キャッシュ戦略 | ISR/SSG最適化 | ⏸️ 未実装 | 3h |
+| データベース最適化 | インデックス調整 | ⏸️ 未実装 | 2h |
+
+#### 6.3 ビジュアルテスト (Optional)
+
+| 項目 | バージョン | ステータス | 工数 |
+|------|-----------|-----------|------|
+| Percy | Latest | ⏸️ 未実装 | 3h |
+| ビジュアルリグレッション | - | ⏸️ 未実装 | 2h |
+
+**技術スタック**:
+- Vercel Analytics (パフォーマンス分析)
+- Sentry (エラートラッキング)
+- Axiom (ログ管理)
+- Highlight.io (セッションリプレイ、オプション)
+- Percy (ビジュアルリグレッションテスト、オプション)
+
+---
+
+### Phase 7: 本番移行 ⏸️ 0/12完了
+
+**期間**: Day 49-53 (5営業日)
+**目標**: 本番環境デプロイと運用開始
+
+#### 7.1 インフラ移行
+
+| 項目 | プラン | ステータス | 工数 |
+|------|--------|-----------|------|
+| Vercel Pro | $20/month | ⏸️ 未実装 | 2h |
+| Supabase Pro | $25/month | ⏸️ 未実装 | 3h |
+| カスタムドメイン | - | ⏸️ 未実装 | 1h |
+| SSL証明書 | 自動 | ⏸️ 未実装 | 1h |
+
+#### 7.2 本番設定
+
+| 項目 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| 環境変数設定 | Vercel | ⏸️ 未実装 | 1h |
+| データベース移行 | マイグレーション実行 | ⏸️ 未実装 | 2h |
+| バックアップ設定 | 自動バックアップ | ⏸️ 未実装 | 1h |
+| 監視アラート | Sentry/Vercel | ⏸️ 未実装 | 2h |
+
+#### 7.3 運用準備
+
+| 項目 | 説明 | ステータス | 工数 |
+|------|------|-----------|------|
+| 運用マニュアル | ドキュメント作成 | ⏸️ 未実装 | 3h |
+| インシデント対応 | 手順書作成 | ⏸️ 未実装 | 2h |
+| 負荷テスト | 本番相当テスト | ⏸️ 未実装 | 3h |
+
+**インフラスタック**:
+- Vercel Pro ($20/month) - ホスティング
+- Supabase Pro ($25/month) - マネージドPostgreSQL
+- Trigger.dev Free (10K credits/month) - ジョブ実行
+- Resend Free (3K emails/month) - メール送信
+- Sentry Free (5K events/month) - エラー監視
 
 ---
 
 ## 🛠️ 技術スタック詳細
 
-### フロントエンド
+### フロントエンド (実装済み ✅)
 
 ```typescript
 // 状態管理・データフェッチ
-TanStack Query 5.62+   // サーバー状態管理
-Zustand 5.0+           // クライアント状態管理
-nuqs 2.8+              // URL状態管理
+TanStack Query 5.62+   // サーバー状態管理 ✅
+Zustand 5.0+           // クライアント状態管理 ✅
+nuqs 2.8+              // URL状態管理 ✅
 
 // UI・スタイリング
-Tailwind CSS 4.0       // Oxide Engine (高速)
-shadcn/ui v2           // React Aria統合
-Lucide React           // アイコン
-Tremor 3.18+           // ダッシュボードチャート
+Tailwind CSS 4.0       // Oxide Engine (高速) ✅
+shadcn/ui v2           // React Aria統合 ✅
+Lucide React           // アイコン ✅
+Tremor 3.18+           // ダッシュボードチャート ✅
 
 // フォーム
-React Hook Form 7.54+  // パフォーマンス重視
-Zod 3.24+              // ランタイムバリデーション
+React Hook Form 7.54+  // パフォーマンス重視 ✅
+Zod 3.24+              // ランタイムバリデーション ✅
 ```
 
-### バックエンド
+### フロントエンド (未実装 ⏸️)
+
+```typescript
+// 国際化
+next-intl 3.27+        // 多言語対応 ⏸️ Phase 4
+```
+
+### バックエンド (実装済み ✅)
 
 ```typescript
 // API・認証
-tRPC 11.0+             // 型安全なAPI
-BetterAuth 1.4+        // 認証 (Organization Plugin)
-CASL 6.7+              // 権限管理
+tRPC 11.0+             // 型安全なAPI ✅
+BetterAuth 1.4+        // 認証 (Organization Plugin) ✅
+CASL 6.7+              // 権限管理 ✅
 
 // データベース
-PostgreSQL 16+         // RDBMS
-Drizzle ORM 0.38+      // 型安全なORM
-Row-Level Security     // マルチテナント分離
-
-// ジョブ・メール
-Trigger.dev v3         // バックグラウンドジョブ
-Resend 4.0+            // トランザクションメール
-React Email 3.0+       // メールテンプレート
+PostgreSQL 16+         // RDBMS ✅
+Drizzle ORM 0.38+      // 型安全なORM ✅
+Row-Level Security     // マルチテナント分離 ✅
 ```
 
-### 開発ツール
+### バックエンド (未実装 ⏸️)
+
+```typescript
+// データベース拡張
+pgvector              // ベクトル検索 ⏸️ Phase 3
+pg_search             // 全文検索 ⏸️ Phase 3
+
+// ジョブ・メール
+Trigger.dev v3        // バックグラウンドジョブ ⏸️ Phase 5
+Resend 4.0+           // トランザクションメール ⏸️ Phase 5
+React Email 3.0+      // メールテンプレート ⏸️ Phase 5
+
+// API公開
+openapi-typescript 7.4+  // REST API型生成 ⏸️ Phase 5
+```
+
+### AI & Analytics (未実装 ⏸️)
+
+```typescript
+// AI基盤
+Vercel AI SDK 4.0+            // AI統合SDK ⏸️ Phase 3
+Anthropic Claude 4.5 Sonnet   // LLM (リード分析) ⏸️ Phase 3
+OpenAI Embeddings             // ベクトル化 ⏸️ Phase 3
+
+// 監視・分析
+Vercel Analytics      // パフォーマンス分析 ⏸️ Phase 6
+Sentry                // エラートラッキング ⏸️ Phase 6
+Axiom                 // ログ管理 ⏸️ Phase 6
+Highlight.io          // セッションリプレイ (Optional) ⏸️ Phase 6
+```
+
+### 開発ツール (実装済み ✅)
 
 ```typescript
 // コード品質
-TypeScript 5.7+ (Strict)  // 型安全性
-Biome 1.9+                // Linter + Formatter
-commitlint 19.7+          // Commit規約
+TypeScript 5.7+ (Strict)  // 型安全性 ✅
+Biome 1.9+                // Linter + Formatter ✅
+commitlint 19.7+          // Commit規約 ✅
+lefthook 1.10+            // Git Hooks ✅
+
+// バージョン管理
+mise                      // ランタイム管理 ✅
+Bun 1.1.38                // パッケージマネージャ ✅
 
 // テスト
-Vitest 4.0+               // ユニットテスト
-Playwright 1.51+          // E2Eテスト
-Testing Library           // コンポーネントテスト
+Vitest 4.0+               // ユニットテスト ✅
+Playwright 1.51+          // E2Eテスト ✅
+Testing Library           // コンポーネントテスト ✅
+```
+
+### 開発ツール (未実装 ⏸️)
+
+```typescript
+// ビジュアルテスト
+Percy                     // ビジュアルリグレッション (Optional) ⏸️ Phase 6
 ```
 
 ---
