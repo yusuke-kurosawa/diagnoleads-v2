@@ -127,10 +127,12 @@
   },
   "leads": {
     "title": "Lead Management",
-    "createLead": "Create Lead",
+    "description": "Manage leads captured from diagnostic forms",
+    "createLead": "Add New Lead",
     "editLead": "Edit Lead",
     "deleteLead": "Delete Lead",
     "leadDetails": "Lead Details",
+    "leadDetailsDescription": "View lead details and edit or delete as needed",
     "name": "Name",
     "email": "Email",
     "phone": "Phone",
@@ -141,6 +143,9 @@
     "score": "Score",
     "notes": "Notes",
     "createdAt": "Created At",
-    "updatedAt": "Updated At"
+    "updatedAt": "Updated At",
+    "actions": "Actions",
+    "noLeads": "No leads found",
+    "loading": "Loading..."
   }
 }

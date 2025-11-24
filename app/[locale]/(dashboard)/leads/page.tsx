@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import { useRequiredOrganizationId } from '@/hooks/use-organization';
 import { useListLeads, useCreateLead, useUpdateLead, useDeleteLead } from '@/hooks/use-leads';
 import { LeadDialog } from '@/components/features/leads/lead-dialog';
@@ -42,6 +43,7 @@ const LeadTable = dynamic(
  * TanStack Table による高度なリード一覧表示機能を提供
  */
 export default function LeadsPage() {
+  const t = useTranslations('leads');
   const organizationId = useRequiredOrganizationId();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -109,14 +111,14 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">リード管理</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-600 mt-1">
-            診断フォームから取得したリードを管理します
+            {t('description')}
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          新規リード追加
+          {t('createLead')}
         </Button>
       </div>
 
@@ -150,9 +152,9 @@ export default function LeadsPage() {
       <Sheet open={detailsSheetOpen} onOpenChange={setDetailsSheetOpen}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>リード詳細</SheetTitle>
+            <SheetTitle>{t('leadDetails')}</SheetTitle>
             <SheetDescription>
-              リードの詳細情報を確認し、編集や削除ができます
+              {t('leadDetailsDescription')}
             </SheetDescription>
           </SheetHeader>
 

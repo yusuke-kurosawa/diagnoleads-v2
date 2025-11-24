@@ -127,10 +127,12 @@
   },
   "leads": {
     "title": "リード管理",
-    "createLead": "リードを作成",
+    "description": "診断フォームから取得したリードを管理します",
+    "createLead": "新規リード追加",
     "editLead": "リードを編集",
     "deleteLead": "リードを削除",
     "leadDetails": "リード詳細",
+    "leadDetailsDescription": "リードの詳細情報を確認し、編集や削除ができます",
     "name": "名前",
     "email": "メールアドレス",
     "phone": "電話番号",
@@ -141,6 +143,9 @@
     "score": "スコア",
     "notes": "メモ",
     "createdAt": "作成日",
-    "updatedAt": "更新日"
+    "updatedAt": "更新日",
+    "actions": "アクション",
+    "noLeads": "リードがありません",
+    "loading": "読み込み中..."
   }
 }

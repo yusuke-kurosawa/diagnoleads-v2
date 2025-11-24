@@ -29,7 +29,7 @@
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
 | **Phase 2**: コア機能実装 | ✅ **完了** | 40/40 | 100% |
-| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 0/50 | 0% |
+| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 24/50 | 48% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -44,11 +44,11 @@
 - パフォーマンス大幅改善（バンドル-28.9%、DBクエリ-80%、ページロード-60%以上）
 - 本番環境準備完了
 
-**🚀 Phase 2.5 開始: メッセージ統合管理（i18n）**
-- 多言語対応基盤構築開始
-- Intlayer + next-intl統合予定
-- AI支援翻訳（Claude 4.5 Sonnet）活用
-- エラー/バリデーションメッセージ統一管理
+**🚧 Phase 2.5 進行中: メッセージ統合管理（i18n）** - 48%完了
+- ✅ Task 1完了: 基盤セットアップ（Intlayer + next-intl統合、エラーマッパー実装）
+- ✅ Task 2完了: UI/UX実装（言語切り替え、[locale]ルーティング、レイアウト更新）
+- 🚧 Task 3進行中: 既存コンポーネントのi18n対応
+- AI支援翻訳（Claude 4.5 Sonnet）活用準備完了
 
 **✅ Task 1完了: organizationProcedure ミドルウェア**
 - 組織スコープの自動適用
@@ -1091,12 +1091,12 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 0%完了
+## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 48%完了
 
 > **目標**: マルチテナントSaaSの多言語対応基盤構築
 > **期間**: Day 13-22 (10営業日)
-> **完了タスク**: 0/5
-> **完了率**: 0% (0/50時間)
+> **完了タスク**: 2/5
+> **完了率**: 48% (24/50時間)
 > **優先度**: ⭐ 推奨（Phase 3前の実装を強く推奨）
 
 ### なぜ Phase 2.5 が重要か？
@@ -1125,23 +1125,25 @@ leads                 -- リード（organization_id でスコープ）
 
 | Task | 機能 | 工数 | 依存関係 | ステータス |
 |------|------|------|---------|-----------|
-| **Task 1** | 基盤セットアップ | 12h | Phase 2完了 | ⏸️ 待機中 |
-| **Task 2** | メッセージ定義 | 16h | Task 1 | ⏸️ 待機中 |
-| **Task 3** | ロケール実装（ja, en） | 8h | Task 2 | ⏸️ 待機中 |
-| **Task 4** | UI/UX（言語切り替え） | 6h | Task 3 | ⏸️ 待機中 |
-| **Task 5** | AI支援翻訳 | 8h | Task 3 | ⏸️ 待機中 |
+| **Task 1** | 基盤セットアップ | 12h | Phase 2完了 | ✅ **完了** |
+| **Task 2** | UI/UX（言語切り替え・ルーティング） | 12h | Task 1 | ✅ **完了** |
+| **Task 3** | 既存コンポーネントi18n対応 | 16h | Task 2 | 🚧 **進行中** |
+| **Task 4** | エラーメッセージ統合 | 6h | Task 3 | ⏸️ 待機中 |
+| **Task 5** | テスト・ドキュメント | 4h | Task 4 | ⏸️ 待機中 |
 
 **総工数**: 50時間
+**完了**: 24時間 (48%)
 
 ---
 
-### ⏸️ Task 1: 基盤セットアップ 待機中
+### ✅ Task 1: 基盤セットアップ 完了
 
 **工数**: 12時間
 **優先度**: P0 (Critical)
 **依存**: Phase 2完了 ✅
+**コミット**: `e4c8384` - feat(i18n): Phase 2.5 Task 1 - i18n infrastructure setup
 
-**実装予定**:
+**実装完了**:
 
 1. **Intlayer 3.0+ セットアップ**（6h）
    - コンポーネント単位メッセージ管理
@@ -1213,98 +1215,84 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### ⏸️ Task 2: メッセージ定義 待機中
+### ✅ Task 2: UI/UX実装（言語切り替え・ルーティング） 完了
 
-**工数**: 16時間
+**工数**: 12時間
 **優先度**: P0 (Critical)
-**依存**: Task 1完了
+**依存**: Task 1完了 ✅
+**コミット**: `ab6e33c` - feat(i18n): Phase 2.5 Task 2 - UI/UX implementation with locale routing
 
-**実装予定**:
+**実装完了**:
 
-1. **共通メッセージ定義**（4h）
-   - ナビゲーション（ヘッダー、サイドバー、フッター）
-   - ボタンテキスト（保存、キャンセル、削除、編集）
-   - ステータス（新規、連絡済み、見込み、成約）
-   - 日付フォーマット
-   - 数値フォーマット
+1. **言語切り替えコンポーネント**（4h）
+   - `LanguageSwitcher`: シンプルなselectドロップダウン
+   - `LanguageSwitcherButton`: リッチUIドロップダウン（Globe アイコン付き）
+   - Cookie更新（NEXT_LOCALE）
+   - useTransitionによるスムーズな遷移
 
-2. **エラーメッセージ統合**（3h）
-   - APIエラーコード定義
-   ```typescript
-   enum ErrorCode {
-     INVALID_INPUT = 'INVALID_INPUT',
-     UNAUTHORIZED = 'UNAUTHORIZED',
-     FORBIDDEN = 'FORBIDDEN',
-     NOT_FOUND = 'NOT_FOUND',
-     CONFLICT = 'CONFLICT',
-     INTERNAL_ERROR = 'INTERNAL_ERROR',
-   }
-   ```
-   - エラーコード → 多言語メッセージマッパー
-   - tRPCエラーハンドリング統合
+2. **[locale]ルーティング実装**（4h）
+   - `app/[locale]/layout.tsx`: ロケール対応ルートレイアウト
+   - `app/[locale]/page.tsx`: ホームページi18n対応
+   - NextIntlClientProvider統合
+   - generateStaticParams実装
 
-3. **バリデーションメッセージ**（3h）
-   - Zod + zod-i18n統合
-   - リードフォームバリデーション
-   - 組織設定バリデーション
-   - メンバー招待バリデーション
+3. **ダッシュボードレイアウト更新**（3h）
+   - 言語切り替えボタン統合
+   - ナビゲーションメニューi18n対応
+   - getTranslations('navigation')使用
+   - 全リンクにロケールプレフィックス追加
 
-4. **診断・リード管理メッセージ**（4h）
-   - リード一覧テーブル
-   - ダッシュボード統計
-   - フォームラベル・プレースホルダー
-   - Toast通知メッセージ
-
-5. **テナント別メッセージ準備**（2h）
-   - テナント別カスタマイズ機能の基盤
-   - DB/CMS連携準備（Phase 4以降）
+4. **Next.js設定更新**（1h）
+   - createNextIntlPlugin統合
+   - serverExternalPackages設定（Next.js 15対応）
+   - typedRoutes一時無効化
 
 **成果物**:
-- `content/shared/common.content.ts`
-- `content/shared/errors.content.ts`
-- `content/shared/validation.content.ts`
-- `content/leads/messages.content.ts`
+- `components/i18n/language-switcher.tsx`
+- `components/i18n/i18n-provider.tsx`
+- `app/[locale]/layout.tsx`
+- `app/[locale]/page.tsx`
+- `app/[locale]/(dashboard)/layout.tsx`
+- `locales/ja/common.json`, `locales/en/common.json`
+- `lib/i18n/config.ts`, `lib/i18n/middleware.ts`, `lib/i18n/request.ts`
 - `lib/messages/error-mapper.ts`
-- `lib/messages/validation.ts`
 
 ---
 
-### ⏸️ Task 3: ロケール実装（ja, en） 待機中
+### 🚧 Task 3: 既存コンポーネントi18n対応 進行中
 
-**工数**: 8時間
+**工数**: 16時間
 **優先度**: P0 (Critical)
-**依存**: Task 2完了
+**依存**: Task 2完了 ✅
 
 **実装予定**:
 
-1. **日本語（ja）ロケール**（2h）
-   - 共通メッセージ日本語訳
-   - エラーメッセージ日本語訳
-   - バリデーションメッセージ日本語訳
-   - ビジネス用語の適切な訳語選定
+1. **リード管理画面**（6h）
+   - テーブルヘッダーの翻訳（名前、メール、会社、ステータス、スコア）
+   - ステータスラベルの翻訳（新規、連絡済、見込、成約、失注）
+   - フォームフィールドの翻訳（プレースホルダー、ラベル）
+   - アクションボタンの翻訳（作成、編集、削除）
+   - Toast通知メッセージの翻訳
 
-2. **英語（en）ロケール**（2h）
-   - 共通メッセージ英語訳
-   - エラーメッセージ英語訳
-   - バリデーションメッセージ英語訳
-   - ビジネス用語の適切な訳語選定
+2. **ダッシュボード画面**（6h）
+   - 統計カードの翻訳（総リード数、今月の新規リード、コンバージョン率）
+   - グラフラベルの翻訳（リードトレンド、ソース内訳、ステータス内訳）
+   - 最近のアクティビティの翻訳
+   - 日付フォーマットの多言語対応
 
-3. **ロケールデータ構造化**（2h）
-   - JSON/TypeScript型定義
-   - next-intl統合
-   - Intlayer統合
-   - 型安全性の確保
-
-4. **フォールバックメカニズム**（2h）
-   - 未翻訳キーの検出
-   - デフォルトロケール設定（日本語）
-   - 翻訳漏れ警告システム
+3. **設定画面**（4h）
+   - 組織設定フォームラベルの翻訳
+   - メンバー管理UIの翻訳（招待、ロール、削除）
+   - バリデーションメッセージの翻訳
+   - 成功/エラーメッセージの翻訳
 
 **成果物**:
-- `locales/en.json` (英語)
-- `locales/ja.json` (日本語)
-- 型定義ファイル
-- フォールバック設定
+- `app/[locale]/(dashboard)/leads/page.tsx` (i18n対応)
+- `app/[locale]/(dashboard)/page.tsx` (i18n対応)
+- `app/[locale]/(dashboard)/settings/page.tsx` (i18n対応)
+- `app/[locale]/(dashboard)/settings/organization/page.tsx` (i18n対応)
+- `app/[locale]/(dashboard)/settings/members/page.tsx` (i18n対応)
+- 更新された`locales/ja/common.json`, `locales/en/common.json`
 
 ---
 
