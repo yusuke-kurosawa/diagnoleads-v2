@@ -448,3 +448,427 @@
 4. データベースマイグレーション実行とシーディング
 
 現時点でのアーキテクチャは、スケーラブルで保守性が高く、セキュアな基盤として完成しています。
+
+---
+
+## 🤖 AI駆動開発：OpenSpec vs OpenAPI
+
+### 📌 重要な明確化
+
+**OpenSpec と OpenAPI は異なる目的のツール**
+
+| 項目 | OpenAPI | OpenSpec |
+|------|---------|----------|
+| **目的** | REST API仕様定義 | AI駆動開発ワークフロー管理 |
+| **用途** | エンドポイント、スキーマ、レスポンス定義 | 仕様→実装プロセスの構造化 |
+| **対象** | API開発者、外部統合 | AI + 人間の協働開発 |
+| **標準化** | OpenAPI 3.1（業界標準） | Fission-AI独自フレームワーク |
+| **競合関係** | ❌ なし（補完関係） | ❌ なし（補完関係） |
+
+### 🎯 OpenSpec とは
+
+**Fission-AI/OpenSpec** - AI駆動開発のための軽量な仕様駆動フレームワーク
+
+#### コンセプト
+```
+人間とAIが実装前に仕様で合意 → 予測可能な実装 → 手戻り削減
+```
+
+#### アーキテクチャ
+```bash
+openspec/
+├── specs/        # 現在の仕様（Source of Truth）
+│   ├── feature-a.md
+│   └── feature-b.md
+└── changes/      # 提案された変更
+    ├── change-001/
+    │   ├── spec-delta.md   # 仕様差分
+    │   ├── tasks.md        # 実装タスク
+    │   └── implementation/ # 実装コード
+    └── change-002/
+```
+
+#### ワークフロー
+```
+1. Draft     → 変更提案作成
+2. Review    → 仕様レビュー・合意
+3. Implement → タスク実行（AI支援）
+4. Complete  → 実装完了
+5. Archive   → 仕様にマージ
+```
+
+### ✅ OpenSpec の利点
+
+**1. 人間・AI間の認識齟齬削減**
+```markdown
+# Before OpenSpec
+開発者: "リード一覧に検索機能を追加して"
+AI: 「了解しました」→ 意図しない実装
+
+# With OpenSpec
+openspec/changes/add-lead-search/spec-delta.md:
+- 検索対象フィールド: name, email, company
+- 部分一致検索（case-insensitive）
+- リアルタイム検索（debounce 300ms）
+→ AI が正確に実装
+```
+
+**2. 段階的変更管理**
+```bash
+# 既存機能の変更に強い
+changes/
+├── update-lead-status/       # 変更1
+├── add-lead-scoring/         # 変更2（変更1に依存）
+└── refactor-lead-table/      # 変更3
+```
+
+**3. 仕様と実装の乖離防止**
+```
+仕様ファイル更新 → 実装 → アーカイブでスペックにマージ
+→ ドキュメントが常に最新
+```
+
+**4. 複数AIツール対応**
+```
+✅ Claude Code, Cursor, GitHub Copilot, Windsurf等 20+ツール
+✅ APIキー不要（スラッシュコマンド or AGENTS.md）
+```
+
+### ⚖️ DiagnoLeads v2 における推奨
+
+#### 採用推奨：ハイブリッドアプローチ
+
+```typescript
+// Layer 1: OpenSpec - 開発ワークフロー管理
+openspec/
+├── specs/
+│   ├── api-design.md           // API全体の設計
+│   ├── lead-management.md      // リード管理機能仕様
+│   └── organization-scoping.md // マルチテナント仕様
+└── changes/
+    └── phase2-core-features/
+        ├── spec-delta.md       // フェーズ2変更内容
+        └── tasks.md            // 実装タスクリスト
+
+// Layer 2: OpenAPI - REST API仕様定義
+openapi/
+└── openapi.json                // 外部API仕様（tRPCから生成）
+
+// Layer 3: tRPC - 内部API実装
+server/routers/
+├── leads.ts                    // tRPCルーター（型安全）
+└── organizations.ts
+```
+
+#### 実装戦略
+
+**Phase 1: OpenSpec セットアップ（推奨：今すぐ）**
+```bash
+# 1. OpenSpec構造作成
+mkdir -p openspec/{specs,changes}
+
+# 2. 既存アーキテクチャを仕様化
+# docs/DIAGNOLEADS_V2_ARCHITECTURE.md → openspec/specs/architecture.md
+
+# 3. フェーズ2をchange化
+# docs/PHASE2_IMPLEMENTATION_PLAN.md → openspec/changes/phase2-core/
+```
+
+**Phase 2: AI駆動開発の実践**
+```bash
+# Claude Code等でOpenSpec参照
+/spec openspec/changes/phase2-core/spec-delta.md
+
+# AI: "組織スコープミドルウェアを実装します"
+# → 仕様に基づいた正確な実装
+```
+
+**Phase 3: OpenAPI外部公開**
+```bash
+# tRPC → OpenAPI変換
+npm run openapi:generate
+
+# Scalar UIで公開
+# → 外部開発者向けドキュメント
+```
+
+### 📊 導入コスト vs メリット
+
+| 項目 | コスト | メリット |
+|------|--------|----------|
+| **初期セットアップ** | 2-3時間 | 🟢 低 |
+| **仕様記述時間** | +20% | 🟡 中（手戻り削減で相殺） |
+| **学習コスト** | 1日 | 🟢 低（Markdown記述のみ） |
+| **メンテナンス** | 仕様更新時 | 🟢 低（実装と同期） |
+| **削減される手戻り** | - | 🔴 高（30-50%削減） |
+| **ドキュメント精度** | - | 🔴 高（自動的に最新） |
+
+### ⭐ 最終推奨
+
+**OpenSpec: ✅ 即座導入推奨（優先度: 高）**
+
+**理由：**
+1. マルチテナントSaaSの複雑性に対応
+2. AI駆動開発の手戻り大幅削減
+3. 初期コスト低、メリット高
+4. OpenAPIと競合せず補完
+
+**OpenAPI: ✅ 継続使用推奨（外部統合用）**
+
+**理由：**
+1. 外部API公開に必須
+2. tRPC→OpenAPI自動変換
+3. 業界標準
+
+---
+
+## 📋 フェーズ2実装計画（詳細）
+
+> **前提**: 基盤実装済み（45%完了）
+> **目標**: マルチテナントSaaSコア機能実装（45% → 65%）
+
+### 🎯 実装優先順位マトリクス
+
+| 機能 | ビジネス価値 | 技術的依存 | 優先度 | 工数 | 完了 |
+|------|------------|----------|--------|------|------|
+| 組織スコープミドルウェア | 最高 | すべての機能が依存 | **P0** | 4h | ⬜ |
+| リード管理CRUD | 最高 | ミドルウェア完了後 | **P0** | 8h | ⬜ |
+| ダッシュボード統計表示 | 高 | リードデータ必要 | **P1** | 6h | ⬜ |
+| 組織管理・メンバー招待 | 高 | ミドルウェア完了後 | **P1** | 10h | ⬜ |
+| リード一覧（TanStack Table） | 中 | リードCRUD完了後 | **P2** | 6h | ⬜ |
+| AIスコアリング基盤 | 中 | リードCRUD完了後 | **P2** | 12h | ⬜ |
+
+### 📅 実装スケジュール（12日間）
+
+```bash
+Day 1-2: 組織スコープミドルウェア完成（P0）
+├─ lib/trpc/init.ts - organizationProcedure実装
+├─ lib/trpc/context.ts - 型定義拡張
+├─ test/unit/trpc/ - ユニットテスト
+└─ ✅ 完了条件: 非メンバーアクセス時403エラー、RLS自動適用
+
+Day 3-5: リード管理CRUD（P0）
+├─ server/routers/leads.ts - リードルーター
+├─ hooks/useOrganization.ts - 組織フック
+├─ app/(dashboard)/leads/page.tsx - リスト表示
+├─ components/leads/LeadForm.tsx - フォーム
+└─ ✅ 完了条件: リード作成・更新・削除が動作、組織スコープ分離
+
+Day 6-7: ダッシュボード統計表示（P1）
+├─ server/routers/analytics.ts - 統計ルーター
+├─ app/(dashboard)/page.tsx - チャート表示
+├─ components/dashboard/StatsCard.tsx - 統計カード
+└─ ✅ 完了条件: Tremorチャート表示、期間フィルター動作
+
+Day 8-10: 組織管理・メンバー招待（P1）
+├─ server/routers/organizations.ts - 組織ルーター
+├─ app/(dashboard)/organizations/page.tsx - 組織管理
+├─ lib/email/send.ts - 招待メール
+└─ ✅ 完了条件: メンバー招待可能、権限管理UI動作
+
+Day 11-12: リファインメント
+├─ TanStack Table統合（リード一覧）
+├─ ローディング・エラーハンドリング
+├─ E2Eテスト完成
+└─ ✅ 完了条件: テストカバレッジ70%以上
+```
+
+### 🔧 実装詳細
+
+#### Step 1: 組織スコープミドルウェア（P0）
+
+**目的**: すべてのtRPCクエリで自動的に組織スコープを適用
+
+**実装ファイル**:
+```typescript
+// lib/trpc/init.ts
+export const organizationProcedure = protectedProcedure
+  .input(z.object({ organizationId: z.string().uuid() }).passthrough())
+  .use(async ({ ctx, input, next }) => {
+    // 1. メンバーシップ検証
+    const membership = await ctx.db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, ctx.user.id),
+        eq(organizationMembers.organizationId, input.organizationId)
+      ),
+      with: { organization: true },
+    });
+
+    if (!membership) {
+      throw new TRPCError({ code: 'FORBIDDEN' });
+    }
+
+    // 2. CASL権限計算
+    const ability = defineAbilitiesFor(ctx.user, membership);
+
+    // 3. RLS適用済みDBクライアント
+    const scopedDb = await withRLS(ctx.db, ctx.user.id);
+
+    return next({
+      ctx: {
+        ...ctx,
+        organization: membership.organization,
+        membership,
+        ability,
+        db: scopedDb,
+      },
+    });
+  });
+```
+
+**テスト**:
+```typescript
+// test/unit/trpc/organization-procedure.test.ts
+it('should allow access for organization members', async () => {
+  const result = await caller.leads.list({ organizationId: testOrg.id });
+  expect(result).toBeDefined();
+});
+
+it('should deny access for non-members', async () => {
+  await expect(
+    caller.leads.list({ organizationId: otherOrg.id })
+  ).rejects.toThrow('FORBIDDEN');
+});
+```
+
+#### Step 2: リード管理CRUD（P0）
+
+**実装ファイル**:
+```typescript
+// server/routers/leads.ts
+export const leadsRouter = router({
+  create: organizationProcedure
+    .input(createLeadSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.ability.can('create', 'Lead')) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      return await ctx.db.insert(leads).values(input).returning();
+    }),
+
+  list: organizationProcedure
+    .input(listLeadsSchema)
+    .query(async ({ ctx, input }) => {
+      if (!ctx.ability.can('read', 'Lead')) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      // 組織スコープ + 検索 + ページネーション
+      return await ctx.db.query.leads.findMany({
+        where: and(
+          eq(leads.organizationId, input.organizationId),
+          input.search ? like(leads.name, `%${input.search}%`) : undefined
+        ),
+        limit: input.limit,
+        offset: input.offset,
+      });
+    }),
+
+  // update, delete 省略
+});
+```
+
+**フロントエンド**:
+```typescript
+// app/(dashboard)/leads/page.tsx
+'use client';
+
+export default function LeadsPage() {
+  const { organization } = useOrganization();
+  const { data, isLoading } = trpc.leads.list.useQuery({
+    organizationId: organization.id,
+  });
+
+  return (
+    <div>
+      <h1>リード管理</h1>
+      {data?.leads.map(lead => (
+        <LeadCard key={lead.id} lead={lead} />
+      ))}
+    </div>
+  );
+}
+```
+
+#### Step 3-4: ダッシュボード統計 & 組織管理
+
+（詳細は `docs/PHASE2_IMPLEMENTATION_PLAN.md` 参照）
+
+### ✅ フェーズ2完了条件
+
+#### 機能要件
+- [ ] リードの作成・取得・更新・削除が動作
+- [ ] ダッシュボードに統計とチャートが表示される
+- [ ] 組織メンバーの招待と権限管理が可能
+- [ ] すべての操作が組織スコープで分離される
+
+#### 技術要件
+- [ ] organizationProcedure が完全に実装される
+- [ ] RLSが自動適用される
+- [ ] CASL権限チェックが機能する
+- [ ] エラーハンドリングが適切
+
+#### 品質要件
+- [ ] ユニットテストカバレッジ 70%以上
+- [ ] E2Eテストで主要フロー検証
+- [ ] TypeScript厳密モードエラーなし
+- [ ] Biomeリンターエラーなし
+
+---
+
+## 🎬 次のアクション
+
+### オプションA: OpenSpec導入 + フェーズ2開始（推奨）⭐
+
+```bash
+# 1. OpenSpec構造作成（30分）
+mkdir -p openspec/{specs,changes}
+mv docs/*.md openspec/specs/
+
+# 2. フェーズ2をchange化（30分）
+mkdir openspec/changes/phase2-core
+# 仕様差分とタスクを記述
+
+# 3. Step 1実装開始（4時間）
+# 組織スコープミドルウェア実装
+
+⏱️ 総工数: 13-15日
+📈 完了率: 45% → 65%
+```
+
+### オプションB: フェーズ2即座開始（OpenSpecなし）
+
+```bash
+# Step 1から実装開始
+# lib/trpc/init.ts - organizationProcedure
+
+⏱️ 総工数: 12日
+📈 完了率: 45% → 65%
+⚠️ AI駆動開発の利点なし
+```
+
+### オプションC: OpenSpec先行セットアップ
+
+```bash
+# OpenSpec完全セットアップ
+# 既存仕様の移行・整理
+
+⏱️ 追加工数: +3日
+📈 長期的な開発速度向上
+```
+
+---
+
+## 📚 参考資料
+
+### OpenSpec
+- [GitHub: Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)
+- [note記事: OpenSpecでAI駆動開発](https://note.com/masa_wunder/n/n6fbc817bf7cc)
+
+### 技術ドキュメント
+- [tRPC Middleware](https://trpc.io/docs/server/middlewares)
+- [CASL Authorization](https://casl.js.org/v6/en/guide/intro)
+- [Drizzle ORM Queries](https://orm.drizzle.team/docs/select)
+- [Tremor Charts](https://www.tremor.so/docs/visualizations/area-chart)
+
+### 完全実装ガイド
+- 📄 `docs/PHASE2_IMPLEMENTATION_PLAN.md` - 詳細コード例付き実装ガイド（808行）
