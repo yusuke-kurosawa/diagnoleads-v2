@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRequiredOrganizationId } from '@/hooks/use-organization';
 import { useOverview, useLeadTrend } from '@/hooks/use-analytics';
 import { useListLeads } from '@/hooks/use-leads';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { LeadChart } from '@/components/dashboard/lead-chart';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import {
   Users,
@@ -14,6 +14,21 @@ import {
   Award,
 } from 'lucide-react';
 import type { DateRange } from '@/lib/features/analytics/types/schemas';
+
+// Dynamic import for heavy chart component (Tremor)
+// This reduces initial bundle size and improves page load performance
+const LeadChart = dynamic(
+  () => import('@/components/dashboard/lead-chart').then((mod) => ({ default: mod.LeadChart })),
+  {
+    loading: () => (
+      <div className="bg-white p-6 rounded-lg border border-gray-200 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
+        <div className="h-64 bg-gray-100 rounded" />
+      </div>
+    ),
+    ssr: false, // Don't render on server (client-only component)
+  }
+);
 
 /**
  * ダッシュボードメインページ

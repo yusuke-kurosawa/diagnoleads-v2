@@ -9,14 +9,38 @@ import { trpc } from '@/lib/trpc/client';
 import { OrganizationProvider } from '@/lib/context/organization-context';
 
 /**
- * Create Query Client with default options
+ * Create Query Client with optimized cache strategy
+ *
+ * Performance optimizations:
+ * - Longer stale time for analytics data (less frequent refetch)
+ * - Aggressive garbage collection to reduce memory usage
+ * - Retry strategy to handle network failures gracefully
+ * - Cache time configuration to balance freshness and performance
  */
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute
-        refetchOnWindowFocus: false,
+        // Cache Strategy
+        staleTime: 5 * 60 * 1000, // 5 minutes (data considered fresh)
+        gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time, formerly cacheTime)
+
+        // Refetch Strategy
+        refetchOnWindowFocus: false, // Don't refetch on window focus (reduce unnecessary requests)
+        refetchOnMount: true, // Refetch on component mount
+        refetchOnReconnect: true, // Refetch on network reconnect
+
+        // Retry Strategy
+        retry: 2, // Retry failed requests twice
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+
+        // Performance
+        structuralSharing: true, // Enable structural sharing (reduce re-renders)
+      },
+      mutations: {
+        // Retry mutations once on failure
+        retry: 1,
+        retryDelay: 1000,
       },
     },
   });

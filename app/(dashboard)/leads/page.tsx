@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRequiredOrganizationId } from '@/hooks/use-organization';
 import { useListLeads, useCreateLead, useUpdateLead, useDeleteLead } from '@/hooks/use-leads';
-import { LeadTable } from '@/components/features/leads/lead-table';
 import { LeadDialog } from '@/components/features/leads/lead-dialog';
 import { LeadDetails } from '@/components/features/leads/lead-details';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,25 @@ import {
 import { Plus } from 'lucide-react';
 import type { Lead } from '@/lib/db/schema';
 import type { CreateLeadInput, UpdateLeadInput } from '@/lib/features/leads/types';
+
+// Dynamic import for heavy table component (TanStack Table)
+// This reduces initial bundle size and improves page load performance
+const LeadTable = dynamic(
+  () => import('@/components/features/leads/lead-table').then((mod) => ({ default: mod.LeadTable })),
+  {
+    loading: () => (
+      <div className="bg-white rounded-lg border border-gray-200 animate-pulse">
+        <div className="p-4 space-y-4">
+          <div className="h-12 bg-gray-200 rounded" />
+          <div className="h-12 bg-gray-100 rounded" />
+          <div className="h-12 bg-gray-100 rounded" />
+          <div className="h-12 bg-gray-100 rounded" />
+        </div>
+      </div>
+    ),
+    ssr: false, // Don't render on server (client-only component)
+  }
+);
 
 /**
  * リード管理ページ
