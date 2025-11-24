@@ -1,10 +1,12 @@
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold">DiagnoLeads v2</h1>
-        <p className="mt-4 text-xl text-gray-600">Next.js 15 Full-Stack Diagnostic Platform</p>
-      </div>
-    </main>
-  );
+import { redirect } from 'next/navigation';
+import { defaultLocale } from '@/lib/i18n/config';
+
+/**
+ * Root Page (Locale Redirect)
+ *
+ * ロケールが指定されていない場合、デフォルトロケールにリダイレクト
+ * ミドルウェアが主にこれを処理しますが、フォールバックとして提供
+ */
+export default function RootPage() {
+  redirect(`/${defaultLocale}`);
 }

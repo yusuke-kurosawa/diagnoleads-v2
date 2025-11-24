@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 
 export const metadata: Metadata = {
   title: 'ダッシュボード - DiagnoLeads',
@@ -8,13 +10,17 @@ export const metadata: Metadata = {
 
 /**
  * ダッシュボードレイアウト
- * TODO: ナビゲーション、ユーザーメニュー、組織切り替えを実装
+ * ナビゲーション、言語切り替え、ユーザーメニューを含む
  */
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+  const t = await getTranslations('navigation');
   return (
     <div className="min-h-screen bg-gray-100">
       {/* ヘッダー */}
@@ -22,13 +28,14 @@ export default function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
+              <Link href={`/${locale}`} className="text-2xl font-bold text-gray-900">
                 DiagnoLeads
               </Link>
             </div>
 
-            {/* TODO: ユーザーメニュー、組織切り替え */}
+            {/* 言語切り替えとユーザーメニュー */}
             <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
               <span className="text-sm text-gray-700">ユーザー名</span>
             </div>
           </div>
@@ -43,34 +50,34 @@ export default function DashboardLayout({
               <ul className="space-y-2">
                 <li>
                   <Link
-                    href="/dashboard"
+                    href={`/${locale}/dashboard`}
                     className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
                   >
-                    ダッシュボード
+                    {t('dashboard')}
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/leads"
+                    href={`/${locale}/leads`}
                     className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
                   >
-                    リード管理
+                    {t('leads')}
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/organizations"
+                    href={`/${locale}/organizations`}
                     className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
                   >
-                    組織設定
+                    {t('organizations')}
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/settings"
+                    href={`/${locale}/settings`}
                     className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
                   >
-                    個人設定
+                    {t('settings')}
                   </Link>
                 </li>
               </ul>

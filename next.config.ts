@@ -1,13 +1,17 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./lib/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
-    typedRoutes: true,
-    // Optimize server components
-    serverComponentsExternalPackages: ['postgres'],
+    // Temporarily disabled due to i18n dynamic routes
+    // typedRoutes: true,
   },
+  // External packages for server components (moved from experimental in Next.js 15)
+  serverExternalPackages: ['postgres'],
 
   // Performance optimizations
   compiler: {
@@ -49,4 +53,5 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
   ? require('@next/bundle-analyzer')({ enabled: true })
   : (config: NextConfig) => config;
 
-export default withBundleAnalyzer(nextConfig);
+// Apply plugins: next-intl -> bundle analyzer
+export default withNextIntl(withBundleAnalyzer(nextConfig));

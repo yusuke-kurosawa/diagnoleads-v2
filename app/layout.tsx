@@ -1,18 +1,11 @@
-import type { Metadata } from 'next';
-import { Providers } from './providers';
-import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'DiagnoLeads v2',
-  description: 'AI-Powered B2B Diagnostic Platform',
-};
-
+/**
+ * Root Layout (Locale Redirect)
+ *
+ * このレイアウトは直接レンダリングされません
+ * ミドルウェアがすべてのリクエストを /[locale]/* にリダイレクトします
+ *
+ * Note: この構造はNext.jsの要件により必要です
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="ja">
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+  return children;
 }
