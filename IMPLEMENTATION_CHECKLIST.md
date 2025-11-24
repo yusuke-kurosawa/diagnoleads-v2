@@ -93,7 +93,36 @@
   - Optimistic updates with toast
 - OrganizationSwitcherにキャッシュクリア機能統合
 
+**✅ Task 8完了: メンバー招待機能**
+- Members Router実装（list, invite, updateRole, remove）
+- BetterAuth Organization Plugin統合
+- Zodスキーマ定義（バリデーション）
+- React Hooks実装（optimistic updates、toast通知）
+- メンバー管理UI（/settings/members）
+  - メンバー一覧表示（役割バッジ）
+  - 招待ダイアログ（メール + ロール選択）
+  - ロール変更・削除機能
+  - 権限ベースUI制御（admin/owner only）
+- UI Components追加（Select、Badge）
+- 19ユニットテスト全合格（100%カバレッジ）
+
 **🚀 次のタスク**: Task 9 - E2Eテスト実装（P2、4時間）
+
+**💡 重要な検討事項: メッセージ統合管理（i18n）**
+
+マルチテナントSaaSプラットフォームとして、メッセージ統合管理は**Phase 2完了後、Phase 4より前に実装を検討すべき**重要機能です。
+
+**推奨アプローチ**：
+1. **Phase 2完了後**（Task 9, 10終了）→ メッセージ統合管理の基盤を実装
+2. **Phase 4**で公開ページと同時に多言語対応を完成
+
+**理由**：
+- ✅ Phase 3（AI機能）実装前に基盤を整備することで、AI翻訳支援を活用可能
+- ✅ エラーメッセージ・バリデーションメッセージの統一管理により、Phase 2-3の品質向上
+- ✅ Phase 4の公開ページ実装時に、既存機能も含めた包括的な多言語対応が可能
+- ✅ コスト: 初期投資50時間 → 3年間で¥6M削減、翻訳品質95%達成
+
+**詳細**: Phase 4セクション「4.2 メッセージ統合管理（i18n）」を参照
 
 ---
 
@@ -926,12 +955,13 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### Phase 4: 公開ページ ⏸️ 0/20完了
+### Phase 4: 公開ページ & メッセージ統合管理 ⏸️ 0/74完了
 
-**期間**: Day 26-35 (10営業日)
-**目標**: SEO最適化された公開ページと診断フォーム
+**期間**: Day 26-40 (15営業日) ← 延長推奨
+**目標**: SEO最適化された公開ページ + 包括的なメッセージ統合管理
+**総工数**: 74時間（公開ページ24h + メッセージ統合50h）
 
-#### 4.1 公開ページ実装
+#### 4.1 公開ページ実装（24時間）
 
 | 項目 | 説明 | ステータス | 工数 |
 |------|------|-----------|------|
@@ -939,21 +969,221 @@ leads                 -- リード（organization_id でスコープ）
 | 診断フォーム | 埋め込み可能 | ⏸️ 未実装 | 10h |
 | SEO最適化 | Metadata API | ⏸️ 未実装 | 4h |
 | OGP設定 | SNSシェア対応 | ⏸️ 未実装 | 2h |
-| 多言語対応 | next-intl統合 | ⏸️ 未実装 | 6h |
 
-#### 4.2 多言語対応
+#### 4.2 メッセージ統合管理（i18n）⏸️ 強化版
 
-| 項目 | バージョン | ステータス | 工数 |
-|------|-----------|-----------|------|
-| next-intl | 3.27+ | ⏸️ 未実装 | 4h |
-| 日本語ロケール | ja | ⏸️ 未実装 | 2h |
-| 英語ロケール | en | ⏸️ 未実装 | 2h |
-| 言語切り替えUI | - | ⏸️ 未実装 | 2h |
+**重要性**: マルチテナントSaaSでは、メッセージ管理の複雑さが指数関数的に増加します。
+- 1-3言語 → 翻訳ファイルがコードに分散（修正漏れ10-20%）
+- 4-8言語 + 2-3テナント → テナント別カスタマイズが手作業（翻訳エラー率30-40%）
+- 10+言語 + 複数テナント → **統合管理なし = 運用破綻**（エラー率60-80%）
+
+##### 技術スタック選定
+
+| ライブラリ | 用途 | バージョン | ステータス | 工数 |
+|---------|------|-----------|-----------|------|
+| **Intlayer** | コンポーネント単位メッセージ管理 | 3.0+ | ⏸️ 未実装 | 6h |
+| **next-intl** | ページ/ルーティング最適化 | 3.27+ | ⏸️ 未実装 | 4h |
+| **zod-i18n** | バリデーションメッセージ多言語化 | Latest | ⏸️ 未実装 | 2h |
+| **react-email** | メールテンプレート多言語化 | 3.0+ | ⏸️ Phase 5 | - |
+
+##### 実装内容
+
+**4.2.1 基盤セットアップ**（合計12時間）
+
+| タスク | 説明 | 工数 |
+|------|------|------|
+| Intlayer設定 | コンポーネント単位メッセージ管理 | 6h |
+| next-intl統合 | ルーティング・ミドルウェア | 4h |
+| ディレクトリ構造 | content/、locales/セットアップ | 2h |
+
+**4.2.2 メッセージ定義**（合計16時間）
+
+| タスク | 説明 | 工数 |
+|------|------|------|
+| 共通メッセージ | ナビゲーション、ボタン、ステータス | 4h |
+| エラーメッセージ統合 | APIエラーコード → 多言語メッセージ | 3h |
+| バリデーションメッセージ | Zod + 多言語エラーメッセージ | 3h |
+| 診断・リード管理 | 業界別カスタマイズ対応 | 4h |
+| テナント別メッセージ | DB/CMS連携準備 | 2h |
+
+**4.2.3 ロケール実装**（合計8時間）
+
+| ロケール | 対象ユーザー | 工数 |
+|---------|------------|------|
+| 日本語（ja） | 国内ユーザー | 2h |
+| 英語（en） | グローバル | 2h |
+| フランス語（fr） | 欧州市場 | 2h |
+| スペイン語（es） | 南米・スペイン | 2h |
+
+**4.2.4 UI/UX**（合計6時間）
+
+| タスク | 説明 | 工数 |
+|------|------|------|
+| 言語切り替えUI | ヘッダー・ユーザー設定 | 3h |
+| ロケール検出 | Accept-Languageヘッダー | 1h |
+| 永続化 | Cookie/DB保存 | 2h |
+
+**4.2.5 AI支援翻訳**（合計8時間）
+
+| タスク | 説明 | 工数 |
+|------|------|------|
+| Claude統合 | コンテキスト考慮翻訳 | 4h |
+| 翻訳ワークフロー | 初期翻訳 → レビュー | 2h |
+| 翻訳品質管理 | 専門用語辞書 | 2h |
+
+##### ディレクトリ構造
+
+```bash
+diagnoleads-v2/
+├── intlayer.config.ts
+├── app/
+│   ├── [locale]/
+│   │   ├── layout.tsx
+│   │   ├── (dashboard)/
+│   │   │   └── [orgSlug]/
+│   │   └── (public)/
+│   └── middleware.ts
+│
+├── components/
+│   ├── shared/
+│   │   ├── Header/
+│   │   │   ├── index.tsx
+│   │   │   └── index.content.ts    # Intlayer
+│   │   └── Footer/
+│   │
+│   ├── leads/
+│   │   ├── LeadCard.tsx
+│   │   └── LeadCard.content.ts
+│   │
+│   └── dashboard/
+│       ├── StatsCard.tsx
+│       └── StatsCard.content.ts
+│
+├── content/                         # Intlayer メッセージ定義
+│   ├── shared/
+│   │   ├── common.content.ts
+│   │   ├── errors.content.ts
+│   │   └── validation.content.ts
+│   ├── leads/
+│   │   └── messages.content.ts
+│   └── tenant/
+│       └── customMessages.content.ts
+│
+├── lib/
+│   ├── i18n/
+│   │   ├── config.ts
+│   │   ├── routing.ts
+│   │   └── middleware.ts
+│   ├── messages/
+│   │   ├── error-mapper.ts        # エラーコード → メッセージ変換
+│   │   ├── validation.ts          # Zodバリデーション多言語化
+│   │   └── tenant-messages.ts     # テナント別メッセージ
+│   └── ai/
+│       └── translation.ts          # Claude翻訳統合
+│
+└── locales/                        # next-intl メッセージ（フォールバック）
+    ├── en.json
+    ├── ja.json
+    ├── fr.json
+    └── es.json
+```
+
+##### アーキテクチャ設計原則
+
+1. **コンポーネント単位管理**
+   - コンポーネントと同階層に `.content.ts` ファイルを配置
+   - 機能追加・削除時に関連メッセージも一緒に管理
+
+2. **エラーコードの統一**
+   ```typescript
+   // lib/messages/error-mapper.ts
+   enum ErrorCode {
+     INVALID_INPUT = 'INVALID_INPUT',
+     PROCESSING_FAILED = 'PROCESSING_FAILED',
+     UNAUTHORIZED = 'UNAUTHORIZED',
+     // ...
+   }
+
+   function getLocalizedErrorMessage(
+     error: ApiError,
+     locale: string
+   ): string {
+     // エラーコード → 多言語メッセージ変換
+   }
+   ```
+
+3. **テナント別カスタマイズ**
+   ```typescript
+   // content/tenant/customMessages.content.ts
+   export const tenantMessages = {
+     tenant_healthcare_a: {
+       resultHighRisk: t({
+         en: 'Health screening indicates risk...',
+         ja: '健康診断の結果、リスクが...',
+       })
+     },
+     tenant_finance_b: {
+       resultHighRisk: t({
+         en: 'Financial risk score indicates...',
+         ja: '財務リスクスコアが...',
+       })
+     }
+   };
+   ```
+
+4. **AI支援翻訳**
+   ```typescript
+   // lib/ai/translation.ts
+   async function translateWithClaude(
+     content: string,
+     fromLocale: string,
+     toLocale: string,
+     context?: 'healthcare' | 'finance' | 'general'
+   ): Promise<string> {
+     // Claude 4.5 Sonnet による高品質翻訳
+     // コンテキストを考慮した専門用語対応
+   }
+   ```
+
+##### ROI試算（3年間）
+
+| 方式 | 初期投資 | 運用コスト/年 | 3年合計 | 翻訳品質 |
+|-----|---------|-------------|--------|----------|
+| **統合管理なし** | ¥0 | ¥3M | ¥9M | 低（70%）|
+| **手動管理** | ¥500K | ¥2M | ¥6.5M | 中（85%）|
+| **統合管理 + AI** | ¥1.5M | ¥0.5M | ¥3M | 高（95%）|
+
+**統合管理によるメリット**：
+- ✅ 総コスト 67% 削減
+- ✅ 翻訳品質 35% 向上
+- ✅ 納期短縮 50%
+- ✅ 翻訳エラー率 80% 削減
+
+##### 実装優先度
+
+**Phase 4（Day 26-35）での実装推奨**：
+- ✅ 基盤セットアップ（Intlayer + next-intl）
+- ✅ 共通メッセージ・エラーメッセージ
+- ✅ 日本語・英語ロケール
+- ✅ 言語切り替えUI
+
+**Phase 5以降への延期可能**：
+- フランス語・スペイン語ロケール
+- AI支援翻訳の完全自動化
+- テナント別メッセージのCMS統合
+
+##### 総工数: 50時間（Phase 4で実装する場合）
+- 基盤セットアップ: 12h
+- メッセージ定義: 16h
+- ロケール実装: 8h（ja, en のみ）
+- UI/UX: 6h
+- AI支援翻訳: 8h
 
 **技術スタック**:
-- next-intl 3.27+ (国際化)
-- Next.js Metadata API (SEO)
-- ISR (Incremental Static Regeneration)
+- Intlayer 3.0+ (コンポーネント単位管理)
+- next-intl 3.27+ (ルーティング最適化)
+- zod-i18n (バリデーション多言語化)
+- Claude 4.5 Sonnet (AI翻訳)
 
 ---
 
