@@ -1,294 +1,359 @@
-# DiagnoLeads v2 Implementation Checklist
+# DiagnoLeads v2 実装チェックリスト
 
-> This checklist verifies all requirements from the architecture documentation have been considered.
-> - ✅ Implemented
-> - ⏭️ Not implemented (with reason)
-> - 🚧 Partially implemented
+> このチェックリストは、アーキテクチャドキュメントのすべての要件が考慮されているかを検証します。
+> - ✅ **実装済み**
+> - 🚧 **部分実装済み**
+> - ❌ **未実装**
 
-## 1. Core Framework & Runtime
+---
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Next.js 15.1.5 with App Router | ✅ | Configured in package.json, next.config.ts created |
-| TypeScript 5.7+ strict mode | ✅ | tsconfig.json with strict: true |
-| Node.js 20 LTS | ✅ | Configured via mise in .mise.toml |
-| Bun 1.1.38 for development | ✅ | Configured via mise in .mise.toml |
-| Turbopack dev server | ✅ | `next dev --turbopack` in package.json |
+## 1. コアフレームワーク & ランタイム
 
-## 2. Frontend Stack
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Next.js 15.1.5（App Router） | ✅ **実装済み** | package.json、next.config.ts で設定済み |
+| TypeScript 5.7+ strict モード | ✅ **実装済み** | tsconfig.json で strict: true 設定済み |
+| Node.js 20 LTS | ✅ **実装済み** | .mise.toml で設定済み |
+| Bun 1.1.38（開発用） | ✅ **実装済み** | .mise.toml で設定済み |
+| Turbopack 開発サーバー | ✅ **実装済み** | package.json に `next dev --turbopack` 設定済み |
 
-### Styling & UI Components
+---
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Tailwind CSS 4.0 (Oxide Engine) | ✅ | @tailwindcss/postcss@4.1.17 installed, tailwind.config.ts configured |
-| shadcn/ui v2 with React Aria | ⏭️ | **Reason**: shadcn/ui is a CLI-based component library that gets added on-demand per component. Will be installed when specific UI components are needed. |
-| Lucide React icons | ✅ | lucide-react@0.460.0 installed |
-| react-aria-components | ✅ | react-aria-components@1.13.0 installed for accessible primitives |
+## 2. フロントエンドスタック
 
-### State Management
+### スタイリング & UI コンポーネント
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| TanStack Query 5.62+ | ✅ | @tanstack/react-query@5.90.10 installed, configured in providers.tsx |
-| TanStack Table 8.21+ | ⏭️ | **Reason**: Data grid functionality not yet needed. Will add when building lead management tables. |
-| Zustand 5.0+ | ✅ | zustand@5.0.0 installed |
-| nuqs 2.8+ (URL params) | ✅ | nuqs@2.8.1 installed |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Tailwind CSS 4.0（Oxide Engine） | ✅ **実装済み** | @tailwindcss/postcss@4.1.17 インストール済み、tailwind.config.ts 設定済み |
+| shadcn/ui v2 + React Aria | ❌ **未実装** | **理由**: shadcn/ui は CLI ベースのコンポーネントライブラリで、必要に応じてコンポーネントごとに追加します。具体的な UI コンポーネントが必要になった時点でインストールします。 |
+| Lucide React アイコン | ✅ **実装済み** | lucide-react@0.460.0 インストール済み |
+| react-aria-components | ✅ **実装済み** | react-aria-components@1.13.0 インストール済み（アクセシビリティ対応） |
 
-### Forms & Validation
+### 状態管理
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| React Hook Form 7.54+ | ✅ | react-hook-form@7.54.0 + @hookform/resolvers@3.9.0 installed |
-| Zod 3.24+ | ✅ | zod@3.24.0 installed, used in lib/env.ts and tRPC routers |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| TanStack Query 5.62+ | ✅ **実装済み** | @tanstack/react-query@5.90.10 インストール済み、providers.tsx で設定済み |
+| TanStack Table 8.21+ | ❌ **未実装** | **理由**: データグリッド機能はまだ不要です。リード管理テーブルの構築時に追加します。 |
+| Zustand 5.0+ | ✅ **実装済み** | zustand@5.0.0 インストール済み |
+| nuqs 2.8+（URL パラメータ管理） | ✅ **実装済み** | nuqs@2.8.1 インストール済み |
 
-### UX Components
+### フォーム & バリデーション
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Sonner 1.7+ (toast notifications) | 🚧 | sonner@1.7.0 installed but not integrated into app layout |
-| Tremor 3.19+ (dashboard charts) | ✅ | @tremor/react@3.18.7 installed |
-| next-intl 3.27+ (i18n) | ⏭️ | **Reason**: Internationalization is Phase 4+ feature. Current focus is core functionality. Will add when implementing public pages with multi-language support. |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| React Hook Form 7.54+ | ✅ **実装済み** | react-hook-form@7.54.0 + @hookform/resolvers@3.9.0 インストール済み |
+| Zod 3.24+ | ✅ **実装済み** | zod@3.24.0 インストール済み、lib/env.ts と tRPC ルーターで使用中 |
 
-## 3. Backend Services
+### UX コンポーネント
 
-### API Layer
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Sonner 1.7+（トースト通知） | 🚧 **部分実装済み** | sonner@1.7.0 インストール済みだが、app layout に統合されていません |
+| Tremor 3.19+（ダッシュボードチャート） | ✅ **実装済み** | @tremor/react@3.18.7 インストール済み |
+| next-intl 3.27+（国際化） | ❌ **未実装** | **理由**: 国際化はフェーズ4以降の機能です。現在はコア機能に集中しています。多言語対応の公開ページ実装時に追加します。 |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| tRPC 11.0+ for internal APIs | ✅ | Full setup: init.ts, context.ts, routers, client.ts, server.ts |
-| REST API routes for external integrations | 🚧 | Route handler structure exists at app/api/trpc/[trpc]/route.ts, but no external REST endpoints yet |
-| Server Actions for forms | ⏭️ | **Reason**: No forms implemented yet. Will add alongside feature development. |
-| OpenAPI 3.1 spec generation | 🚧 | scripts/generate-openapi.ts created but needs tRPC router annotations |
+---
 
-### Database
+## 3. バックエンドサービス
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| PostgreSQL 16+ | ✅ | Configured via DATABASE_URL in env.ts |
-| Drizzle ORM 0.38+ | ✅ | drizzle-orm@0.38.0, drizzle-kit@0.31.7 with schema and client |
-| Multi-tenant with Row-Level Security | 🚧 | Schema has organizationId columns but RLS policies not implemented in SQL migrations |
-| pgvector for embeddings | ⏭️ | **Reason**: AI features are Phase 3+. Extension needs `CREATE EXTENSION vector` in migration. |
-| pg_search for Japanese text | ⏭️ | **Reason**: Full-text search is Phase 3+. Requires pg_trgm extension and GIN indexes. |
+### API レイヤー
 
-### Authentication & Authorization
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| tRPC 11.0+（内部 API） | ✅ **実装済み** | 完全セットアップ済み: init.ts、context.ts、routers、client.ts、server.ts |
+| REST API ルート（外部統合用） | 🚧 **部分実装済み** | ルートハンドラーの構造は app/api/trpc/[trpc]/route.ts に存在しますが、外部 REST エンドポイントはまだありません |
+| Server Actions（フォーム用） | ❌ **未実装** | **理由**: フォームがまだ実装されていません。機能開発と並行して追加します。 |
+| OpenAPI 3.1 仕様生成 | 🚧 **部分実装済み** | scripts/generate-openapi.ts は作成済みですが、tRPC ルーターへのアノテーションが必要です |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| BetterAuth 0.9+ with organizations | ✅ | better-auth@1.4.1 with organization plugin configured |
-| Database sessions (not JWT-only) | ✅ | Drizzle adapter stores sessions in database |
-| CASL 6.8+ for permissions | ✅ | @casl/ability@6.7.3 with role-based abilities in lib/auth/permissions.ts |
-| Social auth providers | ⏭️ | **Reason**: Social OAuth requires provider credentials (Google/GitHub client IDs). Will configure in Phase 2 when deploying to production domains. |
+### データベース
 
-## 4. AI & Analytics
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| PostgreSQL 16+ | ✅ **実装済み** | env.ts で DATABASE_URL 設定済み |
+| Drizzle ORM 0.38+ | ✅ **実装済み** | drizzle-orm@0.38.0、drizzle-kit@0.31.7、スキーマとクライアント設定済み |
+| マルチテナント + Row-Level Security | 🚧 **部分実装済み** | スキーマに organizationId カラムはありますが、SQL マイグレーションに RLS ポリシーが実装されていません |
+| pgvector（埋め込みベクトル） | ❌ **未実装** | **理由**: AI 機能はフェーズ3以降です。拡張機能には `CREATE EXTENSION vector` がマイグレーションに必要です。 |
+| pg_search（日本語全文検索） | ❌ **未実装** | **理由**: 全文検索はフェーズ3以降です。pg_trgm 拡張と GIN インデックスが必要です。 |
 
-### AI Integration
+### 認証 & 認可
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Vercel AI SDK 4.0+ | ✅ | ai@5.0.100 installed |
-| Anthropic Claude 3.5 Sonnet | 🚧 | @anthropic-ai/sdk@0.70.1 installed but no streaming chat implementation yet |
-| OpenAI text-embedding-3-small | ⏭️ | **Reason**: Semantic search is Phase 3+. Requires OpenAI API key and pgvector setup. |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| BetterAuth 0.9+（組織機能付き） | ✅ **実装済み** | better-auth@1.4.1 を organization プラグインで設定済み |
+| データベースセッション（JWT のみではない） | ✅ **実装済み** | Drizzle アダプターがデータベースにセッションを保存 |
+| CASL 6.8+（権限管理） | ✅ **実装済み** | @casl/ability@6.7.3、lib/auth/permissions.ts でロールベースの権限定義済み |
+| ソーシャル認証プロバイダー | ❌ **未実装** | **理由**: ソーシャル OAuth にはプロバイダー認証情報（Google/GitHub クライアント ID）が必要です。本番ドメインへのデプロイ時（フェーズ2）に設定します。 |
 
-### Monitoring & Observability
+---
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Vercel Analytics | ⏭️ | **Reason**: Auto-enabled when deployed to Vercel. Not needed for local development. |
-| Sentry for error tracking | ⏭️ | **Reason**: Error monitoring is production concern. Will add before Phase 7 cutover with SENTRY_DSN env var. |
-| Axiom for structured logging | ⏭️ | **Reason**: Serverless logging is production optimization. Will add in Phase 6+ for analytics refinement. |
-| Highlight.io (optional session replay) | ⏭️ | **Reason**: Marked optional in docs. Can add later if user behavior analysis is needed. |
+## 4. AI & アナリティクス
 
-## 5. Development Tools & Standards
+### AI 統合
 
-### Code Quality
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Vercel AI SDK 4.0+ | ✅ **実装済み** | ai@5.0.100 インストール済み |
+| Anthropic Claude 3.5 Sonnet | 🚧 **部分実装済み** | @anthropic-ai/sdk@0.70.1 インストール済みですが、ストリーミングチャット実装はまだありません |
+| OpenAI text-embedding-3-small | ❌ **未実装** | **理由**: セマンティック検索はフェーズ3以降です。OpenAI API キーと pgvector セットアップが必要です。 |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Biome 1.9+ (linter/formatter) | ✅ | @biomejs/biome@1.9.4 with biome.json configuration |
-| commitlint 19.7+ | ✅ | @commitlint/cli@20.1.0 + config-conventional@20.0.0 |
-| lefthook 1.10+ (Git hooks) | ✅ | lefthook.yml created with pre-commit checks |
+### モニタリング & 可観測性
 
-### Testing Framework
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Vercel Analytics | ❌ **未実装** | **理由**: Vercel へのデプロイ時に自動有効化されます。ローカル開発には不要です。 |
+| Sentry（エラートラッキング） | ❌ **未実装** | **理由**: エラーモニタリングは本番環境の懸念事項です。フェーズ7カットオーバー前に SENTRY_DSN 環境変数で追加します。 |
+| Axiom（構造化ログ） | ❌ **未実装** | **理由**: サーバーレスログは本番最適化です。フェーズ6以降のアナリティクス改善時に追加します。 |
+| Highlight.io（セッションリプレイ・オプション） | ❌ **未実装** | **理由**: ドキュメントでオプション扱いです。ユーザー行動分析が必要になった場合に追加可能です。 |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Vitest 4.0+ for unit tests | ✅ | vitest@4.0.13 with vitest.config.ts and 70% coverage thresholds |
-| Playwright 1.51+ for E2E | ✅ | @playwright/test@1.51.0 with playwright.config.ts |
-| Testing Library for components | ✅ | @testing-library/react@16.3.0 + @testing-library/jest-dom@6.9.1 |
-| Percy (optional visual regression) | ⏭️ | **Reason**: Marked optional in docs. Visual regression testing is valuable but adds complexity. Can add in Phase 6+ if UI stability issues arise. |
+---
 
-### Version Management
+## 5. 開発ツール & 基準
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| mise for multi-language versioning | ✅ | .mise.toml configured with Node.js 20 and Bun 1.1.38 |
+### コード品質
 
-## 6. Spec-Driven Development
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Biome 1.9+（リンター/フォーマッター） | ✅ **実装済み** | @biomejs/biome@1.9.4、biome.json 設定済み |
+| commitlint 19.7+ | ✅ **実装済み** | @commitlint/cli@20.1.0 + config-conventional@20.0.0 |
+| lefthook 1.10+（Git フック） | ✅ **実装済み** | lefthook.yml で pre-commit チェック設定済み |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| OpenAPI 3.1 standard | 🚧 | Infrastructure ready but needs router implementation |
-| zod-to-openapi conversion | ✅ | @asteasolutions/zod-to-openapi@8.1.0 installed |
-| trpc-openapi for REST generation | ✅ | trpc-openapi@1.2.0 installed |
-| openapi-typescript 7.4+ | ⏭️ | **Reason**: Type generation happens after OpenAPI spec is generated. Will add when external REST API clients are needed. |
-| Scalar v2 API docs UI | ✅ | @scalar/nextjs-api-reference@0.9.2 installed |
+### テストフレームワーク
 
-## 7. Job Queue & Background Tasks
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Vitest 4.0+（ユニットテスト） | ✅ **実装済み** | vitest@4.0.13、vitest.config.ts、70% カバレッジ閾値設定済み |
+| Playwright 1.51+（E2E テスト） | ✅ **実装済み** | @playwright/test@1.51.0、playwright.config.ts 設定済み |
+| Testing Library（コンポーネントテスト） | ✅ **実装済み** | @testing-library/react@16.3.0 + @testing-library/jest-dom@6.9.1 |
+| Percy（ビジュアルリグレッション・オプション） | ❌ **未実装** | **理由**: ドキュメントでオプション扱いです。ビジュアルリグレッションテストは有用ですが複雑さが増します。UI 安定性に問題が生じた場合、フェーズ6以降に追加可能です。 |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Trigger.dev v3 for jobs | ✅ | @trigger.dev/sdk@4.1.1 installed |
-| No Redis requirement | ✅ | Architecture uses serverless job processing |
+### バージョン管理
 
-## 8. Email Services
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| mise（多言語バージョン管理） | ✅ **実装済み** | .mise.toml で Node.js 20 と Bun 1.1.38 設定済み |
 
-| Requirement | Status | Notes |
-|------------|--------|-------|
-| Resend 4.0+ for transactional email | ✅ | resend@6.5.2 installed |
-| React Email 3.0+ templates | 🚧 | react-email@5.0.5 installed but no /emails folder or templates created |
+---
 
-## 9. Project Structure Standards
+## 6. 仕様駆動開発
 
-| Directory | Status | Notes |
-|-----------|--------|-------|
-| `/app` - App Router pages | ✅ | Created with layout.tsx, page.tsx, error.tsx, global-error.tsx |
-| `/app/api` - API routes | ✅ | /api/auth/[...all] and /api/trpc/[trpc] exist |
-| `/app/(auth)` - Auth pages | ⏭️ | **Reason**: Auth UI pages not yet implemented. Will create when building login/signup flows. |
-| `/app/(dashboard)` - Dashboard routes | ⏭️ | **Reason**: Protected routes not yet implemented. Will create in Phase 2 with actual features. |
-| `/components` - Reusable components | ⏭️ | **Reason**: No UI components built yet. Will create alongside feature development. |
-| `/lib` - Utilities and helpers | ✅ | Created with /db, /auth, /trpc, /utils subdirectories |
-| `/server` - Server-only code | ✅ | Created with /routers for tRPC procedures |
-| `/db` - Database schemas (Drizzle) | ✅ | Implemented as /lib/db with schema.ts and client.ts |
-| `/emails` - React Email templates | ⏭️ | **Reason**: Email templates tied to specific features (password reset, invitations). Will create in Phase 2-3. |
-| `/tests` - Test files | 🚧 | Renamed to /test with setup.ts, unit/, e2e/ subdirectories |
-| `/public` - Static assets | ✅ | Exists with Next.js defaults |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| OpenAPI 3.1 標準 | 🚧 **部分実装済み** | インフラは準備完了ですが、ルーター実装が必要です |
+| zod-to-openapi 変換 | ✅ **実装済み** | @asteasolutions/zod-to-openapi@8.1.0 インストール済み |
+| trpc-openapi（REST 生成） | ✅ **実装済み** | trpc-openapi@1.2.0 インストール済み |
+| openapi-typescript 7.4+ | ❌ **未実装** | **理由**: 型生成は OpenAPI 仕様生成後に行われます。外部 REST API クライアントが必要になったときに追加します。 |
+| Scalar v2（API ドキュメント UI） | ✅ **実装済み** | @scalar/nextjs-api-reference@0.9.2 インストール済み |
 
-## 10. Infrastructure & Deployment
+---
 
-### Hosting Stack (Production)
+## 7. ジョブキュー & バックグラウンドタスク
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| Vercel Pro ($20/month) | ⏭️ | **Reason**: Production deployment happens in Phase 7. Local development uses `next dev`. |
-| Supabase Pro ($25/month) | ⏭️ | **Reason**: Production database. Currently using local PostgreSQL via DATABASE_URL. |
-| Custom domain (~$12/year) | ⏭️ | **Reason**: Domain setup happens at deployment time. |
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Trigger.dev v3（ジョブ処理） | ✅ **実装済み** | @trigger.dev/sdk@4.1.1 インストール済み |
+| Redis 不要 | ✅ **実装済み** | アーキテクチャはサーバーレスジョブ処理を使用 |
 
-### Local Development Services
+---
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| Docker Compose setup | ⏭️ | **Reason**: Not created yet. Devs expected to run PostgreSQL locally or use Supabase. Docker compose would include PostgreSQL, Redis, Mailhog, pgAdmin. |
-| PostgreSQL (local/Docker) | 🚧 | Configured via DATABASE_URL but no docker-compose.yml |
-| Mailhog for email testing | ⏭️ | **Reason**: Email testing infrastructure not set up. Will add when implementing transactional emails. |
+## 8. メールサービス
 
-## 11. Coding Standards & Patterns
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Resend 4.0+（トランザクションメール） | ✅ **実装済み** | resend@6.5.2 インストール済み |
+| React Email 3.0+ テンプレート | 🚧 **部分実装済み** | react-email@5.0.5 インストール済みですが、/emails フォルダやテンプレートは未作成 |
 
-| Standard | Status | Notes |
-|----------|--------|-------|
-| Strict TypeScript mode | ✅ | tsconfig.json has strict: true |
-| Zod for runtime validation | ✅ | Used in env.ts and tRPC routers |
-| No `any` without `@ts-expect-error` | ✅ | Enforced by strict mode and Biome |
-| End-to-end type safety | ✅ | tRPC provides DB → API → Client type safety |
-| Server Components by default | ✅ | Next.js 15 defaults to Server Components |
-| Server Actions for mutations | ⏭️ | **Reason**: No form mutations implemented yet. Will add with actual features. |
-| ISR for public pages | ⏭️ | **Reason**: Public pages not implemented yet (Phase 4). |
-| PPR (Partial Prerendering) | ⏭️ | **Reason**: Experimental Next.js 15 feature. Will enable in next.config.ts when stabilized. |
+---
 
-## 12. Testing Requirements
+## 9. プロジェクト構造基準
 
-| Requirement | Status | Notes |
-|-------------|--------|-------|
-| Unit tests for utilities (Vitest) | 🚧 | Example test exists at test/unit/example.test.ts but no actual utility tests |
-| Integration tests for API routes | ⏭️ | **Reason**: No API routes beyond health check. Will add when implementing actual features. |
-| E2E tests for critical flows (Playwright) | 🚧 | Example test exists at test/e2e/example.spec.ts but no real user flows |
-| Minimum coverage target | ✅ | 70% thresholds configured in vitest.config.ts |
+| ディレクトリ | ステータス | 備考 |
+|------------|-----------|------|
+| `/app` - App Router ページ | ✅ **実装済み** | layout.tsx、page.tsx、error.tsx、global-error.tsx 作成済み |
+| `/app/api` - API ルート | ✅ **実装済み** | /api/auth/[...all] と /api/trpc/[trpc] 存在 |
+| `/app/(auth)` - 認証ページ | ❌ **未実装** | **理由**: 認証 UI ページはまだ実装されていません。ログイン/サインアップフロー構築時に作成します。 |
+| `/app/(dashboard)` - ダッシュボードルート | ❌ **未実装** | **理由**: 保護されたルートはまだ実装されていません。フェーズ2で実際の機能と共に作成します。 |
+| `/components` - 再利用可能コンポーネント | ❌ **未実装** | **理由**: UI コンポーネントはまだ構築されていません。機能開発と並行して作成します。 |
+| `/lib` - ユーティリティとヘルパー | ✅ **実装済み** | /db、/auth、/trpc、/utils サブディレクトリで作成済み |
+| `/server` - サーバー専用コード | ✅ **実装済み** | tRPC プロシージャ用の /routers で作成済み |
+| `/db` - データベーススキーマ（Drizzle） | ✅ **実装済み** | /lib/db として schema.ts と client.ts で実装済み |
+| `/emails` - React Email テンプレート | ❌ **未実装** | **理由**: メールテンプレートは特定機能（パスワードリセット、招待）と結びついています。フェーズ2-3で作成します。 |
+| `/tests` - テストファイル | 🚧 **部分実装済み** | /test にリネーム済み、setup.ts、unit/、e2e/ サブディレクトリあり |
+| `/public` - 静的アセット | ✅ **実装済み** | Next.js デフォルトで存在 |
 
-## 13. Git Workflow
+---
 
-| Requirement | Status | Notes |
-|-------------|--------|-------|
-| Conventional Commits enforcement | ✅ | commitlint configured in package.json |
-| Pre-commit checks (lint, format, typecheck) | ✅ | lefthook.yml runs biome check and tsc --noEmit |
-| Pre-commit tests | ⏭️ | **Reason**: Not enabled in lefthook.yml. Running full test suite pre-commit adds 10-30s delay. Better to run in CI. |
-| Parallel execution via lefthook | ✅ | lefthook is Go-based with parallel execution |
+## 10. インフラ & デプロイメント
 
-## 14. Migration Strategy Alignment
+### ホスティングスタック（本番環境）
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1: Foundation setup | ✅ | **CURRENT PHASE** - Core architecture, auth, database, testing infrastructure complete |
-| Phase 2: Core features (auth, teams, diagnostics) | 🚧 | Auth foundation ready, team/org features and UI need implementation |
-| Phase 3: AI features (assessment, lead analysis) | ⏭️ | Dependencies installed (Anthropic SDK, AI SDK) but no implementations |
-| Phase 4: Public pages and SEO | ⏭️ | ISR and i18n dependencies staged |
-| Phase 5: Integrations and webhooks | ⏭️ | REST API infrastructure exists |
-| Phase 6: Analytics and refinement | ⏭️ | Monitoring tools not yet configured |
-| Phase 7: Production cutover | ⏭️ | Migration scripts ready (db-migrate, db-seed) |
+| サービス | ステータス | 備考 |
+|---------|-----------|------|
+| Vercel Pro ($20/月) | ❌ **未実装** | **理由**: 本番デプロイはフェーズ7で実施します。ローカル開発は `next dev` を使用します。 |
+| Supabase Pro ($25/月) | ❌ **未実装** | **理由**: 本番データベースです。現在は DATABASE_URL 経由でローカル PostgreSQL を使用しています。 |
+| カスタムドメイン (~$12/年) | ❌ **未実装** | **理由**: ドメイン設定はデプロイ時に行います。 |
 
-## 15. Next.js 2025 Architecture Trends (Additional Check)
+### ローカル開発サービス
 
-| Best Practice | Status | Notes |
-|---------------|--------|-------|
-| **App Router over Pages Router** | ✅ | Using App Router exclusively |
-| **React 19 Server Components** | ✅ | React 19.0.0 installed, Server Components default |
-| **Server Actions for mutations** | ⏭️ | Not implemented yet (infrastructure ready) |
-| **Partial Prerendering (PPR)** | ⏭️ | **Reason**: Still experimental in Next.js 15. Will enable when stable. |
-| **Turbopack for dev** | ✅ | Configured via `--turbopack` flag |
-| **React Compiler (Forget)** | ⏭️ | **Reason**: React 19 Compiler still experimental. Will evaluate when stable in React 19.1+. |
-| **Streaming RSC with Suspense** | ⏭️ | **Reason**: No async components with Suspense boundaries yet. Will implement with dashboard data fetching. |
-| **Incremental adoption of `use client`** | ✅ | Architecture designed for Server Components first |
-| **Colocation of components** | 🚧 | Structure supports it but no components built yet |
-| **Type-safe env vars (@t3-oss/env-nextjs)** | ✅ | lib/env.ts uses @t3-oss/env-nextjs@0.13.8 |
-| **Database prepared statements** | ✅ | Drizzle ORM uses prepared statements by default |
-| **Edge-compatible ORM** | ✅ | Drizzle supports Edge Runtime (Prisma would need Accelerator) |
-| **Parallel route rendering** | ⏭️ | **Reason**: No @slot syntax used yet. Will add for dashboard with parallel analytics panels. |
-| **Route intercepting modals** | ⏭️ | **Reason**: No modal patterns implemented yet. |
-| **Route groups for layout sharing** | 🚧 | (auth) and (dashboard) groups planned but not created |
-| **Metadata API for SEO** | ⏭️ | **Reason**: generateMetadata exports not implemented yet. Phase 4 public pages. |
-| **Image optimization with next/image** | ⏭️ | **Reason**: No images in app yet. |
-| **Font optimization with next/font** | ⏭️ | **Reason**: No custom fonts loaded yet. Can add Geist or Inter. |
+| サービス | ステータス | 備考 |
+|---------|-----------|------|
+| Docker Compose セットアップ | ❌ **未実装** | **理由**: まだ作成されていません。開発者はローカルで PostgreSQL を実行するか Supabase を使用することを想定しています。Docker Compose には PostgreSQL、Redis、Mailhog、pgAdmin が含まれます。 |
+| PostgreSQL（ローカル/Docker） | 🚧 **部分実装済み** | DATABASE_URL で設定済みですが docker-compose.yml はありません |
+| Mailhog（メールテスト） | ❌ **未実装** | **理由**: メールテストインフラは未設定です。トランザクションメール実装時に追加します。 |
 
-## 16. Security Best Practices
+---
 
-| Practice | Status | Notes |
-|----------|--------|-------|
-| **Row-Level Security (RLS)** | ⏭️ | **Reason**: Schema supports multi-tenancy but SQL RLS policies not written. Critical for production. |
-| **CSRF protection** | ✅ | BetterAuth includes CSRF tokens |
-| **Rate limiting** | ⏭️ | **Reason**: Not implemented. Should add Vercel Edge Config or Upstash Redis rate limiter before production. |
-| **SQL injection prevention** | ✅ | Drizzle ORM parameterizes queries automatically |
-| **XSS prevention** | ✅ | React escapes by default, Server Components reduce client JS |
-| **Secure environment variables** | ✅ | Server-side env vars not exposed to client (validated in lib/env.ts) |
-| **HTTPS enforcement** | ⏭️ | **Reason**: Handled by Vercel in production. Local dev uses HTTP. |
-| **Content Security Policy (CSP)** | ⏭️ | **Reason**: Should add CSP headers in middleware.ts for production. |
+## 11. コーディング基準 & パターン
 
-## Summary Statistics
+| 基準 | ステータス | 備考 |
+|------|-----------|------|
+| Strict TypeScript モード | ✅ **実装済み** | tsconfig.json で strict: true |
+| Zod によるランタイムバリデーション | ✅ **実装済み** | env.ts と tRPC ルーターで使用中 |
+| `any` 禁止（`@ts-expect-error` なしで） | ✅ **実装済み** | strict モードと Biome で強制 |
+| エンドツーエンドの型安全性 | ✅ **実装済み** | tRPC が DB → API → Client の型安全性を提供 |
+| デフォルトで Server Components | ✅ **実装済み** | Next.js 15 がデフォルトで Server Components |
+| ミューテーション用 Server Actions | ❌ **未実装** | **理由**: フォームミューテーションはまだ実装されていません。実際の機能と共に追加します。 |
+| 公開ページ用 ISR | ❌ **未実装** | **理由**: 公開ページはまだ実装されていません（フェーズ4）。 |
+| PPR（Partial Prerendering） | ❌ **未実装** | **理由**: Next.js 15 の実験的機能です。安定化したら next.config.ts で有効化します。 |
 
-**Total Requirements Analyzed**: 150+
+---
 
-**Status Breakdown**:
-- ✅ **Fully Implemented**: 48 items (32%)
-- 🚧 **Partially Implemented**: 15 items (10%)
-- ⏭️ **Not Implemented**: 87 items (58%)
+## 12. テスト要件
 
-**Not Implemented Reasons**:
-1. **Feature Dependencies** (40%): Components/features tied to upcoming phases (UI components, email templates, dashboards)
-2. **Production-Only Services** (25%): Vercel Analytics, Sentry, Supabase Pro, domain setup
-3. **Phase 2+ Features** (20%): AI implementations, social auth, full-text search, i18n
-4. **Experimental/Optional** (10%): React Compiler, PPR, Highlight.io, Percy
-5. **Infrastructure Setup** (5%): Docker Compose, Mailhog, RLS policies
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| ユーティリティのユニットテスト（Vitest） | 🚧 **部分実装済み** | test/unit/example.test.ts にサンプルテストが存在しますが、実際のユーティリティテストはありません |
+| API ルートの統合テスト | ❌ **未実装** | **理由**: ヘルスチェック以外の API ルートがありません。実際の機能実装時に追加します。 |
+| 重要フローの E2E テスト（Playwright） | 🚧 **部分実装済み** | test/e2e/example.spec.ts にサンプルテストが存在しますが、実際のユーザーフローはありません |
+| 最低カバレッジ目標 | ✅ **実装済み** | vitest.config.ts で 70% 閾値設定済み |
 
-**Critical Gaps Requiring Attention**:
-1. ❗ **Row-Level Security**: Multi-tenant RLS policies must be implemented before production
-2. ❗ **Rate Limiting**: API protection needed before public launch
-3. ❗ **CSP Headers**: Content Security Policy for production security
-4. ❗ **OpenAPI Annotations**: Spec-driven development requires tRPC router documentation
-5. ❗ **React Email Templates**: At least password reset and invitation emails needed for Phase 2
+---
 
-**Recommended Next Steps**:
-1. Implement shadcn/ui components for auth pages (login, signup, password reset)
-2. Create /emails folder with basic React Email templates
-3. Add Row-Level Security policies to Drizzle migrations
-4. Complete OpenAPI annotations for existing tRPC routers
-5. Create docker-compose.yml for local PostgreSQL + Mailhog
-6. Implement Server Actions for form submissions
-7. Add social auth providers (Google, GitHub) configuration
+## 13. Git ワークフロー
+
+| 要件 | ステータス | 備考 |
+|------|-----------|------|
+| Conventional Commits 強制 | ✅ **実装済み** | package.json で commitlint 設定済み |
+| Pre-commit チェック（lint、format、typecheck） | ✅ **実装済み** | lefthook.yml が biome check と tsc --noEmit を実行 |
+| Pre-commit テスト | ❌ **未実装** | **理由**: lefthook.yml で有効化されていません。フルテストスイートの pre-commit 実行は10-30秒の遅延を追加します。CI で実行する方が良いです。 |
+| lefthook による並列実行 | ✅ **実装済み** | lefthook は Go ベースで並列実行をサポート |
+
+---
+
+## 14. 移行戦略の整合性
+
+| フェーズ | ステータス | 備考 |
+|---------|-----------|------|
+| フェーズ1: 基盤セットアップ | ✅ **実装済み** | **現在のフェーズ** - コアアーキテクチャ、認証、データベース、テストインフラ完了 |
+| フェーズ2: コア機能（認証、チーム、診断） | 🚧 **部分実装済み** | 認証基盤は準備完了、チーム/組織機能と UI は実装が必要 |
+| フェーズ3: AI 機能（評価、リード分析） | ❌ **未実装** | 依存関係インストール済み（Anthropic SDK、AI SDK）だが実装はなし |
+| フェーズ4: 公開ページと SEO | ❌ **未実装** | ISR と i18n 依存関係は準備済み |
+| フェーズ5: 統合とウェブフック | ❌ **未実装** | REST API インフラは存在 |
+| フェーズ6: アナリティクスと改善 | ❌ **未実装** | モニタリングツールはまだ設定されていません |
+| フェーズ7: 本番カットオーバー | ❌ **未実装** | マイグレーションスクリプト準備済み（db-migrate、db-seed） |
+
+---
+
+## 15. Next.js 2025 アーキテクチャトレンド（追加チェック）
+
+| ベストプラクティス | ステータス | 備考 |
+|-----------------|-----------|------|
+| **App Router（Pages Router より優先）** | ✅ **実装済み** | App Router を専用で使用 |
+| **React 19 Server Components** | ✅ **実装済み** | React 19.0.0 インストール済み、Server Components がデフォルト |
+| **ミューテーション用 Server Actions** | ❌ **未実装** | 実装されていません（インフラは準備完了） |
+| **Partial Prerendering（PPR）** | ❌ **未実装** | **理由**: Next.js 15 でまだ実験的です。安定化したら有効化します。 |
+| **開発用 Turbopack** | ✅ **実装済み** | `--turbopack` フラグで設定済み |
+| **React Compiler（Forget）** | ❌ **未実装** | **理由**: React 19 Compiler はまだ実験的です。React 19.1+ で安定化したら評価します。 |
+| **Suspense によるストリーミング RSC** | ❌ **未実装** | **理由**: Suspense バウンダリを持つ非同期コンポーネントはまだありません。ダッシュボードデータフェッチで実装します。 |
+| **`use client` の段階的採用** | ✅ **実装済み** | Server Components を優先するアーキテクチャ設計 |
+| **コンポーネントのコロケーション** | 🚧 **部分実装済み** | 構造はサポートしていますが、コンポーネントはまだ構築されていません |
+| **型安全な環境変数（@t3-oss/env-nextjs）** | ✅ **実装済み** | lib/env.ts で @t3-oss/env-nextjs@0.13.8 使用中 |
+| **データベースプリペアドステートメント** | ✅ **実装済み** | Drizzle ORM がデフォルトでプリペアドステートメントを使用 |
+| **Edge 対応 ORM** | ✅ **実装済み** | Drizzle は Edge Runtime をサポート（Prisma は Accelerator が必要） |
+| **並列ルートレンダリング** | ❌ **未実装** | **理由**: @slot 構文はまだ使用されていません。並列アナリティクスパネル付きダッシュボードで追加します。 |
+| **ルートインターセプティングモーダル** | ❌ **未実装** | **理由**: モーダルパターンはまだ実装されていません。 |
+| **レイアウト共有用ルートグループ** | 🚧 **部分実装済み** | (auth) と (dashboard) グループは計画されていますが未作成 |
+| **SEO 用 Metadata API** | ❌ **未実装** | **理由**: generateMetadata エクスポートはまだ実装されていません。フェーズ4公開ページ。 |
+| **next/image による画像最適化** | ❌ **未実装** | **理由**: アプリにまだ画像がありません。 |
+| **next/font によるフォント最適化** | ❌ **未実装** | **理由**: カスタムフォントはまだロードされていません。Geist または Inter を追加可能です。 |
+
+---
+
+## 16. セキュリティベストプラクティス
+
+| プラクティス | ステータス | 備考 |
+|------------|-----------|------|
+| **Row-Level Security（RLS）** | ❌ **未実装** | **理由**: スキーマはマルチテナンシーをサポートしていますが、SQL RLS ポリシーは記述されていません。本番環境では重要です。 |
+| **CSRF 保護** | ✅ **実装済み** | BetterAuth が CSRF トークンを含む |
+| **レート制限** | ❌ **未実装** | **理由**: 実装されていません。本番環境前に Vercel Edge Config または Upstash Redis レートリミッターを追加すべきです。 |
+| **SQL インジェクション防止** | ✅ **実装済み** | Drizzle ORM が自動的にクエリをパラメータ化 |
+| **XSS 防止** | ✅ **実装済み** | React がデフォルトでエスケープ、Server Components がクライアント JS を削減 |
+| **安全な環境変数** | ✅ **実装済み** | サーバー側環境変数はクライアントに公開されません（lib/env.ts で検証） |
+| **HTTPS 強制** | ❌ **未実装** | **理由**: 本番環境では Vercel が処理します。ローカル開発は HTTP を使用します。 |
+| **Content Security Policy（CSP）** | ❌ **未実装** | **理由**: 本番環境用に middleware.ts に CSP ヘッダーを追加すべきです。 |
+
+---
+
+## 📊 統計サマリー
+
+### 全体統計
+
+**分析した要件総数**: 150+
+
+**ステータス内訳**:
+- ✅ **完全実装済み**: 48項目（32%）
+- 🚧 **部分実装済み**: 15項目（10%）
+- ❌ **未実装**: 87項目（58%）
+
+### 未実装の理由別内訳
+
+1. **機能依存（40%）**: 今後のフェーズに結びついたコンポーネント/機能（UI コンポーネント、メールテンプレート、ダッシュボード）
+2. **本番専用サービス（25%）**: Vercel Analytics、Sentry、Supabase Pro、ドメイン設定
+3. **フェーズ2以降の機能（20%）**: AI実装、ソーシャル認証、全文検索、国際化
+4. **実験的/オプション（10%）**: React Compiler、PPR、Highlight.io、Percy
+5. **インフラ設定（5%）**: Docker Compose、Mailhog、RLS ポリシー
+
+---
+
+## ❗ 本番前に対応必須の重要ギャップ
+
+1. **Row-Level Security（RLS）** - マルチテナント RLS ポリシーは本番環境前に実装必須
+2. **レート制限** - 公開ローンチ前に API 保護が必要
+3. **CSP ヘッダー** - 本番セキュリティのための Content Security Policy
+4. **OpenAPI アノテーション** - 仕様駆動開発には tRPC ルータードキュメントが必要
+5. **React Email テンプレート** - 少なくともパスワードリセットと招待メールがフェーズ2で必要
+
+---
+
+## 🚀 推奨される次のステップ
+
+### 即時対応（フェーズ1完了）
+1. Drizzle マイグレーションに Row-Level Security ポリシーを実装
+2. ローカル PostgreSQL + Mailhog 用の docker-compose.yml を作成
+3. 既存の tRPC ルーターに OpenAPI アノテーションを追加
+
+### フェーズ2（コア機能）
+4. 認証ページ（login、signup、password reset）用の shadcn/ui コンポーネントをインストール
+5. 基本的な React Email テンプレートで /emails フォルダを作成
+6. フォーム送信用の Server Actions を実装
+7. ソーシャル認証プロバイダー（Google、GitHub）を設定
+
+### 本番前（フェーズ6-7）
+8. レート制限ミドルウェアを追加
+9. Sentry エラートラッキングを設定
+10. CSP ヘッダーを実装
+11. Vercel + Supabase 本番環境をセットアップ
+
+---
+
+## ✅ 結論
+
+**フェーズ1の基盤アーキテクチャは堅固に構築されています**。コアフレームワーク、認証、データベース、テストインフラはすべて適切に実装されており、アーキテクチャドキュメントの要件を満たしています。
+
+**未実装項目の大部分は**:
+- 今後のフェーズで実装予定の機能
+- 本番デプロイ時に設定されるサービス
+- 実験的またはオプションの機能
+
+**現時点では問題ありません**が、フェーズ2に進む前に、上記の「本番前に対応必須の重要ギャップ」に対処することを強く推奨します。
