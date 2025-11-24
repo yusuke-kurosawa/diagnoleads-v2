@@ -281,22 +281,41 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🚀 Phase 2: コア機能実装 🚧 25%完了
+## 🚀 Phase 2: コア機能実装 🚧 70%完了
 
 > **目標**: マルチテナントSaaSのMVP機能実装
 > **期間**: Day 1-12 (12営業日)
-> **完了率**: 48% → 68%
+> **完了タスク**: 7/10
+> **完了率**: 70% (28/40項目)
 
-### 優先順位マトリクス
+### タスク概要
 
-| Priority | 機能 | 工数 | 依存関係 | ステータス |
-|---------|------|------|---------|-----------|
-| **P0** | 組織スコープミドルウェア | 4h | なし | ✅ **完了** |
-| **P0** | リード管理CRUD | 8h | P0完了 | ✅ **完了** |
-| **P1** | ダッシュボード統計 | 6h | リードCRUD | 🔄 次 |
-| **P1** | 組織管理・招待 | 10h | P0完了 | ⏸️ 待機 |
-| **P2** | TanStack Table統合 | 6h | リードCRUD | ⏸️ 待機 |
-| **P2** | AIスコアリング基盤 | 12h | リードCRUD | ⏸️ 待機 |
+| Task | 機能 | 工数 | 依存関係 | ステータス |
+|------|------|------|---------|-----------|
+| **Task 1** | organizationProcedure ミドルウェア | 4h | なし | ✅ **完了** |
+| **Task 2** | リード管理tRPCルーター | 8h | Task 1 | ✅ **完了** |
+| **Task 3** | 組織コンテキスト実装 | 2h | Task 1 | ✅ **完了** |
+| **Task 4** | ダッシュボード統計API | 6h | Task 2 | ✅ **完了** |
+| **Task 5** | リード一覧ページUI | 6h | Task 2,3 | ✅ **完了** |
+| **Task 6** | ダッシュボードUI (Tremor) | 6h | Task 4 | ✅ **完了** |
+| **Task 7** | 組織管理機能強化 | 3h | Task 1 | ✅ **完了** |
+| **Task 8** | メンバー招待機能 | 4h | Task 1 | 🚧 **進行中** |
+| **Task 9** | E2Eテスト実装 | 4h | Task 2,5 | ⏸️ 待機中 |
+| **Task 10** | パフォーマンス最適化 | 4h | Task 9 | ⏸️ 待機中 |
+
+### 完了済み機能 (70%)
+- ✅ 組織スコープ自動適用ミドルウェア
+- ✅ リードCRUD完全実装（API + UI）
+- ✅ 組織管理・切り替え機能
+- ✅ ダッシュボード統計API + UI
+- ✅ TanStack Table統合
+- ✅ Tremorチャート統合
+- ✅ 組織設定ページ
+
+### 残タスク (30%)
+- 🚧 メンバー招待機能（進行中）
+- ⏸️ E2Eテスト実装
+- ⏸️ パフォーマンス最適化
 
 ### ✅ Task 1: organizationProcedure 完了 (Day 1)
 
@@ -642,21 +661,175 @@ leads                 -- リード（organization_id でスコープ）
 - ✅ @tanstack/react-table導入
 
 **Git コミット**:
-- 未コミット（次のコミットで追加予定）
+- `5d70b82` - リード一覧ページUI実装 (Task 5)
 
 ---
 
-### ⏸️ Task 6-10: 残りの実装タスク
+### ✅ Task 6: ダッシュボードUI実装 完了 (Day 1)
 
-詳細は `openspec/changes/phase2-core/tasks.md` を参照。
+**実装日**: 2025-11-24
+**工数**: 6時間
+**優先度**: P1 (High)
+**依存**: Task 4完了 ✅
 
-| Task | 機能 | 工数 | Day |
-|------|------|------|-----|
-| 6 | ダッシュボードUI (Tremor) | 6h | Day 6 |
-| 7 | 組織管理機能 | 4h | Day 7 |
-| 8 | メンバー招待機能 | 4h | Day 8 |
-| 9 | E2Eテスト | 4h | Day 9-10 |
-| 10 | パフォーマンス最適化 | 4h | Day 11-12 |
+**実装内容**:
+
+1. **components/dashboard/stats-card.tsx** - 統計カード
+   - 数値表示（number/percentage/currency対応）
+   - 変化率バッジ（前月比）
+   - アイコン統合（Lucide React）
+   - ローディング状態対応
+
+2. **components/dashboard/lead-chart.tsx** - Tremorチャート
+   - Tremor AreaChart統合
+   - 日別/月別トレンド表示
+   - date-fns日本語ロケール対応
+   - 空状態ハンドリング
+
+3. **components/dashboard/recent-activity.tsx** - 最新アクティビティ
+   - リード一覧タイムライン
+   - ステータスバッジ
+   - リンク機能
+   - 5件表示制限
+
+4. **hooks/use-analytics.ts** - Analytics Hooks
+   - `useOverview()` - 概要統計
+   - `useLeadTrend()` - リードトレンド
+   - `useSourceBreakdown()` - ソース別内訳
+   - `useStatusBreakdown()` - ステータス別内訳
+   - `useAnalytics()` - 統合フック
+
+5. **app/(dashboard)/page.tsx** - ダッシュボードページ完全実装
+   - 4つの主要メトリックカード
+   - ステータス別内訳（進捗バー）
+   - リードトレンドチャート（Tremor）
+   - 最新アクティビティフィード
+
+6. **UI Components追加**
+   - `components/ui/sheet.tsx` - サイドパネル（Radix UI）
+   - `components/ui/dialog.tsx` - モーダル（Radix UI）
+   - `components/ui/alert-dialog.tsx` - 確認ダイアログ
+   - `components/ui/table.tsx` - テーブル基礎
+
+**成果**:
+- ✅ Tremor 3.18+統合完了
+- ✅ リアルタイム統計表示
+- ✅ インタラクティブなダッシュボード
+- ✅ Radix UIコンポーネント追加
+- ✅ 完全なレスポンシブデザイン
+
+**Git コミット**:
+- `eed19f2` - ダッシュボードUI実装 (Task 6)
+- `d454e36` - 開発環境情報追加
+
+---
+
+### ✅ Task 7: 組織管理機能強化 完了 (Day 1)
+
+**実装日**: 2025-11-24
+**工数**: 3時間
+**優先度**: P2 (Medium)
+**依存**: Task 1完了 ✅
+
+**実装内容**:
+
+1. **tRPCキャッシュ管理** (`components/dashboard/organization-switcher.tsx`)
+   ```typescript
+   const utils = trpc.useContext();
+   await utils.invalidate(); // 組織切り替え時に全キャッシュクリア
+   ```
+
+2. **API強化** (`lib/features/organizations/api/router.ts`)
+   - `getById`にrole情報追加
+   ```typescript
+   return {
+     ...membership.organization,
+     role: membership.role,      // ユーザーのロール
+     membershipId: membership.id, // メンバーシップID
+   };
+   ```
+
+3. **組織設定ページ** (`app/(dashboard)/settings/organization/page.tsx`)
+   - 組織名・スラッグ編集フォーム
+   - Owner専用アクセス制御
+   - スラッグ自動サニタイゼーション
+   - Optimistic updates with toast
+   - フォーム状態管理（変更検知・リセット）
+   - 非Owner向け閲覧モード
+   - 組織ID・作成日時の読み取り専用表示
+
+**成果**:
+- ✅ キャッシュ管理による正確なデータ表示
+- ✅ ロールベースアクセス制御
+- ✅ 完全な組織設定UI
+- ✅ UX向上（toast通知、ローディング状態）
+
+**Git コミット**:
+- `39a8a05` - 技術スタック詳細追加
+- `06aa7ac` - 組織管理機能強化 (Task 7)
+
+---
+
+### 🚧 Task 8: メンバー招待機能 進行中 (Day 1)
+
+**実装日**: 2025-11-24
+**工数**: 4時間（予定）
+**優先度**: P2 (Medium)
+**依存**: Task 1完了 ✅
+
+**実装予定**:
+
+1. **Members Router** (`server/routers/members.ts`)
+   - [ ] `list` - 組織メンバー一覧
+   - [ ] `invite` - メール招待送信
+   - [ ] `updateRole` - ロール変更（admin/owner）
+   - [ ] `remove` - メンバー削除（admin/owner）
+
+2. **メール機能** (Phase 5で本格実装、今回はモック)
+   - [ ] `emails/member-invite.tsx` - React Email テンプレート
+   - [ ] Resend統合準備
+
+3. **招待受諾フロー**
+   - [ ] `app/(auth)/accept-invite/page.tsx` - 招待受諾ページ
+
+4. **メンバー管理UI**
+   - [ ] `app/(dashboard)/settings/members/page.tsx` - メンバー管理ページ
+   - [ ] メンバー一覧表示
+   - [ ] 招待ボタン
+   - [ ] ロール変更UI
+   - [ ] メンバー削除UI
+
+5. **ユニットテスト**
+   - [ ] `test/unit/features/members-router.test.ts`
+
+**進捗**: 0% → 開始
+
+---
+
+### ⏸️ Task 9: E2Eテスト実装 待機中
+
+**工数**: 4時間（予定）
+**優先度**: P2 (Medium)
+**依存**: Task 2, Task 5完了 ✅
+
+**実装予定**:
+- [ ] `test/e2e/lead-management.spec.ts` - リード管理フロー
+- [ ] `test/e2e/dashboard-analytics.spec.ts` - ダッシュボード統計
+- [ ] `test/e2e/organization-switching.spec.ts` - 組織切り替え
+
+---
+
+### ⏸️ Task 10: パフォーマンス最適化 待機中
+
+**工数**: 4時間（予定）
+**優先度**: P2 (Medium)
+**依存**: Task 9完了
+
+**実装予定**:
+- [ ] バンドルサイズ削減（tree shaking）
+- [ ] データベースクエリ最適化
+- [ ] キャッシュ戦略最適化
+- [ ] コンポーネント遅延ロード
 
 ---
 
