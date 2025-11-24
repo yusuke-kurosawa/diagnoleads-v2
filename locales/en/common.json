@@ -117,13 +117,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "description": "Monitor your organization's lead acquisition and performance",
     "overview": "Overview",
     "statistics": "Statistics",
     "recentActivity": "Recent Activity",
     "totalLeads": "Total Leads",
     "newLeadsThisMonth": "New Leads This Month",
     "conversionRate": "Conversion Rate",
-    "averageScore": "Average Score"
+    "averageScore": "Average Score",
+    "leadTrend": "Lead Trend",
+    "leadStatusBreakdown": "Lead Status Breakdown",
+    "count": "",
+    "loading": "Loading..."
   },
   "leads": {
     "title": "Lead Management",

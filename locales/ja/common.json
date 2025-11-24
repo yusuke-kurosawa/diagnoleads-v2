@@ -117,13 +117,18 @@
   },
   "dashboard": {
     "title": "ダッシュボード",
+    "description": "組織のリード獲得状況とパフォーマンスを確認",
     "overview": "概要",
     "statistics": "統計",
     "recentActivity": "最近のアクティビティ",
     "totalLeads": "総リード数",
     "newLeadsThisMonth": "今月の新規リード",
     "conversionRate": "コンバージョン率",
-    "averageScore": "平均スコア"
+    "averageScore": "平均スコア",
+    "leadTrend": "リードトレンド",
+    "leadStatusBreakdown": "リードステータス内訳",
+    "count": "件",
+    "loading": "読み込み中..."
   },
   "leads": {
     "title": "リード管理",

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import { useRequiredOrganizationId } from '@/hooks/use-organization';
 import { useOverview, useLeadTrend } from '@/hooks/use-analytics';
 import { useListLeads } from '@/hooks/use-leads';
@@ -35,6 +36,8 @@ const LeadChart = dynamic(
  * 組織のリード統計とアクティビティを表示
  */
 export default function DashboardPage() {
+  const t = useTranslations('dashboard');
+  const tStatus = useTranslations('status');
   const organizationId = useRequiredOrganizationId();
   const [dateRange] = useState<DateRange>('30d');
 
@@ -66,16 +69,16 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">ダッシュボード</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
         <p className="text-gray-600 mt-1">
-          組織のリード獲得状況とパフォーマンスを確認
+          {t('description')}
         </p>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
-          title="総リード数"
+          title={t('totalLeads')}
           value={overview?.totalLeads || 0}
           change={totalLeadsChange}
           icon={Users}
@@ -85,7 +88,7 @@ export default function DashboardPage() {
         />
 
         <StatsCard
-          title="今月の新規リード"
+          title={t('newLeadsThisMonth')}
           value={overview?.newLeadsThisMonth || 0}
           icon={TrendingUp}
           iconClassName="text-green-600"
@@ -94,7 +97,7 @@ export default function DashboardPage() {
         />
 
         <StatsCard
-          title="コンバージョン率"
+          title={t('conversionRate')}
           value={overview?.conversionRate || 0}
           change={conversionChange}
           format="percentage"
@@ -105,7 +108,7 @@ export default function DashboardPage() {
         />
 
         <StatsCard
-          title="平均スコア"
+          title={t('averageScore')}
           value={overview?.averageScore || 0}
           change={scoreChange}
           format="number"
@@ -121,9 +124,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-blue-900">新規</span>
+              <span className="text-sm font-medium text-blue-900">{tStatus('new')}</span>
               <span className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                {overview.leadsByStatus.new}件
+                {overview.leadsByStatus.new}{t('count')}
               </span>
             </div>
             <div className="h-2 bg-blue-200 rounded-full overflow-hidden">
@@ -142,9 +145,9 @@ export default function DashboardPage() {
 
           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-yellow-900">連絡済</span>
+              <span className="text-sm font-medium text-yellow-900">{tStatus('contacted')}</span>
               <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-                {overview.leadsByStatus.contacted}件
+                {overview.leadsByStatus.contacted}{t('count')}
               </span>
             </div>
             <div className="h-2 bg-yellow-200 rounded-full overflow-hidden">
@@ -163,9 +166,9 @@ export default function DashboardPage() {
 
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-green-900">見込</span>
+              <span className="text-sm font-medium text-green-900">{tStatus('qualified')}</span>
               <span className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
-                {overview.leadsByStatus.qualified}件
+                {overview.leadsByStatus.qualified}{t('count')}
               </span>
             </div>
             <div className="h-2 bg-green-200 rounded-full overflow-hidden">
@@ -184,9 +187,9 @@ export default function DashboardPage() {
 
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-purple-900">成約</span>
+              <span className="text-sm font-medium text-purple-900">{tStatus('converted')}</span>
               <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded">
-                {overview.leadsByStatus.converted}件
+                {overview.leadsByStatus.converted}{t('count')}
               </span>
             </div>
             <div className="h-2 bg-purple-200 rounded-full overflow-hidden">
