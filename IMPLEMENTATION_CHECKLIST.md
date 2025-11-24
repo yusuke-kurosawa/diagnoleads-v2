@@ -835,6 +835,50 @@ mkdir openspec/changes/phase2-core
 📈 完了率: 45% → 65%
 ```
 
+#### ✅ OpenSpec セットアップ完了
+
+**実施日**: 2025-11-24
+
+- [x] openspec/ ディレクトリ構造作成
+  ```bash
+  openspec/
+  ├── specs/
+  │   ├── architecture.md      # 完全なアーキテクチャ仕様
+  │   └── phase2-plan.md       # フェーズ2実装計画
+  └── changes/
+      └── phase2-core/         # フェーズ2変更提案
+          ├── spec-delta.md    # 仕様差分（変更内容）
+          └── tasks.md         # 実装タスクリスト
+  ```
+
+- [x] アーキテクチャ仕様書作成 (`openspec/specs/architecture.md`)
+  - 技術スタック完全リスト
+  - マルチテナントアーキテクチャ詳細
+  - API設計（3層: tRPC, OpenAPI, WebSocket）
+  - セキュリティアーキテクチャ
+  - ディレクトリ構造
+  - テスト戦略
+  - パフォーマンス目標
+
+- [x] Phase 2 変更仕様作成 (`openspec/changes/phase2-core/spec-delta.md`)
+  - 新規ファイル一覧（ルーター、フック、コンポーネント）
+  - 変更ファイル詳細（organizationProcedure実装、Context型拡張）
+  - アーキテクチャ変更（セキュリティレイヤー、型安全性）
+  - データベース最適化（インデックス追加）
+  - テスト要件、リスク対策、成功基準
+
+- [x] 実装タスクリスト作成 (`openspec/changes/phase2-core/tasks.md`)
+  - Priority 0: 組織スコープミドルウェア、リード管理API、useOrganization
+  - Priority 1: 統計API、リード一覧UI、ダッシュボードUI
+  - Priority 2: 組織管理、メンバー招待、E2Eテスト、最適化
+  - 各タスク: 工数見積、完了基準、依存関係、コード例
+
+**現在の状態**: フェーズ2実装開始準備完了 🚀
+
+**次のステップ**: Task 1 - organizationProcedure 実装（4時間、P0）
+
+---
+
 ### オプションB: フェーズ2即座開始（OpenSpecなし）
 
 ```bash
