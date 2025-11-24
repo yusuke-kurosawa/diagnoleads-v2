@@ -13,7 +13,11 @@
 > - 🧪 **品質保証** - ユニットテスト70%以上、E2Eテスト完備、型安全性の徹底
 > - 🌐 **エンタープライズグレード** - 標準的なマルチテナントSaaSを超える差別化
 >
-> 👉 **詳細**: [マルチテナント戦略](./docs/MULTI_TENANT_STRATEGY.md) | [プロジェクトコンテキスト](./.claude/project-context.md)
+> **開発環境**
+> - 📦 **パッケージマネージャ**: Bun
+> - 🔧 **バージョン管理**: mise
+>
+> 👉 **詳細**: [マルチテナント戦略](./docs/MULTI_TENANT_STRATEGY.md) | [プロジェクトコンテキスト](./.claude/project-context.md) | [技術スタック](https://github.com/yusuke-kurosawa/DiagnoLeads/blob/main/docs/DIAGNOLEADS_V2_TECH_STACK_SUMMARY.md)
 
 ---
 
