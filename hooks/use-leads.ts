@@ -1,4 +1,5 @@
 import { trpc } from '@/lib/trpc/client';
+import { toast } from 'sonner';
 import type {
   CreateLeadInput,
   UpdateLeadInput,
@@ -8,15 +9,22 @@ import type {
 } from '@/lib/features/leads/types';
 
 /**
- * Hook to create a new lead
+ * Hook to create a new lead with optimistic updates
  */
 export function useCreateLead() {
   const utils = trpc.useContext();
 
   return trpc.leads.create.useMutation({
+    onMutate: async () => {
+      toast.loading('リードを作成中...', { id: 'create-lead' });
+    },
     onSuccess: () => {
       // Invalidate leads list to refresh data
       utils.leads.list.invalidate();
+      toast.success('リードを作成しました', { id: 'create-lead' });
+    },
+    onError: (error) => {
+      toast.error(`エラー: ${error.message}`, { id: 'create-lead' });
     },
   });
 }
@@ -36,12 +44,15 @@ export function useListLeads(input: ListLeadsInput) {
 }
 
 /**
- * Hook to update a lead
+ * Hook to update a lead with optimistic updates
  */
 export function useUpdateLead() {
   const utils = trpc.useContext();
 
   return trpc.leads.update.useMutation({
+    onMutate: async () => {
+      toast.loading('リードを更新中...', { id: 'update-lead' });
+    },
     onSuccess: (_, variables) => {
       // Invalidate the specific lead and the list
       utils.leads.get.invalidate({
@@ -49,20 +60,31 @@ export function useUpdateLead() {
         organizationId: variables.organizationId
       });
       utils.leads.list.invalidate();
+      toast.success('リードを更新しました', { id: 'update-lead' });
+    },
+    onError: (error) => {
+      toast.error(`エラー: ${error.message}`, { id: 'update-lead' });
     },
   });
 }
 
 /**
- * Hook to delete a lead
+ * Hook to delete a lead with optimistic updates
  */
 export function useDeleteLead() {
   const utils = trpc.useContext();
 
   return trpc.leads.delete.useMutation({
+    onMutate: async () => {
+      toast.loading('リードを削除中...', { id: 'delete-lead' });
+    },
     onSuccess: () => {
       // Invalidate leads list to refresh data
       utils.leads.list.invalidate();
+      toast.success('リードを削除しました', { id: 'delete-lead' });
+    },
+    onError: (error) => {
+      toast.error(`エラー: ${error.message}`, { id: 'delete-lead' });
     },
   });
 }

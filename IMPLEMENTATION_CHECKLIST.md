@@ -19,12 +19,12 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 55% 完了 🚀
+### 全体進捗: 58% 完了 🚀
 
 | フェーズ | ステータス | 完了項目 | 進捗率 |
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
-| **Phase 2**: コア機能実装 | 🚧 **進行中** | 14/40 | 35% |
+| **Phase 2**: コア機能実装 | 🚧 **進行中** | 20/40 | 50% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -65,7 +65,14 @@
 - Type-safe Zod schemas
 - 13/13ユニットテスト成功
 
-**🚀 次のタスク**: Task 5 - リード一覧ページUI実装（P1、6時間）
+**✅ Task 5完了: リード一覧ページUI実装**
+- TanStack Table統合（ソート・フィルタ・ページネーション）
+- LeadTable, LeadDetails, LeadDialog コンポーネント
+- Optimistic updates（toast通知付き）
+- 完全なCRUD機能（作成・読取・更新・削除）
+- リード詳細Sheet、編集/削除アクション
+
+**🚀 次のタスク**: Task 6 - ダッシュボードUI実装（P1、6時間）
 
 ---
 
@@ -540,17 +547,80 @@ leads                 -- リード（organization_id でスコープ）
 - ✅ Feature-based organizationパターン継続
 
 **Git コミット**:
+- `9627032` - feat(analytics): implement dashboard statistics API (Task 4)
+
+---
+
+### ✅ Task 5: リード一覧ページUI実装 完了 (Day 1)
+
+**実装日**: 2025-11-24
+**工数**: 6時間
+**優先度**: P1 (High)
+**依存**: Task 2, Task 3完了 ✅
+
+**実装内容**:
+
+1. **TanStack Table統合** - 高度なテーブル機能
+   - ソート機能（名前、メール、ステータス、スコア、作成日）
+   - グローバルフィルタリング（検索）
+   - ステータスフィルター
+   - ページネーション（10件/ページ）
+   - レスポンシブデザイン
+
+2. **LeadTable コンポーネント** (`components/features/leads/lead-table.tsx`)
+   - 400+ lines の実装
+   - 8列のデータ表示
+   - クリックで詳細表示
+   - ローディング状態対応
+   - 空状態メッセージ
+
+3. **LeadDetails コンポーネント** (`components/features/leads/lead-details.tsx`)
+   - 連絡先情報表示
+   - リードスコアの視覚化
+   - ソース情報
+   - 診断結果（responses）
+   - タイムスタンプ
+   - 編集/削除アクション
+   - 削除確認ダイアログ
+
+4. **LeadDialog コンポーネント** (`components/features/leads/lead-dialog.tsx`)
+   - 作成/編集モード対応
+   - LeadForm統合
+   - ダイアログUI
+
+5. **Optimistic Updates** - UX向上
+   - `hooks/use-leads.ts`拡張
+   - Toast通知（sonner）
+   - 作成・更新・削除すべてに対応
+   - エラーハンドリング
+
+6. **リード一覧ページ** (`app/(dashboard)/leads/page.tsx`)
+   - 完全統合実装
+   - Create/Read/Update/Delete機能
+   - Sheet による詳細表示
+   - Dialog による作成/編集
+   - 状態管理
+
+**成果**:
+- ✅ TanStack Table完全統合（ソート・フィルタ・ページネーション）
+- ✅ 完全なCRUD機能
+- ✅ Optimistic updates実装
+- ✅ リッチなUI/UX（toast通知、ローディング状態）
+- ✅ レスポンシブデザイン
+- ✅ 詳細表示・編集・削除機能
+- ✅ @tanstack/react-table導入
+
+**Git コミット**:
 - 未コミット（次のコミットで追加予定）
 
 ---
 
-### ⏸️ Task 5-10: 残りの実装タスク
+### ⏸️ Task 6-10: 残りの実装タスク
 
 詳細は `openspec/changes/phase2-core/tasks.md` を参照。
 
 | Task | 機能 | 工数 | Day |
 |------|------|------|-----|
-| 5 | リード一覧UI (TanStack Table) | 6h | Day 5 |
 | 6 | ダッシュボードUI (Tremor) | 6h | Day 6 |
 | 7 | 組織管理機能 | 4h | Day 7 |
 | 8 | メンバー招待機能 | 4h | Day 8 |
