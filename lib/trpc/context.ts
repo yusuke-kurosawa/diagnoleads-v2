@@ -1,8 +1,8 @@
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import { auth } from '@/lib/auth/config';
 import { db } from '@/lib/db/client';
-import type { Organization, OrganizationMember, User, Session } from '@/lib/db/schema';
-import type { AppAbility } from '@/lib/auth/permissions';
+import type { User, Session } from '@/lib/db/schema';
+import type { OrganizationContext } from '@/lib/multi-tenant/types';
 
 /**
  * Create tRPC context
@@ -32,13 +32,9 @@ export type ProtectedContext = Context & {
 };
 
 /**
- * Organization context - available after organizationProcedure middleware
+ * Re-export OrganizationContext from multi-tenant module
  */
-export type OrganizationContext = {
-  organization: Organization;
-  membership: OrganizationMember;
-  ability: AppAbility;
-};
+export type { OrganizationContext } from '@/lib/multi-tenant/types';
 
 /**
  * Organization-protected context - combines both protectedProcedure and organizationProcedure
