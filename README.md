@@ -1,6 +1,27 @@
 # DiagnoLeads v2
 
-AI-Powered B2B Diagnostic Platform built with Next.js 15.
+AI-Powered B2B Diagnostic Platform for **Holdings, Group Companies & Enterprise Organizations**
+
+> 🏢 **Our Core Competence**: Not just another multi-tenant SaaS.
+> DiagnoLeads v2 is designed from the ground up to support **holding companies**, **corporate groups**, and **M&A scenarios** with hierarchical organization structures and cross-organizational insights.
+
+## 🎯 What Makes Us Different
+
+| Standard Multi-Tenant SaaS | DiagnoLeads v2 |
+|---------------------------|----------------|
+| ✅ Organization-level data isolation | ✅ Organization-level data isolation |
+| ❌ Flat organization structure only | ✅ **Hierarchical organizations** (parent-subsidiary) |
+| ❌ No cross-org collaboration | ✅ **Group-wide reporting & analytics** |
+| ❌ Manual handling of M&A | ✅ **Built-in M&A support** with data migration |
+| ❌ Single-org reports only | ✅ **Consolidated group dashboards** |
+
+**Perfect for**:
+- 🏢 Holding companies managing multiple subsidiaries
+- 🌐 Corporate groups with complex structures
+- 📈 Companies executing M&A strategies
+- 🏗️ Enterprises with divisional/company systems
+
+👉 **[Read our Multi-Tenant Strategy](./docs/MULTI_TENANT_STRATEGY.md)** for detailed architecture
 
 ## Quick Start
 
@@ -74,15 +95,36 @@ diagnoleads-v2/
 ├── components/            # React components
 │   ├── ui/               # UI components (shadcn/ui)
 │   └── features/         # Feature components
+│       └── leads/        # Lead management components
+├── hooks/                 # 🆕 React hooks
+│   ├── use-leads.ts      # Lead data hooks
+│   └── use-organization.ts # Organization context
 ├── lib/                   # Utilities & configs
 │   ├── db/               # Database schema & client
+│   ├── multi-tenant/     # 🆕 Multi-tenant logic
+│   │   ├── middleware/   # Organization middleware
+│   │   ├── helpers/      # Membership helpers
+│   │   └── types.ts      # Multi-tenant types
+│   ├── features/         # 🆕 Feature-based modules
+│   │   └── leads/        # Lead management
+│   │       ├── api/      # tRPC router
+│   │       └── types/    # Schemas & types
+│   ├── trpc/             # tRPC configuration
 │   ├── validation/       # Zod schemas
 │   ├── types/            # TypeScript types
 │   └── utils/            # Helper functions
 ├── server/                # tRPC server
 │   └── routers/          # API routers
+├── docs/                  # 📚 Documentation
+│   ├── MULTI_TENANT_STRATEGY.md  # 🆕 Holdings/Group strategy
+│   └── DIRECTORY_IMPROVEMENT_PLAN.md
+├── openspec/              # 📋 OpenSpec-driven development
+│   ├── specs/            # Architecture specs (Source of Truth)
+│   └── changes/          # Change proposals
 ├── test/                  # Tests
 │   ├── unit/             # Unit tests
+│   │   ├── trpc/         # tRPC middleware tests
+│   │   └── features/     # Feature tests
 │   ├── integration/      # Integration tests
 │   └── e2e/              # E2E tests
 └── public/                # Static assets

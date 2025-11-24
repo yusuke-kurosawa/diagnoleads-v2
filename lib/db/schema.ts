@@ -4,6 +4,19 @@ import { relations } from 'drizzle-orm';
 /**
  * Organizations (Tenants)
  * Core multi-tenant table - all data is scoped to an organization
+ *
+ * 🏢 CORE COMPETENCE: Hierarchical Organization Support
+ * This table is designed to support holding companies, group companies, and M&A scenarios.
+ *
+ * Current: Flat organization structure
+ * Future (Phase 2.5): Hierarchical structure with:
+ *   - parent_organization_id: uuid | null (parent company)
+ *   - organization_type: 'holding' | 'subsidiary' | 'independent'
+ *   - hierarchy_path: text (ltree: '1.2.3' for efficient queries)
+ *   - group_id: uuid (top-level organization ID)
+ *   - data_sharing_policy: jsonb (cross-org access control)
+ *
+ * See: docs/MULTI_TENANT_STRATEGY.md for detailed architecture
  */
 export const organizations = pgTable('organizations', {
   id: uuid('id').defaultRandom().primaryKey(),
