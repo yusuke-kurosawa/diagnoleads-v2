@@ -29,7 +29,7 @@
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
 | **Phase 2**: コア機能実装 | ✅ **完了** | 40/40 | 100% |
-| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 24/50 | 48% |
+| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 32/50 | 64% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -1091,12 +1091,12 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 48%完了
+## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 64%完了
 
 > **目標**: マルチテナントSaaSの多言語対応基盤構築
 > **期間**: Day 13-22 (10営業日)
-> **完了タスク**: 2/5
-> **完了率**: 48% (24/50時間)
+> **完了タスク**: 2.5/5 (Task 3 進行中 50%完了)
+> **完了率**: 64% (32/50時間)
 > **優先度**: ⭐ 推奨（Phase 3前の実装を強く推奨）
 
 ### なぜ Phase 2.5 が重要か？
@@ -1132,7 +1132,7 @@ leads                 -- リード（organization_id でスコープ）
 | **Task 5** | テスト・ドキュメント | 4h | Task 4 | ⏸️ 待機中 |
 
 **総工数**: 50時間
-**完了**: 24時間 (48%)
+**完了**: 32時間 (64%)
 
 ---
 
@@ -1264,35 +1264,47 @@ leads                 -- リード（organization_id でスコープ）
 **工数**: 16時間
 **優先度**: P0 (Critical)
 **依存**: Task 2完了 ✅
+**進捗**: 8/16時間完了 (50%)
 
-**実装予定**:
+**実装状況**:
 
-1. **リード管理画面**（6h）
-   - テーブルヘッダーの翻訳（名前、メール、会社、ステータス、スコア）
-   - ステータスラベルの翻訳（新規、連絡済、見込、成約、失注）
-   - フォームフィールドの翻訳（プレースホルダー、ラベル）
-   - アクションボタンの翻訳（作成、編集、削除）
-   - Toast通知メッセージの翻訳
+1. **✅ ダッシュボード画面完了**（6h） - コミット: `b3a33e0`
+   - ✅ ページタイトル・説明文の翻訳
+   - ✅ 統計カードの翻訳（総リード数、今月の新規リード、コンバージョン率、平均スコア）
+   - ✅ ステータス内訳カードの翻訳（新規、連絡済、見込、成約）
+   - ✅ 件数サフィックスの多言語対応（日本語: "件"、英語: ""）
+   - ✅ useTranslations('dashboard')とuseTranslations('status')の統合
 
-2. **ダッシュボード画面**（6h）
-   - 統計カードの翻訳（総リード数、今月の新規リード、コンバージョン率）
-   - グラフラベルの翻訳（リードトレンド、ソース内訳、ステータス内訳）
-   - 最近のアクティビティの翻訳
-   - 日付フォーマットの多言語対応
+2. **🚧 リード管理画面（部分完了）**（2/6h完了） - コミット: `f17c57e`
+   - ✅ ページヘッダーの翻訳（タイトル、説明、作成ボタン）
+   - ✅ リード詳細シートの翻訳（タイトル、説明）
+   - ⏸️ LeadTableコンポーネント（テーブルヘッダー、ステータスラベル）
+   - ⏸️ LeadDialogコンポーネント（フォームフィールド、プレースホルダー）
+   - ⏸️ LeadDetailsコンポーネント（フィールドラベル、アクションボタン）
 
-3. **設定画面**（4h）
+3. **⏸️ 設定画面**（0/4h、残り4h）
    - 組織設定フォームラベルの翻訳
    - メンバー管理UIの翻訳（招待、ロール、削除）
    - バリデーションメッセージの翻訳
    - 成功/エラーメッセージの翻訳
 
-**成果物**:
-- `app/[locale]/(dashboard)/leads/page.tsx` (i18n対応)
-- `app/[locale]/(dashboard)/page.tsx` (i18n対応)
-- `app/[locale]/(dashboard)/settings/page.tsx` (i18n対応)
-- `app/[locale]/(dashboard)/settings/organization/page.tsx` (i18n対応)
-- `app/[locale]/(dashboard)/settings/members/page.tsx` (i18n対応)
-- 更新された`locales/ja/common.json`, `locales/en/common.json`
+4. **⏸️ サブコンポーネント**（残り4h）
+   - LeadTable: テーブルヘッダー、ソート、フィルター
+   - LeadDialog: フォームラベル、バリデーション、送信ボタン
+   - LeadDetails: フィールドラベル、編集・削除ボタン
+
+**完了コミット**:
+- `f17c57e`: feat(i18n): Phase 2.5 Task 3 - Leads page i18n integration (partial)
+- `b3a33e0`: feat(i18n): Phase 2.5 Task 3 - Dashboard page i18n integration
+
+**成果物（予定）**:
+- ✅ `app/[locale]/(dashboard)/page.tsx` (i18n対応完了)
+- 🚧 `app/[locale]/(dashboard)/leads/page.tsx` (i18n対応部分完了)
+- ⏸️ `components/features/leads/lead-table.tsx` (未着手)
+- ⏸️ `components/features/leads/lead-dialog.tsx` (未着手)
+- ⏸️ `components/features/leads/lead-details.tsx` (未着手)
+- ⏸️ `app/[locale]/(dashboard)/settings/**` (未着手)
+- 🚧 `locales/ja/common.json`, `locales/en/common.json` (部分更新)
 
 ---
 
