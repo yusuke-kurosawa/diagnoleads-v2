@@ -139,6 +139,7 @@
     "leadDetails": "リード詳細",
     "leadDetailsDescription": "リードの詳細情報を確認し、編集や削除ができます",
     "name": "名前",
+    "nameNotSet": "名前未設定",
     "email": "メールアドレス",
     "phone": "電話番号",
     "company": "会社名",
@@ -151,6 +152,14 @@
     "updatedAt": "更新日",
     "actions": "アクション",
     "noLeads": "リードがありません",
-    "loading": "読み込み中..."
+    "noLeadsDescription": "新しいリードを作成するか、診断フォームを公開してください",
+    "loading": "読み込み中...",
+    "search": "検索",
+    "searchPlaceholder": "検索... (名前、メール、会社)",
+    "allStatuses": "すべてのステータス",
+    "previous": "前へ",
+    "next": "次へ",
+    "count": "件",
+    "of": "/"
   }
 }

@@ -13,6 +13,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import type { Lead } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,7 @@ import {
 } from '@/components/ui/table';
 import { ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { formatDistance } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { ja, enUS } from 'date-fns/locale';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -41,18 +42,23 @@ const statusColors = {
   converted: 'bg-purple-100 text-purple-800',
 };
 
-const statusLabels = {
-  new: '新規',
-  contacted: '連絡済',
-  qualified: '見込',
-  converted: '成約',
-};
-
 /**
  * Lead table component with TanStack Table
  * Features: sorting, filtering, pagination
  */
 export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
+  const t = useTranslations('leads');
+  const tStatus = useTranslations('status');
+  const locale = useLocale();
+  const dateLocale = locale === 'ja' ? ja : enUS;
+
+  const statusLabels = {
+    new: tStatus('new'),
+    contacted: tStatus('contacted'),
+    qualified: tStatus('qualified'),
+    converted: tStatus('converted'),
+  };
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -68,13 +74,13 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
           >
-            名前
+            {t('name')}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
       cell: ({ row }) => (
-        <div className="font-medium">{row.getValue('name') || '名前未設定'}</div>
+        <div className="font-medium">{row.getValue('name') || t('nameNotSet')}</div>
       ),
     },
     {
@@ -86,7 +92,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
           >
-            メール
+            {t('email')}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -95,14 +101,14 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
     },
     {
       accessorKey: 'company',
-      header: '会社',
+      header: t('company'),
       cell: ({ row }) => (
         <div>{row.getValue('company') || '-'}</div>
       ),
     },
     {
       accessorKey: 'phone',
-      header: '電話番号',
+      header: t('phone'),
       cell: ({ row }) => <div>{row.getValue('phone') || '-'}</div>,
     },
     {
@@ -114,7 +120,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
           >
-            ステータス
+            {t('status')}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -142,7 +148,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
           >
-            スコア
+            {t('score')}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -158,7 +164,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
     },
     {
       accessorKey: 'source',
-      header: 'ソース',
+      header: t('source'),
       cell: ({ row }) => {
         const source = row.getValue('source') as string | null;
         return <div className="capitalize">{source || '-'}</div>;
@@ -173,7 +179,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
           >
-            作成日
+            {t('createdAt')}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -184,7 +190,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
           <div className="text-sm text-gray-600">
             {formatDistance(new Date(date), new Date(), {
               addSuffix: true,
-              locale: ja,
+              locale: dateLocale,
             })}
           </div>
         );
@@ -234,7 +240,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="検索... (名前、メール、会社)"
+            placeholder={t('searchPlaceholder')}
             value={globalFilter ?? ''}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="pl-9"
@@ -253,11 +259,11 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
           }
           className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">すべてのステータス</option>
-          <option value="new">新規</option>
-          <option value="contacted">連絡済</option>
-          <option value="qualified">見込</option>
-          <option value="converted">成約</option>
+          <option value="">{t('allStatuses')}</option>
+          <option value="new">{tStatus('new')}</option>
+          <option value="contacted">{tStatus('contacted')}</option>
+          <option value="qualified">{tStatus('qualified')}</option>
+          <option value="converted">{tStatus('converted')}</option>
         </select>
       </div>
 
@@ -308,9 +314,9 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
                   className="h-24 text-center"
                 >
                   <div className="text-gray-500">
-                    <p className="text-lg">リードがまだありません</p>
+                    <p className="text-lg">{t('noLeads')}</p>
                     <p className="text-sm mt-2 text-gray-400">
-                      新しいリードを作成するか、診断フォームを公開してください
+                      {t('noLeadsDescription')}
                     </p>
                   </div>
                 </TableCell>
@@ -338,14 +344,14 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
                   table.getFilteredRowModel().rows.length
                 )}
               </span>
-              {' / '}
+              {t('of')}
               <span className="font-medium">
                 {table.getFilteredRowModel().rows.length}
               </span>
-              {' 件'}
+              {t('count')}
             </>
           ) : (
-            '0 件'
+            `0${t('count')}`
           )}
         </div>
 
@@ -357,7 +363,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             disabled={!table.getCanPreviousPage()}
           >
             <ChevronLeft className="h-4 w-4" />
-            前へ
+            {t('previous')}
           </Button>
           <Button
             variant="outline"
@@ -365,7 +371,7 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            次へ
+            {t('next')}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
