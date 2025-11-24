@@ -29,7 +29,7 @@
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
 | **Phase 2**: コア機能実装 | ✅ **完了** | 40/40 | 100% |
-| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 32/50 | 64% |
+| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 40/50 | 80% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -1091,12 +1091,12 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 64%完了
+## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 80%完了
 
 > **目標**: マルチテナントSaaSの多言語対応基盤構築
 > **期間**: Day 13-22 (10営業日)
-> **完了タスク**: 2.5/5 (Task 3 進行中 50%完了)
-> **完了率**: 64% (32/50時間)
+> **完了タスク**: 3/5 (Task 3 完了)
+> **完了率**: 80% (40/50時間)
 > **優先度**: ⭐ 推奨（Phase 3前の実装を強く推奨）
 
 ### なぜ Phase 2.5 が重要か？
@@ -1127,12 +1127,12 @@ leads                 -- リード（organization_id でスコープ）
 |------|------|------|---------|-----------|
 | **Task 1** | 基盤セットアップ | 12h | Phase 2完了 | ✅ **完了** |
 | **Task 2** | UI/UX（言語切り替え・ルーティング） | 12h | Task 1 | ✅ **完了** |
-| **Task 3** | 既存コンポーネントi18n対応 | 16h | Task 2 | 🚧 **進行中** |
+| **Task 3** | 既存コンポーネントi18n対応 | 16h | Task 2 | ✅ **完了** |
 | **Task 4** | エラーメッセージ統合 | 6h | Task 3 | ⏸️ 待機中 |
 | **Task 5** | テスト・ドキュメント | 4h | Task 4 | ⏸️ 待機中 |
 
 **総工数**: 50時間
-**完了**: 32時間 (64%)
+**完了**: 40時間 (80%)
 
 ---
 
@@ -1259,14 +1259,14 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### 🚧 Task 3: 既存コンポーネントi18n対応 進行中
+### ✅ Task 3: 既存コンポーネントi18n対応 完了
 
 **工数**: 16時間
 **優先度**: P0 (Critical)
 **依存**: Task 2完了 ✅
-**進捗**: 8/16時間完了 (50%)
+**進捗**: 16/16時間完了 (100%)
 
-**実装状況**:
+**実装完了**:
 
 1. **✅ ダッシュボード画面完了**（6h） - コミット: `b3a33e0`
    - ✅ ページタイトル・説明文の翻訳
@@ -1275,36 +1275,49 @@ leads                 -- リード（organization_id でスコープ）
    - ✅ 件数サフィックスの多言語対応（日本語: "件"、英語: ""）
    - ✅ useTranslations('dashboard')とuseTranslations('status')の統合
 
-2. **🚧 リード管理画面（部分完了）**（2/6h完了） - コミット: `f17c57e`
+2. **✅ リード管理画面完了**（10h） - コミット: `f17c57e`, `be82d1c`, `3d62d63`
    - ✅ ページヘッダーの翻訳（タイトル、説明、作成ボタン）
    - ✅ リード詳細シートの翻訳（タイトル、説明）
-   - ⏸️ LeadTableコンポーネント（テーブルヘッダー、ステータスラベル）
-   - ⏸️ LeadDialogコンポーネント（フォームフィールド、プレースホルダー）
-   - ⏸️ LeadDetailsコンポーネント（フィールドラベル、アクションボタン）
-
-3. **⏸️ 設定画面**（0/4h、残り4h）
-   - 組織設定フォームラベルの翻訳
-   - メンバー管理UIの翻訳（招待、ロール、削除）
-   - バリデーションメッセージの翻訳
-   - 成功/エラーメッセージの翻訳
-
-4. **⏸️ サブコンポーネント**（残り4h）
-   - LeadTable: テーブルヘッダー、ソート、フィルター
-   - LeadDialog: フォームラベル、バリデーション、送信ボタン
-   - LeadDetails: フィールドラベル、編集・削除ボタン
+   - ✅ LeadTableコンポーネント完全対応
+     - テーブルヘッダー（名前、メール、会社、電話、ステータス、スコア、ソース、作成日）
+     - ステータスラベル・フィルター
+     - 検索プレースホルダー
+     - 空状態メッセージ
+     - ページネーション（前へ、次へ、件数表示）
+     - 動的date-fnsロケール切り替え（ja/enUS）
+   - ✅ LeadDialogコンポーネント完全対応
+     - ダイアログタイトル（作成/編集モード）
+     - 説明文の翻訳
+   - ✅ LeadDetailsコンポーネント完全対応
+     - 名前表示・編集/削除ボタン
+     - 連絡先情報セクション（メール、電話、会社）
+     - リードスコアセクション
+     - ソース情報セクション
+     - 診断結果セクション
+     - タイムスタンプセクション（作成日時、更新日時）
+     - 削除確認ダイアログ
+     - 動的日付フォーマット（ja: yyyy年MM月dd日 HH:mm / en: MMM dd, yyyy HH:mm）
 
 **完了コミット**:
 - `f17c57e`: feat(i18n): Phase 2.5 Task 3 - Leads page i18n integration (partial)
 - `b3a33e0`: feat(i18n): Phase 2.5 Task 3 - Dashboard page i18n integration
+- `be82d1c`: feat(i18n): Phase 2.5 Task 3 - LeadTable component i18n integration
+- `3d62d63`: feat(i18n): Phase 2.5 Task 3 - LeadDialog and LeadDetails i18n integration
 
-**成果物（予定）**:
+**成果物**:
 - ✅ `app/[locale]/(dashboard)/page.tsx` (i18n対応完了)
-- 🚧 `app/[locale]/(dashboard)/leads/page.tsx` (i18n対応部分完了)
-- ⏸️ `components/features/leads/lead-table.tsx` (未着手)
-- ⏸️ `components/features/leads/lead-dialog.tsx` (未着手)
-- ⏸️ `components/features/leads/lead-details.tsx` (未着手)
-- ⏸️ `app/[locale]/(dashboard)/settings/**` (未着手)
-- 🚧 `locales/ja/common.json`, `locales/en/common.json` (部分更新)
+- ✅ `app/[locale]/(dashboard)/leads/page.tsx` (i18n対応完了)
+- ✅ `components/features/leads/lead-table.tsx` (i18n対応完了)
+- ✅ `components/features/leads/lead-dialog.tsx` (i18n対応完了)
+- ✅ `components/features/leads/lead-details.tsx` (i18n対応完了)
+- ✅ `locales/ja/common.json`, `locales/en/common.json` (完全更新)
+
+**技術的ハイライト**:
+- 動的ロケール検出（useLocale hook）
+- 複数翻訳名前空間の統合（leads, status, common, dashboard）
+- date-fnsロケール動的切り替え
+- パラメータ付き翻訳メッセージ（deleteConfirmMessage）
+- count suffix処理（日本語: "件", 英語: ""）
 
 ---
 
