@@ -93,7 +93,7 @@
   - Optimistic updates with toast
 - OrganizationSwitcherにキャッシュクリア機能統合
 
-**🚀 次のタスク**: Task 8 - メンバー招待機能（P2、4時間）
+**🚀 次のタスク**: Task 9 - E2Eテスト実装（P2、4時間）
 
 ---
 
@@ -281,12 +281,12 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🚀 Phase 2: コア機能実装 🚧 70%完了
+## 🚀 Phase 2: コア機能実装 🚧 80%完了
 
 > **目標**: マルチテナントSaaSのMVP機能実装
 > **期間**: Day 1-12 (12営業日)
-> **完了タスク**: 7/10
-> **完了率**: 70% (28/40項目)
+> **完了タスク**: 8/10
+> **完了率**: 80% (32/40項目)
 
 ### タスク概要
 
@@ -299,14 +299,15 @@ leads                 -- リード（organization_id でスコープ）
 | **Task 5** | リード一覧ページUI | 6h | Task 2,3 | ✅ **完了** |
 | **Task 6** | ダッシュボードUI (Tremor) | 6h | Task 4 | ✅ **完了** |
 | **Task 7** | 組織管理機能強化 | 3h | Task 1 | ✅ **完了** |
-| **Task 8** | メンバー招待機能 | 4h | Task 1 | 🚧 **進行中** |
+| **Task 8** | メンバー招待機能 | 4h | Task 1 | ✅ **完了** |
 | **Task 9** | E2Eテスト実装 | 4h | Task 2,5 | ⏸️ 待機中 |
 | **Task 10** | パフォーマンス最適化 | 4h | Task 9 | ⏸️ 待機中 |
 
-### 完了済み機能 (70%)
+### 完了済み機能 (80%)
 - ✅ 組織スコープ自動適用ミドルウェア
 - ✅ リードCRUD完全実装（API + UI）
 - ✅ 組織管理・切り替え機能
+- ✅ メンバー招待・管理機能
 - ✅ ダッシュボード統計API + UI
 - ✅ TanStack Table統合
 - ✅ Tremorチャート統合
@@ -770,39 +771,61 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### 🚧 Task 8: メンバー招待機能 進行中 (Day 1)
+### ✅ Task 8: メンバー招待機能 完了 (Day 1)
 
 **実装日**: 2025-11-24
-**工数**: 4時間（予定）
+**工数**: 4時間（実績）
 **優先度**: P2 (Medium)
 **依存**: Task 1完了 ✅
 
-**実装予定**:
+**実装完了**:
 
-1. **Members Router** (`server/routers/members.ts`)
-   - [ ] `list` - 組織メンバー一覧
-   - [ ] `invite` - メール招待送信
-   - [ ] `updateRole` - ロール変更（admin/owner）
-   - [ ] `remove` - メンバー削除（admin/owner）
+1. **Members Router** (`lib/features/members/api/router.ts`) ✅
+   - ✅ `list` - 組織メンバー一覧（ページネーション対応）
+   - ✅ `invite` - BetterAuth統合、メール招待API
+   - ✅ `updateRole` - ロール変更（admin/owner権限チェック）
+   - ✅ `remove` - メンバー削除（admin/owner権限チェック、owner保護）
 
-2. **メール機能** (Phase 5で本格実装、今回はモック)
-   - [ ] `emails/member-invite.tsx` - React Email テンプレート
-   - [ ] Resend統合準備
+2. **Zodスキーマ** (`lib/features/members/types/schemas.ts`) ✅
+   - ✅ `listMembersSchema` - UUIDバリデーション、ページネーション
+   - ✅ `inviteMemberSchema` - メールバリデーション、ロール制限
+   - ✅ `updateRoleSchema` - owner/admin/member enum
+   - ✅ `removeMemberSchema` - membershipId検証
 
-3. **招待受諾フロー**
-   - [ ] `app/(auth)/accept-invite/page.tsx` - 招待受諾ページ
+3. **React Hooks** (`hooks/use-members.ts`) ✅
+   - ✅ `useListMembers` - メンバー一覧取得
+   - ✅ `useInviteMember` - 招待送信（optimistic updates）
+   - ✅ `useUpdateRole` - ロール変更（toast通知）
+   - ✅ `useRemoveMember` - メンバー削除（toast通知）
+   - ✅ `useMembers` - 複合hook
 
-4. **メンバー管理UI**
-   - [ ] `app/(dashboard)/settings/members/page.tsx` - メンバー管理ページ
-   - [ ] メンバー一覧表示
-   - [ ] 招待ボタン
-   - [ ] ロール変更UI
-   - [ ] メンバー削除UI
+4. **メンバー管理UI** (`app/(dashboard)/settings/members/page.tsx`) ✅
+   - ✅ メンバー一覧表示（役割バッジ、アイコン付き）
+   - ✅ 招待ダイアログ（メール + ロール選択）
+   - ✅ ロール変更ダイアログ
+   - ✅ メンバー削除確認ダイアログ
+   - ✅ 権限ベースUI制御（admin/owner only）
+   - ✅ ローディング・空状態表示
 
-5. **ユニットテスト**
-   - [ ] `test/unit/features/members-router.test.ts`
+5. **UI コンポーネント** ✅
+   - ✅ `components/ui/select.tsx` - Radix UI Select
+   - ✅ `components/ui/badge.tsx` - ロールバッジ
 
-**進捗**: 0% → 開始
+6. **ユニットテスト** (`test/unit/features/members-router.test.ts`) ✅
+   - ✅ 19テスト全合格
+   - ✅ list: 3テスト（一覧、ページネーション、空リスト）
+   - ✅ invite: 5テスト（owner/admin招待、権限チェック、重複チェック、エラーハンドリング）
+   - ✅ updateRole: 5テスト（owner/admin変更、権限チェック、owner保護、未存在エラー）
+   - ✅ remove: 6テスト（owner/admin削除、権限チェック、owner保護、自己削除防止、未存在エラー）
+
+**技術的な決定**:
+- BetterAuth Organization Plugin の `api.inviteUser()` を使用
+- メール送信はPhase 5で実装予定（Resend統合）
+- 招待受諾フローもPhase 5で実装
+- RLSポリシーで組織データ分離を保証
+- CASL権限モデルでadmin/owner権限を管理
+
+**進捗**: 100% ✅ 完了
 
 ---
 
@@ -845,11 +868,12 @@ leads                 -- リード（organization_id でスコープ）
 
 ### 実装済みテスト
 
-**ユニットテスト** (54 tests passing):
+**ユニットテスト** (73 tests passing):
 - ✅ `test/unit/trpc/organization-procedure.test.ts` (12 tests)
 - ✅ `test/unit/features/leads-router.test.ts` (19 tests)
 - ✅ `test/unit/features/organizations-router.test.ts` (10 tests)
 - ✅ `test/unit/features/analytics-router.test.ts` (13 tests)
+- ✅ `test/unit/features/members-router.test.ts` (19 tests)
 
 **E2Eテスト**:
 - ⏸️ `test/e2e/auth-flow.spec.ts` (待機中)
