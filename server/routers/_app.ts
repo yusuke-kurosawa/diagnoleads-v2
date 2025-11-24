@@ -1,5 +1,6 @@
 import { router } from '@/lib/trpc/init';
 import { healthRouter } from './health';
+import { leadsRouter } from '@/lib/features/leads/api/router';
 
 /**
  * Main tRPC app router
@@ -7,8 +8,8 @@ import { healthRouter } from './health';
  */
 export const appRouter = router({
   health: healthRouter,
+  leads: leadsRouter,
   // TODO: Add more routers here
-  // leads: leadsRouter,
   // organizations: organizationsRouter,
   // assessments: assessmentsRouter,
 });
