@@ -6,6 +6,11 @@ import {
   getRateLimitConfig,
   setRateLimitHeaders,
 } from './lib/middleware/rate-limit';
+import {
+  intlMiddleware,
+  shouldSkipI18nMiddleware,
+  stripLocalePrefix,
+} from './lib/i18n/middleware';
 
 /**
  * Public routes that don't require authentication
@@ -88,13 +93,27 @@ function isPublicApiRoute(pathname: string): boolean {
 
 /**
  * Next.js Middleware
- * Runs before every request to check rate limit, authentication, and add security headers
+ * Runs before every request to check i18n, rate limit, authentication, and add security headers
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check rate limit
-  const rateLimitConfig = getRateLimitConfig(pathname);
+  // 1. Handle i18n (locale routing)
+  // Skip i18n for API routes, static files, etc.
+  if (!shouldSkipI18nMiddleware(pathname)) {
+    const intlResponse = intlMiddleware(request);
+    // If i18n middleware returns a redirect, return it immediately
+    if (intlResponse && intlResponse.status === 307) {
+      return intlResponse;
+    }
+  }
+
+  // Strip locale prefix for route checking
+  // Example: /ja/dashboard -> /dashboard
+  const pathnameWithoutLocale = stripLocalePrefix(pathname);
+
+  // 2. Check rate limit
+  const rateLimitConfig = getRateLimitConfig(pathnameWithoutLocale);
   const rateLimitResult = checkRateLimit(request, rateLimitConfig);
 
   if (!rateLimitResult.allowed) {
@@ -111,18 +130,18 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Get security headers
+  // 3. Get security headers
   const securityHeaders = getSecurityHeaders(request);
 
-  // Create response
+  // 4. Create response based on authentication requirements
   let response: NextResponse;
 
   // Allow public routes
-  if (isPublicRoute(pathname)) {
+  if (isPublicRoute(pathnameWithoutLocale)) {
     response = NextResponse.next();
   }
   // Allow public API routes
-  else if (isPublicApiRoute(pathname)) {
+  else if (isPublicApiRoute(pathnameWithoutLocale)) {
     response = NextResponse.next();
   }
   // Check authentication for protected routes
@@ -133,8 +152,8 @@ export async function middleware(request: NextRequest) {
       });
 
       if (!session) {
-        // Redirect to login page
-        const loginUrl = new URL('/login', request.url);
+        // Redirect to login page with locale prefix
+        const loginUrl = new URL(pathname.replace(pathnameWithoutLocale, '/login'), request.url);
         loginUrl.searchParams.set('callbackUrl', pathname);
         response = NextResponse.redirect(loginUrl);
       } else {
@@ -142,14 +161,16 @@ export async function middleware(request: NextRequest) {
       }
     } catch (error) {
       console.error('Middleware auth error:', error);
-      response = NextResponse.redirect(new URL('/', request.url));
+      // Redirect to home with locale prefix
+      const homeUrl = new URL(pathname.replace(pathnameWithoutLocale, '/'), request.url);
+      response = NextResponse.redirect(homeUrl);
     }
   }
 
-  // Add rate limit headers to response
+  // 5. Add rate limit headers to response
   setRateLimitHeaders(response.headers, rateLimitResult);
 
-  // Add security headers to response
+  // 6. Add security headers to response
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });

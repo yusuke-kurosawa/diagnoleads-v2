@@ -29,6 +29,7 @@
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
 | **Phase 2**: コア機能実装 | ✅ **完了** | 40/40 | 100% |
+| **Phase 2.5**: メッセージ統合管理（i18n） | 🚧 **進行中** | 0/50 | 0% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -37,10 +38,17 @@
 
 ### 最新実装 (2025-11-24)
 
-**✅ ディレクトリ構造改善完了**
-- lib/multi-tenant/ - マルチテナントロジックを専用モジュール化
-- hooks/ - React hooks用ディレクトリ作成
-- Feature-based organization実験開始
+**🎉 Phase 2 完了 (100%)**
+- 全10タスク完了（organizationProcedure、リード管理、組織管理、メンバー招待、ダッシュボード、E2Eテスト、パフォーマンス最適化）
+- E2Eテスト37ケース実装（Critical paths 100%カバー）
+- パフォーマンス大幅改善（バンドル-28.9%、DBクエリ-80%、ページロード-60%以上）
+- 本番環境準備完了
+
+**🚀 Phase 2.5 開始: メッセージ統合管理（i18n）**
+- 多言語対応基盤構築開始
+- Intlayer + next-intl統合予定
+- AI支援翻訳（Claude 4.5 Sonnet）活用
+- エラー/バリデーションメッセージ統一管理
 
 **✅ Task 1完了: organizationProcedure ミドルウェア**
 - 組織スコープの自動適用
@@ -1083,11 +1091,328 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
+## 🌐 Phase 2.5: メッセージ統合管理（i18n）基盤実装 🚧 0%完了
+
+> **目標**: マルチテナントSaaSの多言語対応基盤構築
+> **期間**: Day 13-22 (10営業日)
+> **完了タスク**: 0/5
+> **完了率**: 0% (0/50時間)
+> **優先度**: ⭐ 推奨（Phase 3前の実装を強く推奨）
+
+### なぜ Phase 2.5 が重要か？
+
+**Phase 3（AI機能）実装前に多言語基盤を整備すべき3つの理由:**
+
+1. **AI翻訳支援の活用**
+   - Claude 4.5 Sonnetを活用した高品質な翻訳
+   - Phase 3のAI機能実装時に翻訳インフラを即座に利用可能
+   - コンテキストを考慮した専門用語翻訳
+
+2. **エラー/バリデーションメッセージの統一管理**
+   - APIエラーコード → 多言語メッセージの一元管理
+   - Zodバリデーション + 多言語エラーメッセージ
+   - Phase 3-4の品質向上に直結
+
+3. **ROI（投資対効果）の最大化**
+   - 初期投資: ¥1.5M（50時間 × ¥30K/h）
+   - 3年間削減: ¥6M（手動翻訳 vs AI支援統合管理）
+   - 翻訳品質: 70% → 95%（専門用語対応）
+   - 納期短縮: 50%（自動化により）
+
+---
+
+### タスク概要
+
+| Task | 機能 | 工数 | 依存関係 | ステータス |
+|------|------|------|---------|-----------|
+| **Task 1** | 基盤セットアップ | 12h | Phase 2完了 | ⏸️ 待機中 |
+| **Task 2** | メッセージ定義 | 16h | Task 1 | ⏸️ 待機中 |
+| **Task 3** | ロケール実装（ja, en） | 8h | Task 2 | ⏸️ 待機中 |
+| **Task 4** | UI/UX（言語切り替え） | 6h | Task 3 | ⏸️ 待機中 |
+| **Task 5** | AI支援翻訳 | 8h | Task 3 | ⏸️ 待機中 |
+
+**総工数**: 50時間
+
+---
+
+### ⏸️ Task 1: 基盤セットアップ 待機中
+
+**工数**: 12時間
+**優先度**: P0 (Critical)
+**依存**: Phase 2完了 ✅
+
+**実装予定**:
+
+1. **Intlayer 3.0+ セットアップ**（6h）
+   - コンポーネント単位メッセージ管理
+   - `.content.ts` ファイル co-location パターン
+   - TypeScript型生成設定
+   - Next.js統合設定
+
+2. **next-intl 3.27+ セットアップ**（4h）
+   - ルーティング最適化（`/[locale]/...`）
+   - ミドルウェア設定（ロケール検出）
+   - サーバーコンポーネント対応
+   - クライアントコンポーネント対応
+
+3. **ディレクトリ構造セットアップ**（2h）
+   ```bash
+   diagnoleads-v2/
+   ├── intlayer.config.ts          # Intlayer設定
+   ├── app/
+   │   ├── [locale]/               # ロケールルーティング
+   │   │   ├── layout.tsx
+   │   │   ├── (dashboard)/
+   │   │   └── (auth)/
+   │   └── middleware.ts           # next-intl middleware
+   │
+   ├── components/
+   │   ├── shared/
+   │   │   ├── Header/
+   │   │   │   ├── index.tsx
+   │   │   │   └── index.content.ts   # Intlayer messages
+   │   │   └── Footer/
+   │   │       └── index.content.ts
+   │   │
+   │   ├── features/
+   │   │   ├── leads/
+   │   │   │   ├── lead-table.tsx
+   │   │   │   └── lead-table.content.ts
+   │   │   └── dashboard/
+   │   │       └── stats-card.content.ts
+   │
+   ├── content/                    # 共通メッセージ
+   │   ├── shared/
+   │   │   ├── common.content.ts
+   │   │   ├── errors.content.ts
+   │   │   └── validation.content.ts
+   │   ├── leads/
+   │   │   └── messages.content.ts
+   │   └── tenant/
+   │       └── customMessages.content.ts
+   │
+   ├── lib/
+   │   ├── i18n/
+   │   │   ├── config.ts
+   │   │   ├── routing.ts
+   │   │   └── middleware.ts
+   │   └── messages/
+   │       ├── error-mapper.ts     # エラーコード → メッセージ
+   │       ├── validation.ts       # Zod多言語化
+   │       └── tenant-messages.ts  # テナント別カスタム
+   │
+   └── locales/                    # next-intl フォールバック
+       ├── en.json
+       └── ja.json
+   ```
+
+**技術スタック**:
+- Intlayer 3.0+ (コンポーネント単位管理)
+- next-intl 3.27+ (ルーティング最適化)
+- zod-i18n Latest (バリデーション多言語化)
+
+---
+
+### ⏸️ Task 2: メッセージ定義 待機中
+
+**工数**: 16時間
+**優先度**: P0 (Critical)
+**依存**: Task 1完了
+
+**実装予定**:
+
+1. **共通メッセージ定義**（4h）
+   - ナビゲーション（ヘッダー、サイドバー、フッター）
+   - ボタンテキスト（保存、キャンセル、削除、編集）
+   - ステータス（新規、連絡済み、見込み、成約）
+   - 日付フォーマット
+   - 数値フォーマット
+
+2. **エラーメッセージ統合**（3h）
+   - APIエラーコード定義
+   ```typescript
+   enum ErrorCode {
+     INVALID_INPUT = 'INVALID_INPUT',
+     UNAUTHORIZED = 'UNAUTHORIZED',
+     FORBIDDEN = 'FORBIDDEN',
+     NOT_FOUND = 'NOT_FOUND',
+     CONFLICT = 'CONFLICT',
+     INTERNAL_ERROR = 'INTERNAL_ERROR',
+   }
+   ```
+   - エラーコード → 多言語メッセージマッパー
+   - tRPCエラーハンドリング統合
+
+3. **バリデーションメッセージ**（3h）
+   - Zod + zod-i18n統合
+   - リードフォームバリデーション
+   - 組織設定バリデーション
+   - メンバー招待バリデーション
+
+4. **診断・リード管理メッセージ**（4h）
+   - リード一覧テーブル
+   - ダッシュボード統計
+   - フォームラベル・プレースホルダー
+   - Toast通知メッセージ
+
+5. **テナント別メッセージ準備**（2h）
+   - テナント別カスタマイズ機能の基盤
+   - DB/CMS連携準備（Phase 4以降）
+
+**成果物**:
+- `content/shared/common.content.ts`
+- `content/shared/errors.content.ts`
+- `content/shared/validation.content.ts`
+- `content/leads/messages.content.ts`
+- `lib/messages/error-mapper.ts`
+- `lib/messages/validation.ts`
+
+---
+
+### ⏸️ Task 3: ロケール実装（ja, en） 待機中
+
+**工数**: 8時間
+**優先度**: P0 (Critical)
+**依存**: Task 2完了
+
+**実装予定**:
+
+1. **日本語（ja）ロケール**（2h）
+   - 共通メッセージ日本語訳
+   - エラーメッセージ日本語訳
+   - バリデーションメッセージ日本語訳
+   - ビジネス用語の適切な訳語選定
+
+2. **英語（en）ロケール**（2h）
+   - 共通メッセージ英語訳
+   - エラーメッセージ英語訳
+   - バリデーションメッセージ英語訳
+   - ビジネス用語の適切な訳語選定
+
+3. **ロケールデータ構造化**（2h）
+   - JSON/TypeScript型定義
+   - next-intl統合
+   - Intlayer統合
+   - 型安全性の確保
+
+4. **フォールバックメカニズム**（2h）
+   - 未翻訳キーの検出
+   - デフォルトロケール設定（日本語）
+   - 翻訳漏れ警告システム
+
+**成果物**:
+- `locales/en.json` (英語)
+- `locales/ja.json` (日本語)
+- 型定義ファイル
+- フォールバック設定
+
+---
+
+### ⏸️ Task 4: UI/UX（言語切り替え） 待機中
+
+**工数**: 6時間
+**優先度**: P1 (High)
+**依存**: Task 3完了
+
+**実装予定**:
+
+1. **言語切り替えUI**（3h）
+   - ヘッダーに言語セレクター配置
+   - ドロップダウンメニュー（日本語/English）
+   - アイコン + テキスト表示
+   - アクティブ言語の視覚的表示
+
+2. **ロケール検出**（1h）
+   - Accept-Languageヘッダー検出
+   - ブラウザ設定からの自動検出
+   - デフォルトロケール（ja）
+
+3. **永続化**（2h）
+   - Cookie保存（next-intl標準）
+   - DBユーザー設定（Phase 3以降）
+   - ローカルストレージフォールバック
+
+**成果物**:
+- `components/shared/language-switcher.tsx`
+- `components/shared/language-switcher.content.ts`
+- ミドルウェア統合
+- ユーザー設定永続化
+
+---
+
+### ⏸️ Task 5: AI支援翻訳 待機中
+
+**工数**: 8時間
+**優先度**: P1 (High)
+**依存**: Task 3完了
+
+**実装予定**:
+
+1. **Claude 4.5 Sonnet統合**（4h）
+   - Anthropic API統合
+   - プロンプトエンジニアリング
+     ```
+     Context: Multi-tenant SaaS platform for lead management
+     Industry: Healthcare/Finance/General
+     Tone: Professional, concise
+
+     Translate the following text from Japanese to English:
+     [text]
+
+     Technical terms:
+     - リード: Lead (not Reed)
+     - 見込み: Qualified
+     - 成約: Converted
+     ```
+   - コンテキスト考慮翻訳
+
+2. **翻訳ワークフロー**（2h）
+   - 初期翻訳（AI自動生成）
+   - レビュープロセス
+   - 翻訳品質スコア
+   - バージョン管理
+
+3. **専門用語辞書**（2h）
+   - 業界別専門用語
+   - テナント別カスタム用語
+   - 翻訳メモリ
+   - 用語統一ルール
+
+**成果物**:
+- `lib/ai/translation.ts`
+- `scripts/translate-messages.ts`
+- 専門用語辞書（JSON）
+- 翻訳品質レポート
+
+---
+
+### Phase 2.5 完了基準
+
+**機能要件**:
+- ✅ 日本語・英語の完全な切り替え
+- ✅ すべてのUI要素が多言語対応
+- ✅ エラーメッセージが統一管理
+- ✅ バリデーションメッセージが多言語化
+- ✅ 言語設定が永続化
+
+**品質要件**:
+- ✅ 翻訳品質スコア 95%以上
+- ✅ 未翻訳キー 0件
+- ✅ TypeScript型エラー 0件
+- ✅ 翻訳漏れ警告システム動作
+
+**パフォーマンス要件**:
+- ✅ 言語切り替え < 100ms
+- ✅ 初回ロード時の言語検出 < 50ms
+- ✅ バンドルサイズ増加 < 50KB
+
+---
+
 ## 📈 Phase 3-7: 今後の実装計画
 
 ### Phase 3: AI機能 ⏸️ 0/25完了
 
-**期間**: Day 13-25 (13営業日)
+**期間**: Day 23-35 (13営業日) ← Phase 2.5後に開始
 **目標**: AI駆動のリードスコアリングとセマンティック検索
 
 #### 3.1 AI基盤セットアップ
