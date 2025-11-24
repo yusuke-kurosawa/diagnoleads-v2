@@ -19,12 +19,12 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 52% 完了 🚀
+### 全体進捗: 55% 完了 🚀
 
 | フェーズ | ステータス | 完了項目 | 進捗率 |
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
-| **Phase 2**: コア機能実装 | 🚧 **進行中** | 10/40 | 25% |
+| **Phase 2**: コア機能実装 | 🚧 **進行中** | 14/40 | 35% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -58,7 +58,14 @@
 - OrganizationSwitcher コンポーネント
 - 10/10ユニットテスト成功
 
-**🚀 次のタスク**: Task 4 - ダッシュボード統計API実装（P1、6時間）
+**✅ Task 4完了: ダッシュボード統計API実装**
+- 統計API完全実装 (getOverview, getLeadTrend, getSourceBreakdown, getStatusBreakdown)
+- Feature-based organization (lib/features/analytics/)
+- SQL最適化 (日付範囲フィルタリング、集計クエリ)
+- Type-safe Zod schemas
+- 13/13ユニットテスト成功
+
+**🚀 次のタスク**: Task 5 - リード一覧ページUI実装（P1、6時間）
 
 ---
 
@@ -462,18 +469,87 @@ leads                 -- リード（organization_id でスコープ）
 - ✅ ユニットテスト10ケース（100%成功）
 
 **Git コミット**:
+- `fa8e705` - feat(organizations): implement organization context and management (Task 3)
+
+---
+
+### ✅ Task 4: ダッシュボード統計API実装 完了 (Day 1)
+
+**実装日**: 2025-11-24
+**工数**: 6時間
+**優先度**: P1 (High)
+**依存**: Task 1完了 ✅
+
+**実装内容**:
+
+1. **Feature-based Directory Structure** - Analytics機能のモジュール化
+   ```bash
+   lib/features/analytics/
+   ├── api/
+   │   └── router.ts              # tRPC analytics router
+   └── types/
+       ├── schemas.ts             # Zod schemas & response types
+       └── index.ts
+   ```
+
+2. **lib/features/analytics/types/schemas.ts** - Type-safe Schemas
+   ```typescript
+   - getOverviewSchema          # 総合統計取得
+   - getLeadTrendSchema         # リード推移取得
+   - getSourceBreakdownSchema   # 流入経路別内訳
+   - getStatusBreakdownSchema   # ステータス別内訳
+
+   // Response Types
+   - OverviewStats             # 総リード数、成約率、平均スコア等
+   - TrendDataPoint            # 日別/月別推移データ
+   - SourceBreakdown           # 流入経路分布
+   - StatusBreakdown           # ステータス分布
+   ```
+
+3. **lib/features/analytics/api/router.ts** - Analytics Router実装
+   - `getOverview` - 総合統計（総リード数、成約率、今月の新規、平均スコア、ステータス別内訳）
+   - `getLeadTrend` - 推移データ（日別/月別の集計、変換済みリード追跡）
+   - `getSourceBreakdown` - 流入経路分析（パーセンテージ計算付き）
+   - `getStatusBreakdown` - ステータス分析（パーセンテージ計算付き）
+
+4. **SQL最適化**
+   - 日付範囲フィルタリング（7d, 30d, 90d, all対応）
+   - 集計クエリ最適化（COUNT, AVG, GROUP BY活用）
+   - NULL値の適切な処理（COALESCE使用）
+   - インデックス活用可能な設計
+
+5. **server/routers/_app.ts** - Router統合
+   - analyticsRouterを追加
+
+6. **test/unit/features/analytics-router.test.ts** - Unit Tests
+   - ✅ 13/13 tests passed (100% coverage)
+   - getOverview全機能テスト
+   - getLeadTrend日別/月別テスト
+   - getSourceBreakdown分布テスト
+   - getStatusBreakdown分布テスト
+   - 権限チェックテスト
+   - 日付範囲対応テスト
+
+**成果**:
+- ✅ ダッシュボード統計API完全実装
+- ✅ 日別/月別のトレンド分析対応
+- ✅ 流入経路・ステータス別分析
+- ✅ SQL最適化済み（集計クエリ）
+- ✅ Type-safe API（Zod + TypeScript）
+- ✅ ユニットテスト13ケース（100%成功）
+- ✅ Feature-based organizationパターン継続
+
+**Git コミット**:
 - 未コミット（次のコミットで追加予定）
 
 ---
 
-### ⏸️ Task 4-10: 残りの実装タスク
+### ⏸️ Task 5-10: 残りの実装タスク
 
 詳細は `openspec/changes/phase2-core/tasks.md` を参照。
 
 | Task | 機能 | 工数 | Day |
 |------|------|------|-----|
-| 3 | useOrganization フック | 2h | Day 3 |
-| 4 | ダッシュボード統計API | 6h | Day 4 |
 | 5 | リード一覧UI (TanStack Table) | 6h | Day 5 |
 | 6 | ダッシュボードUI (Tremor) | 6h | Day 6 |
 | 7 | 組織管理機能 | 4h | Day 7 |
@@ -495,9 +571,11 @@ leads                 -- リード（organization_id でスコープ）
 
 ### 実装済みテスト
 
-**ユニットテスト**:
+**ユニットテスト** (54 tests passing):
 - ✅ `test/unit/trpc/organization-procedure.test.ts` (12 tests)
-- ⏸️ `test/unit/routers/leads.test.ts` (待機中)
+- ✅ `test/unit/features/leads-router.test.ts` (19 tests)
+- ✅ `test/unit/features/organizations-router.test.ts` (10 tests)
+- ✅ `test/unit/features/analytics-router.test.ts` (13 tests)
 
 **E2Eテスト**:
 - ⏸️ `test/e2e/auth-flow.spec.ts` (待機中)
