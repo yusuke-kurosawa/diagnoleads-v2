@@ -1,0 +1,10 @@
+[tools]
+bun = "1.1.38"
+node = "20.11.0"
+lefthook = "1.10.1"
+
+[env]
+DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/diagnoleads_dev"
+REDIS_URL = "redis://localhost:6379"
+SMTP_HOST = "localhost"
+SMTP_PORT = "1025"

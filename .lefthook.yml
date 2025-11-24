@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{ts,tsx,js,jsx,json}"
+      run: biome check --write {staged_files}
+      stage_fixed: true
+    typecheck:
+      run: bun tsc --noEmit
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}
