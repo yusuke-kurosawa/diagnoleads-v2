@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import type { Lead } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,8 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Mail, Phone, Building2, Calendar, Pencil, Trash2 } from 'lucide-react';
 import { formatDistance, format } from 'date-fns';
-import { ja } from 'date-fns/locale';
-import { useState } from 'react';
+import { ja, enUS } from 'date-fns/locale';
 
 interface LeadDetailsProps {
   lead: Lead;
@@ -32,13 +33,6 @@ const statusColors = {
   converted: 'bg-purple-100 text-purple-800',
 };
 
-const statusLabels = {
-  new: '新規',
-  contacted: '連絡済',
-  qualified: '見込',
-  converted: '成約',
-};
-
 /**
  * Lead details component
  * Displays detailed lead information with edit/delete actions
@@ -49,6 +43,20 @@ export function LeadDetails({
   onDelete,
   isDeleting,
 }: LeadDetailsProps) {
+  const t = useTranslations('leads');
+  const tStatus = useTranslations('status');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const dateLocale = locale === 'ja' ? ja : enUS;
+  const dateFormat = locale === 'ja' ? 'yyyy年MM月dd日 HH:mm' : 'MMM dd, yyyy HH:mm';
+
+  const statusLabels = {
+    new: tStatus('new'),
+    contacted: tStatus('contacted'),
+    qualified: tStatus('qualified'),
+    converted: tStatus('converted'),
+  };
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = async () => {
@@ -63,7 +71,7 @@ export function LeadDetails({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900">
-              {lead.name || '名前未設定'}
+              {lead.name || t('nameNotSet')}
             </h2>
             <div className="mt-2">
               <span
@@ -80,7 +88,7 @@ export function LeadDetails({
             {onEdit && (
               <Button onClick={onEdit} variant="outline" size="sm">
                 <Pencil className="h-4 w-4 mr-2" />
-                編集
+                {tCommon('edit')}
               </Button>
             )}
             {onDelete && (
@@ -91,7 +99,7 @@ export function LeadDetails({
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                削除
+                {tCommon('delete')}
               </Button>
             )}
           </div>
@@ -99,12 +107,12 @@ export function LeadDetails({
 
         {/* Contact information */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">連絡先情報</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('contactInfo')}</h3>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-gray-400" />
               <div>
-                <div className="text-sm text-gray-500">メールアドレス</div>
+                <div className="text-sm text-gray-500">{t('email')}</div>
                 <a
                   href={`mailto:${lead.email}`}
                   className="text-blue-600 hover:underline"
@@ -118,7 +126,7 @@ export function LeadDetails({
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-gray-400" />
                 <div>
-                  <div className="text-sm text-gray-500">電話番号</div>
+                  <div className="text-sm text-gray-500">{t('phone')}</div>
                   <a
                     href={`tel:${lead.phone}`}
                     className="text-blue-600 hover:underline"
@@ -133,7 +141,7 @@ export function LeadDetails({
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-gray-400" />
                 <div>
-                  <div className="text-sm text-gray-500">会社名</div>
+                  <div className="text-sm text-gray-500">{t('company')}</div>
                   <div className="font-medium">{lead.company}</div>
                 </div>
               </div>
@@ -144,12 +152,12 @@ export function LeadDetails({
         {/* Lead score */}
         {lead.score !== null && lead.score !== undefined && (
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">リードスコア</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('leadScore')}</h3>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-blue-600">
                 {lead.score}
               </span>
-              <span className="text-xl text-gray-500">/ 100</span>
+              <span className="text-xl text-gray-500">{t('scoreMax')}</span>
             </div>
             <div className="mt-4">
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -165,9 +173,9 @@ export function LeadDetails({
         {/* Source information */}
         {lead.source && (
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">ソース情報</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('sourceInfo')}</h3>
             <div>
-              <div className="text-sm text-gray-500">流入経路</div>
+              <div className="text-sm text-gray-500">{t('sourceChannel')}</div>
               <div className="font-medium capitalize mt-1">{lead.source}</div>
             </div>
           </Card>
@@ -176,7 +184,7 @@ export function LeadDetails({
         {/* Responses */}
         {lead.responses && Object.keys(lead.responses).length > 0 && (
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">診断結果</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('diagnosticResults')}</h3>
             <div className="space-y-3">
               {Object.entries(lead.responses as Record<string, unknown>).map(
                 ([key, value]) => (
@@ -196,20 +204,20 @@ export function LeadDetails({
 
         {/* Timestamps */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">タイムスタンプ</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('timestamps')}</h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-gray-400" />
               <div>
-                <div className="text-sm text-gray-500">作成日時</div>
+                <div className="text-sm text-gray-500">{t('createdAt')}</div>
                 <div className="font-medium">
-                  {format(new Date(lead.createdAt), 'yyyy年MM月dd日 HH:mm', {
-                    locale: ja,
+                  {format(new Date(lead.createdAt), dateFormat, {
+                    locale: dateLocale,
                   })}
                   <span className="text-sm text-gray-500 ml-2">
                     ({formatDistance(new Date(lead.createdAt), new Date(), {
                       addSuffix: true,
-                      locale: ja,
+                      locale: dateLocale,
                     })})
                   </span>
                 </div>
@@ -219,15 +227,15 @@ export function LeadDetails({
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-gray-400" />
               <div>
-                <div className="text-sm text-gray-500">更新日時</div>
+                <div className="text-sm text-gray-500">{t('updatedAt')}</div>
                 <div className="font-medium">
-                  {format(new Date(lead.updatedAt), 'yyyy年MM月dd日 HH:mm', {
-                    locale: ja,
+                  {format(new Date(lead.updatedAt), dateFormat, {
+                    locale: dateLocale,
                   })}
                   <span className="text-sm text-gray-500 ml-2">
                     ({formatDistance(new Date(lead.updatedAt), new Date(), {
                       addSuffix: true,
-                      locale: ja,
+                      locale: dateLocale,
                     })})
                   </span>
                 </div>
@@ -241,22 +249,21 @@ export function LeadDetails({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>リードを削除しますか？</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              この操作は取り消せません。{lead.name || lead.email}{' '}
-              のすべてのデータが完全に削除されます。
+              {t('deleteConfirmMessage', { name: lead.name || lead.email })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>
-              キャンセル
+              {tCommon('cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? '削除中...' : '削除'}
+              {isDeleting ? t('deleting') : tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

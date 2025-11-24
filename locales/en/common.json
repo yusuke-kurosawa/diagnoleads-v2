@@ -134,7 +134,10 @@
     "title": "Lead Management",
     "description": "Manage leads captured from diagnostic forms",
     "createLead": "Add New Lead",
+    "createLeadTitle": "Create New Lead",
+    "createLeadDescription": "Enter information for the new lead.",
     "editLead": "Edit Lead",
+    "editLeadDescription": "Edit the lead information.",
     "deleteLead": "Delete Lead",
     "leadDetails": "Lead Details",
     "leadDetailsDescription": "View lead details and edit or delete as needed",
@@ -160,6 +163,16 @@
     "previous": "Previous",
     "next": "Next",
     "count": "",
-    "of": " / "
+    "of": " / ",
+    "contactInfo": "Contact Information",
+    "leadScore": "Lead Score",
+    "scoreMax": " / 100",
+    "sourceInfo": "Source Information",
+    "sourceChannel": "Source Channel",
+    "diagnosticResults": "Diagnostic Results",
+    "timestamps": "Timestamps",
+    "deleteConfirmTitle": "Delete this lead?",
+    "deleteConfirmMessage": "This action cannot be undone. All data for {name} will be permanently deleted.",
+    "deleting": "Deleting..."
   }
 }

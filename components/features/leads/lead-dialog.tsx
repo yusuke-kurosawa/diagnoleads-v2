@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,8 @@ export function LeadDialog({
   onSubmit,
   isLoading,
 }: LeadDialogProps) {
+  const t = useTranslations('leads');
+
   const handleSubmit = async (data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>) => {
     await onSubmit(data);
     onOpenChange(false);
@@ -42,12 +45,12 @@ export function LeadDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {lead ? 'リードを編集' : '新しいリードを作成'}
+            {lead ? t('editLead') : t('createLeadTitle')}
           </DialogTitle>
           <DialogDescription>
             {lead
-              ? 'リードの情報を編集します。'
-              : '新しいリードの情報を入力してください。'}
+              ? t('editLeadDescription')
+              : t('createLeadDescription')}
           </DialogDescription>
         </DialogHeader>
 
