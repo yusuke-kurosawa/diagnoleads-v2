@@ -1,35 +1,86 @@
-version: '3.8'
+version: '3.9'
 
 services:
+  # PostgreSQL データベース
   postgres:
     image: postgres:16-alpine
     container_name: diagnoleads-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
     environment:
-      POSTGRES_DB: diagnoleads_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: diagnoleads_dev
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --locale=C'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - diagnoleads
 
+  # pgAdmin - PostgreSQL GUI
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: diagnoleads-pgadmin
+    restart: unless-stopped
+    ports:
+      - '5050:80'
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@diagnoleads.local
       PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - diagnoleads
 
+  # Mailhog - メールテスト用 SMTP サーバー
   mailhog:
     image: mailhog/mailhog:latest
     container_name: diagnoleads-mailhog
+    restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - '1025:1025' # SMTP ポート
+      - '8025:8025' # Web UI ポート
+    networks:
+      - diagnoleads
+
+  # Redis（オプション）- 開発時のキャッシュ用
+  redis:
+    image: redis:7-alpine
+    container_name: diagnoleads-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - diagnoleads
 
 volumes:
   postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  diagnoleads:
+    driver: bridge
