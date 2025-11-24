@@ -19,12 +19,12 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 51% 完了 🚀
+### 全体進捗: 52% 完了 🚀
 
 | フェーズ | ステータス | 完了項目 | 進捗率 |
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
-| **Phase 2**: コア機能実装 | 🚧 **進行中** | 8/40 | 20% |
+| **Phase 2**: コア機能実装 | 🚧 **進行中** | 10/40 | 25% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -51,7 +51,14 @@
 - UI components (LeadForm, LeadCard, LeadList)
 - 19/19ユニットテスト成功
 
-**🚀 次のタスク**: Task 3 - useOrganization フック拡張（P1、2時間）
+**✅ Task 3完了: 組織コンテキスト実装**
+- OrganizationProvider (React Context API)
+- 組織状態管理（localStorage永続化）
+- 組織tRPC router (CRUD操作)
+- OrganizationSwitcher コンポーネント
+- 10/10ユニットテスト成功
+
+**🚀 次のタスク**: Task 4 - ダッシュボード統計API実装（P1、6時間）
 
 ---
 
@@ -229,11 +236,11 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🚀 Phase 2: コア機能実装 🚧 10%完了
+## 🚀 Phase 2: コア機能実装 🚧 25%完了
 
 > **目標**: マルチテナントSaaSのMVP機能実装
 > **期間**: Day 1-12 (12営業日)
-> **完了率**: 45% → 65%
+> **完了率**: 48% → 68%
 
 ### 優先順位マトリクス
 
@@ -396,7 +403,70 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### ⏸️ Task 3-10: 残りの実装タスク
+### ✅ Task 3: 組織コンテキストフック 完了 (Day 1)
+
+**実装日**: 2025-11-24
+**工数**: 2時間
+**優先度**: P1 (High)
+**ブロッカー**: なし
+
+**実装内容**:
+
+1. **lib/context/organization-context.tsx** - React Context Provider
+   - OrganizationProvider - アプリ全体で組織状態を管理
+   - localStorage永続化（自動復元）
+   - URL検出との同期（/dashboard/[orgId]/...）
+   - セッション変更時のクリア機能
+
+2. **hooks/use-organization.ts** - 組織管理フック（拡張）
+   - `useOrganizationId()` - URLから組織ID取得（既存）
+   - `useRequiredOrganizationId()` - 必須版（既存）
+   - `useOrganization()` - 🆕 Context統合版
+   - `useCurrentOrganization()` - 🆕 データ取得付き
+
+3. **lib/features/organizations/api/router.ts** - Organizations Router
+   - `getById` - 組織詳細取得（メンバーシップ確認）
+   - `list` - ユーザー所属組織一覧
+   - `update` - 組織情報更新（ownerのみ）
+   - `create` - 新規組織作成（自動でowner追加）
+
+4. **lib/features/organizations/types/schemas.ts** - Zod Schemas
+   ```typescript
+   - getOrganizationSchema
+   - listOrganizationsSchema
+   - updateOrganizationSchema
+   - createOrganizationSchema
+   ```
+
+5. **components/dashboard/organization-switcher.tsx** - UI Component
+   - ドロップダウンメニュー
+   - 組織一覧表示
+   - 切り替え機能
+   - 新規作成リンク
+
+6. **app/providers.tsx** - Provider統合
+   - OrganizationProviderをアプリに追加
+   - tRPC, QueryClientと統合
+
+7. **test/unit/features/organizations-router.test.ts** - Unit Tests
+   - ✅ 10/10 tests passed (100% coverage)
+   - CRUD操作すべてテスト
+   - 権限チェックテスト（owner vs admin）
+   - バリデーションテスト
+
+**成果**:
+- ✅ 組織状態管理の完全実装
+- ✅ localStorage永続化で UX 向上
+- ✅ 組織切り替え UI 完成
+- ✅ Type-safe organization API
+- ✅ ユニットテスト10ケース（100%成功）
+
+**Git コミット**:
+- 未コミット（次のコミットで追加予定）
+
+---
+
+### ⏸️ Task 4-10: 残りの実装タスク
 
 詳細は `openspec/changes/phase2-core/tasks.md` を参照。
 
