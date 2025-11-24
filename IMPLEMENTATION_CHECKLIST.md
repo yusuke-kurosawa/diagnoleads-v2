@@ -12,12 +12,12 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 48% 完了 🚀
+### 全体進捗: 51% 完了 🚀
 
 | フェーズ | ステータス | 完了項目 | 進捗率 |
 |---------|-----------|---------|--------|
 | **Phase 1**: 基盤セットアップ | ✅ **完了** | 68/68 | 100% |
-| **Phase 2**: コア機能実装 | 🚧 **進行中** | 4/40 | 10% |
+| **Phase 2**: コア機能実装 | 🚧 **進行中** | 8/40 | 20% |
 | **Phase 3**: AI機能 | ⏸️ 待機中 | 0/25 | 0% |
 | **Phase 4**: 公開ページ | ⏸️ 待機中 | 0/20 | 0% |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/15 | 0% |
@@ -26,9 +26,10 @@
 
 ### 最新実装 (2025-11-24)
 
-**✅ OpenSpec構造セットアップ完了**
-- openspec/specs/ - アーキテクチャ仕様（Source of Truth）
-- openspec/changes/phase2-core/ - Phase 2実装計画
+**✅ ディレクトリ構造改善完了**
+- lib/multi-tenant/ - マルチテナントロジックを専用モジュール化
+- hooks/ - React hooks用ディレクトリ作成
+- Feature-based organization実験開始
 
 **✅ Task 1完了: organizationProcedure ミドルウェア**
 - 組織スコープの自動適用
@@ -36,7 +37,14 @@
 - RLS自動有効化
 - 12/12ユニットテスト成功
 
-**🚀 次のタスク**: Task 2 - リード管理tRPCルーター実装（P0、8時間）
+**✅ Task 2完了: リード管理tRPCルーター**
+- CRUD操作完全実装 (create/read/update/delete/list)
+- Feature-based organization (lib/features/leads/)
+- React hooks (hooks/use-leads.ts)
+- UI components (LeadForm, LeadCard, LeadList)
+- 19/19ユニットテスト成功
+
+**🚀 次のタスク**: Task 3 - useOrganization フック拡張（P1、2時間）
 
 ---
 
@@ -225,8 +233,8 @@ leads                 -- リード（organization_id でスコープ）
 | Priority | 機能 | 工数 | 依存関係 | ステータス |
 |---------|------|------|---------|-----------|
 | **P0** | 組織スコープミドルウェア | 4h | なし | ✅ **完了** |
-| **P0** | リード管理CRUD | 8h | P0完了 | 🔄 次 |
-| **P1** | ダッシュボード統計 | 6h | リードCRUD | ⏸️ 待機 |
+| **P0** | リード管理CRUD | 8h | P0完了 | ✅ **完了** |
+| **P1** | ダッシュボード統計 | 6h | リードCRUD | 🔄 次 |
 | **P1** | 組織管理・招待 | 10h | P0完了 | ⏸️ 待機 |
 | **P2** | TanStack Table統合 | 6h | リードCRUD | ⏸️ 待機 |
 | **P2** | AIスコアリング基盤 | 12h | リードCRUD | ⏸️ 待機 |
@@ -301,40 +309,83 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-### 🔄 Task 2: リード管理tRPCルーター (Day 2-3) - 次のタスク
+### ✅ Task 2: リード管理tRPCルーター 完了 (Day 1)
 
+**実装日**: 2025-11-24
 **工数**: 8時間
 **優先度**: P0 (Critical)
 **依存**: Task 1完了 ✅
 
-**実装ファイル**:
-```bash
-server/routers/leads.ts              # リードCRUDルーター
-├─ list()    - リード一覧（ページネーション）
-├─ getById() - リード詳細取得
-├─ create()  - リード作成（Zodバリデーション）
-├─ update()  - リード更新
-└─ delete()  - ソフトデリート
+**実装内容**:
 
-types/lead.ts                         # Zod Schema定義
-├─ createLeadSchema
-├─ updateLeadSchema
-└─ listLeadsSchema
+1. **Feature-based Directory Structure** - Feature-based organization実験
+   ```bash
+   lib/features/leads/
+   ├── api/
+   │   └── router.ts              # tRPC router (CRUD操作)
+   └── types/
+       ├── schemas.ts             # Zod schemas & types
+       └── index.ts
+   ```
 
-hooks/useLeads.ts                     # React Hook
-└─ useLeads() - tRPCラッパー
+2. **lib/features/leads/api/router.ts** - CRUD Router実装
+   - `create` - リード作成（Zodバリデーション + CASL権限）
+   - `get` - リード詳細取得（組織スコープ検証）
+   - `list` - リード一覧（ページネーション + フィルタリング + 検索）
+   - `update` - リード更新（部分更新対応）
+   - `delete` - リード削除（権限チェック）
 
-app/(dashboard)/leads/page.tsx        # リード一覧UI
-components/leads/LeadForm.tsx         # リード作成/編集Form
-components/leads/LeadCard.tsx         # リードカード表示
-```
+3. **lib/features/leads/types/schemas.ts** - Type-safe Schemas
+   ```typescript
+   export const createLeadSchema = z.object({
+     organizationId: z.string().uuid(),
+     email: z.string().email(),
+     name: z.string().optional(),
+     company: z.string().optional(),
+     phone: z.string().optional(),
+     status: leadStatusEnum.default('new'),
+     score: z.number().int().min(0).max(100).optional(),
+     source: leadSourceEnum.optional(),
+     responses: z.record(z.unknown()).default({}),
+   });
+   ```
 
-**完了条件**:
-- [ ] リスト表示が動作（組織スコープ適用確認）
-- [ ] 作成フォームが動作（Zodバリデーション）
-- [ ] 更新・削除が動作（CASL権限チェック）
-- [ ] 他組織のリードが見えないことを確認
-- [ ] ユニットテスト10+ケース作成
+4. **hooks/use-leads.ts** - React Hooks
+   - `useCreateLead()` - 作成mutation
+   - `useGetLead()` - 詳細取得query
+   - `useListLeads()` - 一覧取得query
+   - `useUpdateLead()` - 更新mutation
+   - `useDeleteLead()` - 削除mutation
+   - `useLeads()` - Composite hook
+
+5. **hooks/use-organization.ts** - Organization Context
+   - `useOrganizationId()` - URL paramsから組織ID取得
+   - `useRequiredOrganizationId()` - 組織ID必須版
+
+6. **components/features/leads/** - UI Components
+   - `LeadForm` - 作成/編集フォーム（react-hook-form + Zod）
+   - `LeadCard` - リード情報表示カード
+   - `LeadList` - リスト表示（ローディング状態対応）
+
+7. **test/unit/features/leads-router.test.ts** - Unit Tests
+   - ✅ 19/19 tests passed (100% coverage)
+   - CRUD操作すべてテスト
+   - 権限チェックテスト
+   - バリデーションテスト
+   - 組織スコープ検証
+
+**成果**:
+- ✅ リスト表示が動作（組織スコープ適用確認）
+- ✅ 作成フォームが動作（Zodバリデーション）
+- ✅ 更新・削除が動作（CASL権限チェック）
+- ✅ 他組織のリードが見えないことを確認
+- ✅ ユニットテスト19ケース作成（目標10+達成）
+- ✅ Feature-based organization実験成功
+- ✅ Type-safe API完全実装
+
+**Git コミット**:
+- `e81e2d8` - マルチテナントロジック抽出（ディレクトリ構造改善）
+- `cd4a59f` - リード管理CRUD完全実装 + テスト
 
 ---
 
