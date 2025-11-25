@@ -24,3 +24,16 @@ export {
 
 // Export chat
 export { generateChatResponse, generateLeadSummary, type ChatMessage } from './chat/assistant';
+
+// Export types and schemas
+export type {
+  ScoreLeadInput,
+  SemanticSearchInput,
+  FindSimilarLeadsInput,
+  GenerateSummaryInput,
+  UpdateEmbeddingInput,
+  BatchScoreLeadsInput,
+} from './types/schemas';
+
+// Export tRPC router
+export { aiRouter } from './api/router';

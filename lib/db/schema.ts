@@ -1,5 +1,26 @@
-import { pgTable, text, timestamp, uuid, jsonb, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, jsonb, boolean, integer, customType } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+/**
+ * Custom PostgreSQL types for AI features
+ */
+const vector = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return 'vector(1536)';
+  },
+  toDriver(value: number[]): string {
+    return `[${value.join(',')}]`;
+  },
+  fromDriver(value: string): number[] {
+    return JSON.parse(value.replace(/\{|\}/g, (m) => (m === '{' ? '[' : ']')));
+  },
+});
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
 
 /**
  * Organizations (Tenants)
@@ -93,6 +114,10 @@ export const leads = pgTable('leads', {
 
   // Assessment data
   responses: jsonb('responses').$type<Record<string, unknown>>().default({}),
+
+  // AI features (Phase 3)
+  embedding: vector('embedding'), // OpenAI text-embedding-3-small (1536 dimensions)
+  searchVector: tsvector('search_vector'), // Full-text search vector (generated)
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

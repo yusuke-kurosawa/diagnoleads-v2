@@ -61,11 +61,10 @@ Be concise, helpful, and professional. Focus on actionable insights.`;
         role: msg.role,
         content: msg.content,
       })),
-      maxTokens: 1000,
       temperature: 0.7,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error generating chat response:', error);
     throw new Error('Failed to generate chat response');
@@ -101,7 +100,6 @@ Focus on key business value and next steps.`;
     const result = await streamText({
       model: anthropic('claude-sonnet-4-20250514'),
       prompt,
-      maxTokens: 200,
     });
 
     // Convert stream to text
