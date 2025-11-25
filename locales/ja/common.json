@@ -330,6 +330,25 @@
         "passwordMismatch": "パスワードが一致しません",
         "nameRequired": "名前を入力してください"
       }
+    },
+    "errorPages": {
+      "error": {
+        "title": "エラーが発生しました",
+        "message": "申し訳ございません。予期しないエラーが発生しました。",
+        "errorId": "エラーID: {digest}",
+        "retry": "再試行"
+      },
+      "globalError": {
+        "title": "システムエラー",
+        "message": "システムエラーが発生しました。ページを再読み込みしてください。",
+        "errorId": "エラーID: {digest}",
+        "retry": "再試行"
+      },
+      "notFound": {
+        "title": "ページが見つかりません",
+        "message": "お探しのページは存在しないか、移動した可能性があります。",
+        "backHome": "ホームに戻る"
+      }
     }
   }
 }

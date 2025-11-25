@@ -330,6 +330,25 @@
         "passwordMismatch": "Passwords do not match",
         "nameRequired": "Please enter your name"
       }
+    },
+    "errorPages": {
+      "error": {
+        "title": "An error occurred",
+        "message": "We're sorry, an unexpected error has occurred.",
+        "errorId": "Error ID: {digest}",
+        "retry": "Try again"
+      },
+      "globalError": {
+        "title": "System Error",
+        "message": "A system error has occurred. Please reload the page.",
+        "errorId": "Error ID: {digest}",
+        "retry": "Try again"
+      },
+      "notFound": {
+        "title": "Page not found",
+        "message": "The page you're looking for doesn't exist or may have been moved.",
+        "backHome": "Back to Home"
+      }
     }
   }
 }
