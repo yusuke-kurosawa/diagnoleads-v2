@@ -130,6 +130,167 @@ diagnoleads-v2/
 └── public/                # Static assets
 ```
 
+## 🌐 Internationalization (i18n)
+
+DiagnoLeads v2 supports multiple languages with comprehensive i18n infrastructure.
+
+### Supported Languages
+
+- 🇯🇵 Japanese (`ja`)
+- 🇺🇸 English (`en`)
+
+### Directory Structure
+
+```
+diagnoleads-v2/
+├── locales/                # Translation files
+│   ├── ja/                # Japanese translations
+│   │   ├── common.json    # Common UI strings
+│   │   └── errors.json    # Error messages
+│   └── en/                # English translations
+│       ├── common.json
+│       └── errors.json
+├── lib/
+│   ├── i18n/              # i18n configuration
+│   │   ├── config.ts      # next-intl config
+│   │   ├── middleware.ts  # Locale detection
+│   │   └── request.ts     # Server-side i18n
+│   └── messages/          # Message utilities
+│       ├── error-mapper.ts    # Error code → i18n key mapping
+│       └── validation.ts      # Zod validation i18n
+└── app/[locale]/          # Locale-based routing
+```
+
+### Error Message Localization
+
+All error messages are centrally managed in `locales/*/errors.json`:
+
+```typescript
+// Example: Using localized error messages
+import { useTranslations } from 'next-intl';
+import { getLocalizedErrorMessage } from '@/lib/messages/error-mapper';
+
+function MyComponent() {
+  const tErrors = useTranslations('errors');
+
+  try {
+    // API call
+  } catch (error) {
+    const errorResponse = await mapFetchErrorToErrorResponse(error);
+    const message = getLocalizedErrorMessage(errorResponse, tErrors);
+    toast.error(message);
+  }
+}
+```
+
+### Zod Validation Localization
+
+Zod validation errors are automatically localized:
+
+```typescript
+import { useTranslations } from 'next-intl';
+import { createZodErrorMap } from '@/lib/messages/validation';
+import { z } from 'zod';
+
+function MyForm() {
+  const tErrors = useTranslations('errors');
+  const tFields = useTranslations('leads');
+
+  // Set Zod error map for i18n
+  z.setErrorMap(createZodErrorMap(tErrors, tFields));
+
+  const schema = z.object({
+    email: z.string().email(),
+    name: z.string().min(2).max(100),
+  });
+
+  // Errors will be automatically localized
+}
+```
+
+### Usage Examples
+
+#### 1. Basic Translation
+
+```typescript
+import { useTranslations } from 'next-intl';
+
+function MyComponent() {
+  const t = useTranslations('leads');
+
+  return <h1>{t('title')}</h1>; // "リード管理" (ja) or "Lead Management" (en)
+}
+```
+
+#### 2. Parameterized Messages
+
+```typescript
+const t = useTranslations('errors');
+
+// {field} will be replaced with actual field name
+const message = t('validation.required', { field: 'Email' });
+// "Emailは必須です" (ja) or "Email is required" (en)
+```
+
+#### 3. Multiple Namespaces
+
+```typescript
+function Dashboard() {
+  const t = useTranslations('dashboard');
+  const tStatus = useTranslations('status');
+
+  return (
+    <>
+      <h1>{t('title')}</h1>
+      <span>{tStatus('new')}</span> {/* Status labels */}
+    </>
+  );
+}
+```
+
+#### 4. Toast Notifications
+
+```typescript
+import { getToastMessageKey } from '@/lib/messages/error-mapper';
+
+const tToast = useTranslations('errors');
+const key = getToastMessageKey('create', 'lead', false);
+toast.success(tToast(key)); // "リードを作成しました" (ja)
+```
+
+### Best Practices
+
+1. **Always use translation keys** - Never hardcode user-facing strings
+2. **Use parameterized messages** - For dynamic content (field names, counts, etc.)
+3. **Namespace organization** - Group related translations (leads, dashboard, errors)
+4. **Error handling** - Use `getLocalizedErrorMessage()` for consistent error display
+5. **Date formatting** - Use locale-aware date-fns functions
+
+```typescript
+// ✅ Good - locale-aware date formatting
+import { useLocale } from 'next-intl';
+import { format } from 'date-fns';
+import { ja, enUS } from 'date-fns/locale';
+
+const locale = useLocale();
+const dateLocale = locale === 'ja' ? ja : enUS;
+format(date, 'PPP', { locale: dateLocale });
+
+// ❌ Bad - hardcoded Japanese
+format(date, 'yyyy年MM月dd日');
+```
+
+### Language Switching
+
+Language preferences are stored in cookies and automatically applied:
+
+```typescript
+// Language switching is handled by LanguageSwitcher component
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+
+<LanguageSwitcher /> // Displays language dropdown
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env.local` and configure:
