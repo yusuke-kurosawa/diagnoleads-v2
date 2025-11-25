@@ -1,0 +1,93 @@
+{
+  "api": {
+    "400": "リクエストが正しくありません",
+    "401": "認証が必要です",
+    "403": "アクセス権限がありません",
+    "404": "リソースが見つかりません",
+    "500": "サーバーエラーが発生しました",
+    "502": "ゲートウェイエラーが発生しました",
+    "503": "サービスが利用できません",
+    "504": "ゲートウェイタイムアウトが発生しました",
+    "network": "ネットワークエラーが発生しました",
+    "unknown": "予期しないエラーが発生しました",
+    "timeout": "リクエストがタイムアウトしました"
+  },
+  "auth": {
+    "unauthorized": "認証されていません。再度ログインしてください",
+    "sessionExpired": "セッションの有効期限が切れました",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+    "accountLocked": "アカウントがロックされています",
+    "invalidToken": "無効なトークンです"
+  },
+  "validation": {
+    "required": "{field}は必須です",
+    "email": "有効なメールアドレスを入力してください",
+    "min": "{field}は{min}文字以上で入力してください",
+    "max": "{field}は{max}文字以内で入力してください",
+    "minNumber": "{field}は{min}以上で入力してください",
+    "maxNumber": "{field}は{max}以下で入力してください",
+    "pattern": "{field}の形式が正しくありません",
+    "url": "有効なURLを入力してください",
+    "phone": "有効な電話番号を入力してください",
+    "unique": "{field}は既に使用されています",
+    "invalid": "{field}が無効です"
+  },
+  "lead": {
+    "notFound": "リードが見つかりません",
+    "createFailed": "リードの作成に失敗しました",
+    "updateFailed": "リードの更新に失敗しました",
+    "deleteFailed": "リードの削除に失敗しました",
+    "duplicateEmail": "このメールアドレスは既に登録されています",
+    "invalidStatus": "無効なステータスです"
+  },
+  "organization": {
+    "notFound": "組織が見つかりません",
+    "accessDenied": "この組織へのアクセス権限がありません",
+    "createFailed": "組織の作成に失敗しました",
+    "updateFailed": "組織の更新に失敗しました",
+    "deleteFailed": "組織の削除に失敗しました"
+  },
+  "member": {
+    "notFound": "メンバーが見つかりません",
+    "inviteFailed": "メンバーの招待に失敗しました",
+    "removeFailed": "メンバーの削除に失敗しました",
+    "alreadyMember": "既にメンバーとして登録されています",
+    "insufficientPermissions": "この操作を実行する権限がありません"
+  },
+  "toast": {
+    "lead": {
+      "created": "リードを作成しました",
+      "updated": "リードを更新しました",
+      "deleted": "リードを削除しました",
+      "createError": "リードの作成に失敗しました",
+      "updateError": "リードの更新に失敗しました",
+      "deleteError": "リードの削除に失敗しました"
+    },
+    "organization": {
+      "created": "組織を作成しました",
+      "updated": "組織を更新しました",
+      "deleted": "組織を削除しました",
+      "createError": "組織の作成に失敗しました",
+      "updateError": "組織の更新に失敗しました",
+      "deleteError": "組織の削除に失敗しました"
+    },
+    "member": {
+      "invited": "メンバーを招待しました",
+      "removed": "メンバーを削除しました",
+      "inviteError": "メンバーの招待に失敗しました",
+      "removeError": "メンバーの削除に失敗しました"
+    },
+    "settings": {
+      "saved": "設定を保存しました",
+      "saveError": "設定の保存に失敗しました"
+    },
+    "general": {
+      "success": "操作が完了しました",
+      "error": "エラーが発生しました",
+      "warning": "警告",
+      "info": "情報",
+      "copied": "コピーしました",
+      "saved": "保存しました"
+    }
+  }
+}

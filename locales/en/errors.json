@@ -1,0 +1,93 @@
+{
+  "api": {
+    "400": "Bad request",
+    "401": "Authentication required",
+    "403": "Access denied",
+    "404": "Resource not found",
+    "500": "Internal server error",
+    "502": "Bad gateway",
+    "503": "Service unavailable",
+    "504": "Gateway timeout",
+    "network": "Network error occurred",
+    "unknown": "An unexpected error occurred",
+    "timeout": "Request timed out"
+  },
+  "auth": {
+    "unauthorized": "You are not authenticated. Please log in again",
+    "sessionExpired": "Your session has expired",
+    "invalidCredentials": "Invalid email or password",
+    "accountLocked": "Your account has been locked",
+    "invalidToken": "Invalid token"
+  },
+  "validation": {
+    "required": "{field} is required",
+    "email": "Please enter a valid email address",
+    "min": "{field} must be at least {min} characters",
+    "max": "{field} must be no more than {max} characters",
+    "minNumber": "{field} must be at least {min}",
+    "maxNumber": "{field} must be no more than {max}",
+    "pattern": "{field} format is invalid",
+    "url": "Please enter a valid URL",
+    "phone": "Please enter a valid phone number",
+    "unique": "{field} is already in use",
+    "invalid": "{field} is invalid"
+  },
+  "lead": {
+    "notFound": "Lead not found",
+    "createFailed": "Failed to create lead",
+    "updateFailed": "Failed to update lead",
+    "deleteFailed": "Failed to delete lead",
+    "duplicateEmail": "This email address is already registered",
+    "invalidStatus": "Invalid status"
+  },
+  "organization": {
+    "notFound": "Organization not found",
+    "accessDenied": "You don't have access to this organization",
+    "createFailed": "Failed to create organization",
+    "updateFailed": "Failed to update organization",
+    "deleteFailed": "Failed to delete organization"
+  },
+  "member": {
+    "notFound": "Member not found",
+    "inviteFailed": "Failed to invite member",
+    "removeFailed": "Failed to remove member",
+    "alreadyMember": "Already a member",
+    "insufficientPermissions": "You don't have permission to perform this action"
+  },
+  "toast": {
+    "lead": {
+      "created": "Lead created successfully",
+      "updated": "Lead updated successfully",
+      "deleted": "Lead deleted successfully",
+      "createError": "Failed to create lead",
+      "updateError": "Failed to update lead",
+      "deleteError": "Failed to delete lead"
+    },
+    "organization": {
+      "created": "Organization created successfully",
+      "updated": "Organization updated successfully",
+      "deleted": "Organization deleted successfully",
+      "createError": "Failed to create organization",
+      "updateError": "Failed to update organization",
+      "deleteError": "Failed to delete organization"
+    },
+    "member": {
+      "invited": "Member invited successfully",
+      "removed": "Member removed successfully",
+      "inviteError": "Failed to invite member",
+      "removeError": "Failed to remove member"
+    },
+    "settings": {
+      "saved": "Settings saved successfully",
+      "saveError": "Failed to save settings"
+    },
+    "general": {
+      "success": "Operation completed successfully",
+      "error": "An error occurred",
+      "warning": "Warning",
+      "info": "Info",
+      "copied": "Copied to clipboard",
+      "saved": "Saved"
+    }
+  }
+}
