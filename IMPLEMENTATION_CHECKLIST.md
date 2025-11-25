@@ -1556,7 +1556,7 @@ leads                 -- リード（organization_id でスコープ）
 **優先度**: P0 (Critical)
 **依存**: Phase 2.5完了 ✅
 **進捗**: 10/10時間完了 (100%)
-**完了コミット**: TBD
+**完了コミット**: `d984b3b` - feat(i18n): Phase 2.6 Task 1 - Complete members management page i18n
 
 **対象ページ**:
 
