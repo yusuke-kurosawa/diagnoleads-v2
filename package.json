@@ -20,6 +20,8 @@
     "db:reset": "tsx scripts/db-reset.ts",
     "db:studio": "drizzle-kit studio",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
+    "i18n:check": "tsx scripts/check-i18n.ts",
+    "i18n:check-hardcoded": "tsx scripts/check-hardcoded-strings.ts",
     "prepare": "lefthook install"
   },
   "dependencies": {
