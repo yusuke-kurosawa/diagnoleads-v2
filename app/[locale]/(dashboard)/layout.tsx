@@ -3,10 +3,22 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 
-export const metadata: Metadata = {
-  title: 'ダッシュボード - DiagnoLeads',
-  description: 'DiagnoLeads ダッシュボード',
-};
+/**
+ * Generate metadata for dashboard pages
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'metadata.dashboard' });
+
+  return {
+    title: t('title'),
+    description: t('description'),
+  };
+}
 
 /**
  * ダッシュボードレイアウト

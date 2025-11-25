@@ -9,6 +9,16 @@
     "profile": "Profile",
     "logout": "Logout"
   },
+  "metadata": {
+    "root": {
+      "title": "DiagnoLeads v2",
+      "description": "AI-Powered B2B Diagnostic Platform"
+    },
+    "dashboard": {
+      "title": "Dashboard - DiagnoLeads",
+      "description": "Monitor your organization's lead acquisition and performance"
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

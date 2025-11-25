@@ -9,6 +9,16 @@
     "profile": "プロフィール",
     "logout": "ログアウト"
   },
+  "metadata": {
+    "root": {
+      "title": "DiagnoLeads v2",
+      "description": "AI搭載 B2B診断プラットフォーム"
+    },
+    "dashboard": {
+      "title": "ダッシュボード - DiagnoLeads",
+      "description": "組織のリード獲得とパフォーマンスを監視"
+    }
+  },
   "common": {
     "save": "保存",
     "cancel": "キャンセル",

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import { locales } from '@/lib/i18n/config';
 import { Providers } from '../providers';
 import '../globals.css';
@@ -15,13 +15,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'metadata.root' });
 
   return {
-    title: 'DiagnoLeads v2',
-    description:
-      locale === 'ja'
-        ? 'AI搭載 B2B診断プラットフォーム'
-        : 'AI-Powered B2B Diagnostic Platform',
+    title: t('title'),
+    description: t('description'),
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
     alternates: {
       canonical: `/${locale}`,
