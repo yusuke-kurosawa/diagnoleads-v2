@@ -381,7 +381,14 @@
       "exampleQueries": "Examples",
       "exampleQuery1": "Tech companies in San Francisco",
       "exampleQuery2": "Decision makers at enterprise companies",
-      "exampleQuery3": "Companies interested in SaaS"
+      "exampleQuery3": "Companies interested in SaaS",
+      "chat": {
+        "title": "AI Assistant",
+        "welcomeMessage": "Hello! I'm here to help with lead management.",
+        "suggestionHint": "Ask me about lead analysis or recommended actions",
+        "inputPlaceholder": "Type a message...",
+        "errorMessage": "Sorry, an error occurred. Please try again."
+      }
     },
     "errorPages": {
       "error": {

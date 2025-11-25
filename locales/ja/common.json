@@ -381,7 +381,14 @@
       "exampleQueries": "例",
       "exampleQuery1": "東京のテック企業",
       "exampleQuery2": "決定権を持つエンタープライズ顧客",
-      "exampleQuery3": "SaaSに興味のある企業"
+      "exampleQuery3": "SaaSに興味のある企業",
+      "chat": {
+        "title": "AIアシスタント",
+        "welcomeMessage": "こんにちは！リード管理についてお手伝いします。",
+        "suggestionHint": "リードの分析や推奨アクションについて質問してみてください",
+        "inputPlaceholder": "メッセージを入力...",
+        "errorMessage": "申し訳ございません。エラーが発生しました。もう一度お試しください。"
+      }
     },
     "errorPages": {
       "error": {
