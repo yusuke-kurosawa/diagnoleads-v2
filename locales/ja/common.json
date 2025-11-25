@@ -1,4 +1,199 @@
 {
+  "public": {
+    "meta": {
+      "title": "DiagnoLeads - AI搭載B2B診断プラットフォーム",
+      "description": "AIを活用した診断フォームでリード獲得を最大化。見込み客のスコアリング、セマンティック検索、高度な分析機能を提供します。",
+      "keywords": "B2B, 診断, AI, リード獲得, リードスコアリング, マーケティング, セールス",
+      "ogTitle": "DiagnoLeads - AI搭載B2B診断プラットフォーム",
+      "ogDescription": "AIを活用した診断フォームでリード獲得を効率化。スマートなリードスコアリングと分析で成約率を向上させましょう。"
+    },
+    "landing": {
+      "meta": {
+        "title": "ホーム",
+        "description": "DiagnoLeadsは、AIを活用したB2B診断プラットフォームです。効率的なリード獲得と高度な分析機能を提供します。"
+      },
+      "nav": {
+        "features": "機能",
+        "benefits": "メリット",
+        "diagnostic": "診断を試す",
+        "login": "ログイン",
+        "signup": "無料で始める"
+      },
+      "hero": {
+        "badge": "AI搭載の次世代プラットフォーム",
+        "title": "AIが変える、B2Bリード獲得の未来",
+        "subtitle": "診断フォームとAIスコアリングで、質の高いリードを効率的に獲得。成約率の向上と営業効率の最大化を実現します。",
+        "cta": {
+          "primary": "無料で診断を試す",
+          "secondary": "アカウント作成"
+        }
+      },
+      "features": {
+        "title": "主な機能",
+        "subtitle": "DiagnoLeadsが提供する強力な機能をご紹介します",
+        "aiScoring": {
+          "title": "AIリードスコアリング",
+          "description": "機械学習モデルが見込み客を自動で評価。優先度の高いリードに集中できます。"
+        },
+        "semanticSearch": {
+          "title": "セマンティック検索",
+          "description": "自然言語でリードを検索。「東京のIT企業」など、直感的な検索が可能です。"
+        },
+        "analytics": {
+          "title": "高度な分析",
+          "description": "リード獲得トレンド、コンバージョン率、ソース分析などをリアルタイムで把握。"
+        },
+        "multiTenant": {
+          "title": "マルチテナント対応",
+          "description": "複数の組織やチームで独立したデータ管理が可能。セキュアな環境を提供します。"
+        }
+      },
+      "benefits": {
+        "title": "導入のメリット",
+        "subtitle": "DiagnoLeadsで実現できること",
+        "item1": "リード獲得数を平均40%向上",
+        "item2": "営業チームの生産性を2倍に",
+        "item3": "リード対応時間を75%短縮",
+        "item4": "成約率を平均25%改善",
+        "item5": "データドリブンな意思決定を実現"
+      },
+      "trust": {
+        "title": "安心・信頼のプラットフォーム",
+        "security": {
+          "title": "エンタープライズセキュリティ",
+          "description": "SOC2準拠、データ暗号化、安全な認証システムで大切なデータを保護します。"
+        },
+        "global": {
+          "title": "グローバル対応",
+          "description": "日本語・英語に対応。世界中のチームでご利用いただけます。"
+        },
+        "performance": {
+          "title": "高速・高可用性",
+          "description": "エッジコンピューティングと最適化されたインフラで、いつでも高速なレスポンスを実現。"
+        }
+      },
+      "cta": {
+        "title": "今すぐ始めましょう",
+        "subtitle": "無料で診断フォームを作成し、AIの力でリード獲得を加速させましょう。",
+        "button": "無料で始める"
+      },
+      "footer": {
+        "privacy": "プライバシーポリシー",
+        "terms": "利用規約",
+        "contact": "お問い合わせ",
+        "copyright": "© {year} DiagnoLeads. All rights reserved."
+      }
+    },
+    "diagnostic": {
+      "meta": {
+        "title": "無料診断",
+        "description": "あなたのビジネスに最適なリード獲得戦略を診断します。約3分で完了し、AIによる分析結果をお届けします。"
+      },
+      "title": "ビジネス診断",
+      "subtitle": "簡単な質問に回答いただくことで、あなたのビジネスに最適なリード獲得戦略をAIが分析します。",
+      "progress": "ステップ {current} / {total}",
+      "step1": {
+        "title": "企業情報",
+        "description": "まずは、あなたの会社についてお聞かせください"
+      },
+      "step2": {
+        "title": "連絡先情報",
+        "description": "診断結果をお届けするための連絡先を入力してください"
+      },
+      "step3": {
+        "title": "ビジネス課題",
+        "description": "現在の課題と目標についてお聞かせください"
+      },
+      "step4": {
+        "title": "最終確認",
+        "description": "追加情報があればお聞かせください"
+      },
+      "fields": {
+        "companyName": "会社名",
+        "companyNamePlaceholder": "株式会社サンプル",
+        "industry": "業種",
+        "employeeCount": "従業員数",
+        "name": "お名前",
+        "namePlaceholder": "山田 太郎",
+        "email": "メールアドレス",
+        "emailPlaceholder": "your@company.com",
+        "phone": "電話番号",
+        "phonePlaceholder": "03-1234-5678",
+        "position": "役職",
+        "positionPlaceholder": "営業部長",
+        "optional": "任意",
+        "currentChallenge": "現在の最大の課題は何ですか？",
+        "primaryGoal": "主な目標",
+        "timeline": "導入検討時期",
+        "budget": "予算規模",
+        "additionalInfo": "その他、お知らせいただきたいこと",
+        "additionalInfoPlaceholder": "現在お使いのツールや、具体的なお悩みなどをご記入ください",
+        "marketingConsent": "DiagnoLeadsからの最新情報やお役立ち情報の受信に同意します"
+      },
+      "industries": {
+        "technology": "IT・テクノロジー",
+        "finance": "金融・保険",
+        "healthcare": "医療・ヘルスケア",
+        "manufacturing": "製造業",
+        "retail": "小売・EC",
+        "other": "その他"
+      },
+      "employeeCount": {
+        "1-10": "1〜10名",
+        "11-50": "11〜50名",
+        "51-200": "51〜200名",
+        "201-500": "201〜500名",
+        "501-1000": "501〜1000名",
+        "1000+": "1000名以上"
+      },
+      "challenges": {
+        "leadGeneration": "リード獲得数が少ない",
+        "conversion": "リードからの成約率が低い",
+        "efficiency": "営業効率が悪い",
+        "dataManagement": "顧客データの管理が煩雑",
+        "scaling": "事業拡大に対応できていない"
+      },
+      "goals": {
+        "increaseLeads": "リード数を増やしたい",
+        "improveConversion": "成約率を上げたい",
+        "reduceTime": "対応時間を短縮したい",
+        "betterInsights": "データ分析を強化したい"
+      },
+      "timelines": {
+        "immediate": "すぐにでも",
+        "1-3months": "1〜3ヶ月以内",
+        "3-6months": "3〜6ヶ月以内",
+        "6months+": "6ヶ月以上先"
+      },
+      "budgets": {
+        "under10k": "10万円未満",
+        "10k-50k": "10〜50万円",
+        "50k-100k": "50〜100万円",
+        "100k+": "100万円以上"
+      },
+      "validation": {
+        "required": "この項目は必須です",
+        "invalidEmail": "有効なメールアドレスを入力してください"
+      },
+      "navigation": {
+        "previous": "戻る",
+        "next": "次へ",
+        "submit": "診断を受ける",
+        "submitting": "送信中..."
+      },
+      "summary": {
+        "title": "診断結果について",
+        "description": "入力いただいた情報をもとに、AIがあなたのビジネスに最適なリード獲得戦略を分析します。結果はメールでお届けします。"
+      },
+      "complete": {
+        "title": "診断が完了しました！",
+        "message": "ご回答ありがとうございます。AIによる詳細な分析結果を、まもなくメールでお届けします。",
+        "scoreLabel": "あなたのリード獲得ポテンシャルスコア",
+        "scoreMax": "/ 100",
+        "followUp": "担当者より、診断結果に基づいた具体的なご提案をさせていただきます。"
+      }
+    }
+  },
   "navigation": {
     "dashboard": "ダッシュボード",
     "leads": "リード管理",
