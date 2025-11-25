@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useRequiredOrganizationId, useCurrentOrganization } from '@/hooks/use-organization';
 import { trpc } from '@/lib/trpc/client';
 import { Card } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import { Building2, Save, AlertCircle } from 'lucide-react';
  */
 export default function OrganizationSettingsPage() {
   const router = useRouter();
+  const t = useTranslations('settings.organization');
   const organizationId = useRequiredOrganizationId();
 
   // Fetch organization data with role information
@@ -47,16 +49,16 @@ export default function OrganizationSettingsPage() {
 
   const updateOrganization = trpc.organizations.update.useMutation({
     onMutate: () => {
-      toast.loading('組織情報を更新中...', { id: 'update-org' });
+      toast.loading(t('updating'), { id: 'update-org' });
     },
     onSuccess: () => {
-      toast.success('組織情報を更新しました', { id: 'update-org' });
+      toast.success(t('updateSuccess'), { id: 'update-org' });
       setHasChanges(false);
       // Refresh the page to get updated data
       router.refresh();
     },
     onError: (error) => {
-      toast.error(`エラー: ${error.message}`, { id: 'update-org' });
+      toast.error(t('updateError', { message: error.message }), { id: 'update-org' });
     },
   });
 
@@ -116,13 +118,13 @@ export default function OrganizationSettingsPage() {
           <Card className="p-8 text-center">
             <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              組織が見つかりません
+              {t('notFound')}
             </h2>
             <p className="text-gray-600 mb-4">
-              組織情報を取得できませんでした
+              {t('notFoundDescription')}
             </p>
             <Button onClick={() => router.push('/dashboard')}>
-              ダッシュボードに戻る
+              {t('backToDashboard')}
             </Button>
           </Card>
         </div>
@@ -138,8 +140,8 @@ export default function OrganizationSettingsPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">組織設定</h1>
-          <p className="text-gray-600">組織の基本情報を管理します</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
+          <p className="text-gray-600">{t('description')}</p>
         </div>
 
         {/* Non-owner warning */}
@@ -149,11 +151,12 @@ export default function OrganizationSettingsPage() {
               <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
                 <h3 className="font-medium text-yellow-900 mb-1">
-                  閲覧モード
+                  {t('viewMode')}
                 </h3>
                 <p className="text-sm text-yellow-800">
-                  組織情報の変更はオーナーのみ可能です。あなたの現在のロールは「
-                  {currentOrg.role === 'admin' ? '管理者' : 'メンバー'}」です。
+                  {t('viewModeDescription', {
+                    role: currentOrg.role === 'admin' ? t('roleAdmin') : t('roleMember')
+                  })}
                 </p>
               </div>
             </div>
@@ -178,42 +181,42 @@ export default function OrganizationSettingsPage() {
 
             {/* Organization Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">組織名</Label>
+              <Label htmlFor="name">{t('nameLabel')}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="例: 株式会社サンプル"
+                placeholder={t('namePlaceholder')}
                 disabled={!isOwner || updateOrganization.isPending}
                 required
                 maxLength={100}
               />
               <p className="text-xs text-gray-500">
-                組織の表示名です。いつでも変更できます。
+                {t('nameHelp')}
               </p>
             </div>
 
             {/* Organization Slug */}
             <div className="space-y-2">
-              <Label htmlFor="slug">組織スラッグ</Label>
+              <Label htmlFor="slug">{t('slugLabel')}</Label>
               <Input
                 id="slug"
                 value={slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
-                placeholder="例: sample-corp"
+                placeholder={t('slugPlaceholder')}
                 disabled={!isOwner || updateOrganization.isPending}
                 required
                 pattern="[a-z0-9-]+"
                 maxLength={50}
               />
               <p className="text-xs text-gray-500">
-                URLに使用される一意の識別子です。小文字英数字とハイフンのみ使用できます。
+                {t('slugHelp')}
               </p>
             </div>
 
             {/* Organization ID (Read-only) */}
             <div className="space-y-2">
-              <Label htmlFor="id">組織ID</Label>
+              <Label htmlFor="id">{t('idLabel')}</Label>
               <Input
                 id="id"
                 value={currentOrg.id}
@@ -221,13 +224,13 @@ export default function OrganizationSettingsPage() {
                 className="bg-gray-50"
               />
               <p className="text-xs text-gray-500">
-                システム内部で使用される一意のIDです。変更できません。
+                {t('idHelp')}
               </p>
             </div>
 
             {/* Created At */}
             <div className="space-y-2">
-              <Label htmlFor="created">作成日時</Label>
+              <Label htmlFor="created">{t('createdAtLabel')}</Label>
               <Input
                 id="created"
                 value={new Date(currentOrg.createdAt).toLocaleString('ja-JP')}
@@ -245,7 +248,7 @@ export default function OrganizationSettingsPage() {
                   className="flex-1"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  変更を保存
+                  {t('saveChanges')}
                 </Button>
                 <Button
                   type="button"
@@ -253,7 +256,7 @@ export default function OrganizationSettingsPage() {
                   onClick={handleReset}
                   disabled={!hasChanges || updateOrganization.isPending}
                 >
-                  リセット
+                  {t('reset')}
                 </Button>
               </div>
             )}
@@ -265,11 +268,11 @@ export default function OrganizationSettingsPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
             <div className="text-sm text-blue-900">
-              <p className="font-medium mb-1">ヒント</p>
+              <p className="font-medium mb-1">{t('hintsTitle')}</p>
               <ul className="space-y-1 list-disc list-inside">
-                <li>組織名はいつでも変更できます</li>
-                <li>組織スラッグの変更は慎重に行ってください（URLが変わります）</li>
-                <li>組織の削除については管理者にお問い合わせください</li>
+                <li>{t('hintNameChange')}</li>
+                <li>{t('hintSlugChange')}</li>
+                <li>{t('hintDelete')}</li>
               </ul>
             </div>
           </div>

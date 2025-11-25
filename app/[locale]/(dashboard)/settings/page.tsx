@@ -1,47 +1,53 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
+
 /**
  * 個人設定ページ
  * TODO: 実際の設定フォームを実装
  */
 export default function SettingsPage() {
+  const t = useTranslations('settings.profile');
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">個人設定</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('title')}</h1>
 
       <div className="space-y-6">
         {/* プロフィール設定 */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            プロフィール
+            {t('profileSection')}
           </h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                氏名
+                {t('nameLabel')}
               </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="山田 太郎"
+                placeholder={t('namePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス
+                {t('emailLabel')}
               </label>
               <input
                 type="email"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="your@email.com"
+                placeholder={t('emailPlaceholder')}
                 disabled
               />
               <p className="text-xs text-gray-500 mt-1">
-                メールアドレスは変更できません
+                {t('emailHelp')}
               </p>
             </div>
 
             <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-              保存
+              {t('save')}
             </button>
           </div>
         </div>
@@ -49,12 +55,12 @@ export default function SettingsPage() {
         {/* パスワード変更 */}
         <div className="border-t pt-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            パスワード変更
+            {t('passwordSection')}
           </h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                現在のパスワード
+                {t('currentPasswordLabel')}
               </label>
               <input
                 type="password"
@@ -64,7 +70,7 @@ export default function SettingsPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                新しいパスワード
+                {t('newPasswordLabel')}
               </label>
               <input
                 type="password"
@@ -74,7 +80,7 @@ export default function SettingsPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                新しいパスワード（確認）
+                {t('confirmPasswordLabel')}
               </label>
               <input
                 type="password"
@@ -83,7 +89,7 @@ export default function SettingsPage() {
             </div>
 
             <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-              パスワードを変更
+              {t('changePassword')}
             </button>
           </div>
         </div>
@@ -91,13 +97,13 @@ export default function SettingsPage() {
         {/* アカウント削除 */}
         <div className="border-t pt-6">
           <h2 className="text-lg font-semibold text-red-900 mb-4">
-            アカウント削除
+            {t('deleteAccountSection')}
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            アカウントを削除すると、すべてのデータが削除されます。この操作は取り消せません。
+            {t('deleteAccountWarning')}
           </p>
           <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
-            アカウントを削除
+            {t('deleteAccount')}
           </button>
         </div>
       </div>
