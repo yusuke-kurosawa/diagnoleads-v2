@@ -273,6 +273,63 @@
       "updatingRole": "Updating role...",
       "roleUpdateSuccess": "Role updated successfully",
       "roleUpdateError": "Failed to update role: {message}"
+    },
+    "auth": {
+      "metadata": {
+        "title": "Authentication - DiagnoLeads",
+        "description": "Log in or sign up to DiagnoLeads"
+      },
+      "branding": {
+        "title": "DiagnoLeads",
+        "subtitle": "AI-powered B2B diagnostic platform"
+      },
+      "login": {
+        "title": "Log In",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "••••••••",
+        "submitButton": "Log In",
+        "submittingButton": "Logging in...",
+        "forgotPassword": "Forgot password?",
+        "divider": "or",
+        "signupLink": "Sign Up",
+        "successToast": "Successfully logged in",
+        "errorToast": "Login failed. Please check your email and password."
+      },
+      "signup": {
+        "title": "Create Account",
+        "nameLabel": "Name",
+        "namePlaceholder": "John Doe",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "Confirm Password",
+        "submitButton": "Create Account",
+        "submittingButton": "Creating account...",
+        "successToast": "Account created successfully",
+        "errorToast": "Failed to create account. This email may already be in use."
+      },
+      "resetPassword": {
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "your@email.com",
+        "description": "We'll send a password reset link to your registered email address.",
+        "submitButton": "Send Reset Link",
+        "submittingButton": "Sending...",
+        "successTitle": "Password reset email sent",
+        "successMessage": "Click the link in the email to reset your password.",
+        "successNote": "If you don't receive the email, please check your spam folder.",
+        "successToast": "Password reset email sent successfully",
+        "errorToast": "Failed to send password reset email. Please check your email address."
+      },
+      "validation": {
+        "emailInvalid": "Please enter a valid email address",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordComplexity": "Password must contain uppercase, lowercase, and numbers",
+        "passwordMismatch": "Passwords do not match",
+        "nameRequired": "Please enter your name"
+      }
     }
   }
 }

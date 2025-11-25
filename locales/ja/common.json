@@ -273,6 +273,63 @@
       "updatingRole": "ロールを変更中...",
       "roleUpdateSuccess": "ロールを変更しました",
       "roleUpdateError": "ロールの変更に失敗しました: {message}"
+    },
+    "auth": {
+      "metadata": {
+        "title": "認証 - DiagnoLeads",
+        "description": "DiagnoLeads へのログイン・サインアップ"
+      },
+      "branding": {
+        "title": "DiagnoLeads",
+        "subtitle": "AI を活用した B2B 診断プラットフォーム"
+      },
+      "login": {
+        "title": "ログイン",
+        "emailLabel": "メールアドレス",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "パスワード",
+        "passwordPlaceholder": "••••••••",
+        "submitButton": "ログイン",
+        "submittingButton": "ログイン中...",
+        "forgotPassword": "パスワードを忘れた場合",
+        "divider": "または",
+        "signupLink": "新規登録",
+        "successToast": "ログインに成功しました",
+        "errorToast": "ログインに失敗しました。メールアドレスとパスワードを確認してください。"
+      },
+      "signup": {
+        "title": "アカウントを作成",
+        "nameLabel": "名前",
+        "namePlaceholder": "山田 太郎",
+        "emailLabel": "メールアドレス",
+        "emailPlaceholder": "your@email.com",
+        "passwordLabel": "パスワード",
+        "passwordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "パスワード（確認）",
+        "submitButton": "アカウントを作成",
+        "submittingButton": "アカウント作成中...",
+        "successToast": "アカウントを作成しました",
+        "errorToast": "アカウント作成に失敗しました。既にこのメールアドレスが使用されている可能性があります。"
+      },
+      "resetPassword": {
+        "emailLabel": "メールアドレス",
+        "emailPlaceholder": "your@email.com",
+        "description": "登録されているメールアドレスにパスワードリセット用のリンクを送信します。",
+        "submitButton": "リセットメールを送信",
+        "submittingButton": "送信中...",
+        "successTitle": "パスワードリセットメールを送信しました",
+        "successMessage": "メールに記載されたリンクをクリックして、パスワードをリセットしてください。",
+        "successNote": "メールが届かない場合は、迷惑メールフォルダをご確認ください。",
+        "successToast": "パスワードリセットメールを送信しました",
+        "errorToast": "パスワードリセットメールの送信に失敗しました。メールアドレスを確認してください。"
+      },
+      "validation": {
+        "emailInvalid": "有効なメールアドレスを入力してください",
+        "passwordMin": "パスワードは8文字以上である必要があります",
+        "passwordComplexity": "パスワードには大文字、小文字、数字を含める必要があります",
+        "passwordMismatch": "パスワードが一致しません",
+        "nameRequired": "名前を入力してください"
+      }
     }
   }
 }

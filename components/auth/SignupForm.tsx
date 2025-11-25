@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,29 +19,36 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-const signupSchema = z
-  .object({
-    name: z.string().min(1, '名前を入力してください'),
-    email: z.string().email('有効なメールアドレスを入力してください'),
-    password: z
-      .string()
-      .min(8, 'パスワードは8文字以上である必要があります')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'パスワードには大文字、小文字、数字を含める必要があります'
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'パスワードが一致しません',
-    path: ['confirmPassword'],
-  });
-
-type SignupFormValues = z.infer<typeof signupSchema>;
+type SignupFormValues = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export function SignupForm() {
   const router = useRouter();
+  const t = useTranslations('settings.auth.signup');
+  const tv = useTranslations('settings.auth.validation');
   const [isLoading, setIsLoading] = useState(false);
+
+  const signupSchema = z
+    .object({
+      name: z.string().min(1, tv('nameRequired')),
+      email: z.string().email(tv('emailInvalid')),
+      password: z
+        .string()
+        .min(8, tv('passwordMin'))
+        .regex(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+          tv('passwordComplexity')
+        ),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: tv('passwordMismatch'),
+      path: ['confirmPassword'],
+    });
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -62,13 +70,11 @@ export function SignupForm() {
         callbackURL: '/dashboard',
       });
 
-      toast.success('アカウントを作成しました');
+      toast.success(t('successToast'));
       router.push('/dashboard');
     } catch (error) {
       console.error('Signup error:', error);
-      toast.error(
-        'アカウント作成に失敗しました。既にこのメールアドレスが使用されている可能性があります。'
-      );
+      toast.error(t('errorToast'));
     } finally {
       setIsLoading(false);
     }
@@ -82,11 +88,11 @@ export function SignupForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>名前</FormLabel>
+              <FormLabel>{t('nameLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="text"
-                  placeholder="山田 太郎"
+                  placeholder={t('namePlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -101,11 +107,11 @@ export function SignupForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>メールアドレス</FormLabel>
+              <FormLabel>{t('emailLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t('emailPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -120,11 +126,11 @@ export function SignupForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>パスワード</FormLabel>
+              <FormLabel>{t('passwordLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('passwordPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -139,11 +145,11 @@ export function SignupForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>パスワード（確認）</FormLabel>
+              <FormLabel>{t('confirmPasswordLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('passwordPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -154,7 +160,7 @@ export function SignupForm() {
         />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'アカウント作成中...' : 'アカウントを作成'}
+          {isLoading ? t('submittingButton') : t('submitButton')}
         </Button>
       </form>
     </Form>

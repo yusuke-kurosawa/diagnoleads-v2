@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,16 +19,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-const loginSchema = z.object({
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(8, 'パスワードは8文字以上である必要があります'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
 
 export function LoginForm() {
   const router = useRouter();
+  const t = useTranslations('settings.auth.login');
+  const tv = useTranslations('settings.auth.validation');
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginSchema = z.object({
+    email: z.string().email(tv('emailInvalid')),
+    password: z.string().min(8, tv('passwordMin')),
+  });
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,11 +52,11 @@ export function LoginForm() {
         callbackURL: '/dashboard',
       });
 
-      toast.success('ログインに成功しました');
+      toast.success(t('successToast'));
       router.push('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+      toast.error(t('errorToast'));
     } finally {
       setIsLoading(false);
     }
@@ -64,11 +70,11 @@ export function LoginForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>メールアドレス</FormLabel>
+              <FormLabel>{t('emailLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t('emailPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -83,11 +89,11 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>パスワード</FormLabel>
+              <FormLabel>{t('passwordLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('passwordPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
@@ -98,7 +104,7 @@ export function LoginForm() {
         />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'ログイン中...' : 'ログイン'}
+          {isLoading ? t('submittingButton') : t('submitButton')}
         </Button>
       </form>
     </Form>

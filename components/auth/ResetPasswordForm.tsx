@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,15 +19,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-const resetPasswordSchema = z.object({
-  email: z.string().email('有効なメールアドレスを入力してください'),
-});
-
-type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormValues = {
+  email: string;
+};
 
 export function ResetPasswordForm() {
+  const t = useTranslations('settings.auth.resetPassword');
+  const tv = useTranslations('settings.auth.validation');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const resetPasswordSchema = z.object({
+    email: z.string().email(tv('emailInvalid')),
+  });
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -43,13 +48,11 @@ export function ResetPasswordForm() {
         redirectTo: '/reset-password/confirm',
       });
 
-      toast.success('パスワードリセットメールを送信しました');
+      toast.success(t('successToast'));
       setIsSuccess(true);
     } catch (error) {
       console.error('Reset password error:', error);
-      toast.error(
-        'パスワードリセットメールの送信に失敗しました。メールアドレスを確認してください。'
-      );
+      toast.error(t('errorToast'));
     } finally {
       setIsLoading(false);
     }
@@ -59,13 +62,13 @@ export function ResetPasswordForm() {
     return (
       <div className="text-center space-y-4">
         <div className="text-green-600 text-lg font-semibold">
-          パスワードリセットメールを送信しました
+          {t('successTitle')}
         </div>
         <p className="text-sm text-gray-600">
-          メールに記載されたリンクをクリックして、パスワードをリセットしてください。
+          {t('successMessage')}
         </p>
         <p className="text-xs text-gray-500">
-          メールが届かない場合は、迷惑メールフォルダをご確認ください。
+          {t('successNote')}
         </p>
       </div>
     );
@@ -79,17 +82,17 @@ export function ResetPasswordForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>メールアドレス</FormLabel>
+              <FormLabel>{t('emailLabel')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t('emailPlaceholder')}
                   {...field}
                   disabled={isLoading}
                 />
               </FormControl>
               <FormDescription>
-                登録されているメールアドレスにパスワードリセット用のリンクを送信します。
+                {t('description')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -97,7 +100,7 @@ export function ResetPasswordForm() {
         />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? '送信中...' : 'リセットメールを送信'}
+          {isLoading ? t('submittingButton') : t('submitButton')}
         </Button>
       </form>
     </Form>
