@@ -1503,13 +1503,14 @@ leads                 -- リード（organization_id でスコープ）
 
 ---
 
-## 🌐 Phase 2.6: i18n完全化（管理系・認証系ページ対応） ⏸️ 0%完了
+## 🌐 Phase 2.6: i18n完全化（管理系・認証系ページ対応） 🚧 28%完了
 
 > **目標**: Phase 2.5で構築したi18n基盤を活用し、全ページの多言語対応を完了
 > **期間**: Day 23-25 (3営業日)
-> **完了タスク**: 0/4
-> **完了率**: 0% (0/18時間)
+> **完了タスク**: 0/4 (Task 1進行中 50%完了)
+> **完了率**: 28% (5/18時間)
 > **優先度**: ⭐⭐ 高（Phase 3前の完全化を推奨）
+> **最終更新**: 2025-11-25
 
 ### なぜ Phase 2.6 が重要か？
 
@@ -1538,35 +1539,41 @@ leads                 -- リード（organization_id でスコープ）
 
 | Task | 機能 | 工数 | 依存関係 | ステータス |
 |------|------|------|---------|-----------|
-| **Task 1** | 管理系ページi18n対応 | 10h | Phase 2.5完了 | ⏸️ 待機中 |
+| **Task 1** | 管理系ページi18n対応 | 10h | Phase 2.5完了 | 🚧 **進行中** |
 | **Task 2** | 認証系ページi18n対応 | 4h | Task 1 | ⏸️ 待機中 |
 | **Task 3** | エラーページi18n対応 | 2h | Task 2 | ⏸️ 待機中 |
 | **Task 4** | メタデータ多言語化 | 2h | Task 3 | ⏸️ 待機中 |
 
 **総工数**: 18時間
-**完了**: 0時間 (0%)
+**完了**: 5時間 (28%)
 
 ---
 
-### ⏸️ Task 1: 管理系ページi18n対応 待機中
+### 🚧 Task 1: 管理系ページi18n対応 進行中
 
 **工数**: 10時間
 **優先度**: P0 (Critical)
 **依存**: Phase 2.5完了 ✅
+**進捗**: 5/10時間完了 (50%)
+**完了コミット**: `5767e60` - feat(i18n): Phase 2.6 Task 1 - Organization and Profile settings i18n
 
 **対象ページ**:
 
-1. **組織設定ページ** (`app/[locale]/(dashboard)/settings/organization/page.tsx`)
-   - ハードコーディング: 16箇所
+1. **✅ 組織設定ページ** (`app/[locale]/(dashboard)/settings/organization/page.tsx`) - **完了**
+   - ハードコーディング: 16箇所 → 0箇所
    - 工数: 4時間
-   - 内容:
-     - ページタイトル、説明文
-     - フォームラベル（組織名、説明、プラン）
-     - ボタン（保存、キャンセル）
-     - トースト通知（更新成功/失敗）
-     - 確認ダイアログ
+   - 完了内容:
+     - ✅ ページタイトル、説明文
+     - ✅ エラーメッセージ（組織が見つかりません、ダッシュボードに戻る）
+     - ✅ 閲覧モード警告、ロールラベル（管理者、メンバー）
+     - ✅ フォームラベル（組織名、組織スラッグ、組織ID、作成日時）
+     - ✅ プレースホルダー、ヘルプテキスト
+     - ✅ ボタン（変更を保存、リセット）
+     - ✅ トースト通知（更新中、更新成功、エラー）
+     - ✅ ヒント（3項目）
+   - 翻訳追加: settings.organization (27キー)
 
-2. **メンバー管理ページ** (`app/[locale]/(dashboard)/settings/members/page.tsx`)
+2. **⏸️ メンバー管理ページ** (`app/[locale]/(dashboard)/settings/members/page.tsx`) - **未着手**
    - ハードコーディング: 28箇所
    - 工数: 5時間
    - 内容:
@@ -1578,12 +1585,17 @@ leads                 -- リード（organization_id でスコープ）
      - 招待ダイアログ
      - 削除確認ダイアログ
 
-3. **個人設定ページ** (`app/[locale]/(dashboard)/settings/page.tsx`)
-   - ハードコーディング: 2箇所
+3. **✅ 個人設定ページ** (`app/[locale]/(dashboard)/settings/page.tsx`) - **完了**
+   - ハードコーディング: 15箇所 → 0箇所
    - 工数: 1時間
-   - 内容:
-     - ページタイトル
-     - フォームラベル（名前、プロフィール画像）
+   - 完了内容:
+     - ✅ ページタイトル
+     - ✅ セクションタイトル（プロフィール、パスワード変更、アカウント削除）
+     - ✅ フォームラベル（氏名、メールアドレス、パスワード関連）
+     - ✅ プレースホルダー、ヘルプテキスト
+     - ✅ ボタン（保存、パスワードを変更、アカウントを削除）
+     - ✅ 警告メッセージ
+   - 翻訳追加: settings.profile (16キー)
 
 **実装手順**:
 
@@ -1621,10 +1633,16 @@ leads                 -- リード（organization_id でスコープ）
    pnpm i18n:check-hardcoded
    ```
 
-**成果物**:
-- `locales/ja/common.json` (settings セクション追加)
-- `locales/en/common.json` (settings セクション追加)
-- 3ページのコンポーネント更新
+**完了した成果物**:
+- ✅ `locales/ja/common.json` (settings.organization: 27キー、settings.profile: 16キー)
+- ✅ `locales/en/common.json` (settings.organization: 27キー、settings.profile: 16キー)
+- ✅ `app/[locale]/(dashboard)/settings/organization/page.tsx` (i18n完全対応)
+- ✅ `app/[locale]/(dashboard)/settings/page.tsx` (i18n完全対応)
+
+**残り**:
+- ⏸️ `app/[locale]/(dashboard)/settings/members/page.tsx` (未着手)
+- ⏸️ `locales/ja/common.json` (settings.members セクション追加予定)
+- ⏸️ `locales/en/common.json` (settings.members セクション追加予定)
 
 ---
 
