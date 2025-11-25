@@ -341,6 +341,36 @@
         "nameRequired": "Please enter your name"
       }
     },
+    "ai": {
+      "leadScore": "Lead Score",
+      "aiLeadScore": "AI Lead Score",
+      "generateAIScore": "Score with AI",
+      "generateScore": "Generate Score",
+      "generating": "Generating...",
+      "showDetails": "Show Details",
+      "hideDetails": "Hide Details",
+      "noScoreAvailable": "No score has been generated yet",
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "confidence": {
+        "low": "Confidence: Low",
+        "medium": "Confidence: Medium",
+        "high": "Confidence: High"
+      },
+      "reasoning": "Reasoning",
+      "recommendedActions": "Recommended Actions",
+      "similarLeads": "Similar Leads",
+      "noSimilarLeadsFound": "No similar leads found",
+      "similarity": "Similarity",
+      "aiSummary": "AI Summary",
+      "regenerate": "Regenerate",
+      "generate": "Generate",
+      "noSummaryAvailable": "No summary has been generated yet"
+    },
     "errorPages": {
       "error": {
         "title": "An error occurred",
