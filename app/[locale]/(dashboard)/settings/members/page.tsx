@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useRequiredOrganizationId } from '@/hooks/use-organization';
-import { useMembers } from '@/hooks/use-members';
+import { useListMembers } from '@/hooks/use-members';
 import { trpc } from '@/lib/trpc/client';
+import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +74,7 @@ type MemberToChangeRole = {
  */
 export default function MembersPage() {
   const router = useRouter();
+  const t = useTranslations('settings.members');
   const organizationId = useRequiredOrganizationId();
 
   // Fetch organization data to check permissions
@@ -82,8 +85,58 @@ export default function MembersPage() {
     }
   );
 
-  // Member operations
-  const { members, total, isLoading, invite, updateRole, remove } = useMembers(organizationId);
+  // Fetch members list
+  const list = useListMembers({
+    organizationId,
+    limit: 50,
+    offset: 0,
+  });
+
+  const utils = trpc.useContext();
+
+  // Member operations with i18n toast notifications
+  const invite = trpc.members.invite.useMutation({
+    onMutate: () => {
+      toast.loading(t('inviting'), { id: 'invite-member' });
+    },
+    onSuccess: () => {
+      utils.members.list.invalidate();
+      toast.success(t('inviteSuccess'), { id: 'invite-member' });
+    },
+    onError: (error) => {
+      toast.error(t('inviteError', { message: error.message }), { id: 'invite-member' });
+    },
+  });
+
+  const updateRole = trpc.members.updateRole.useMutation({
+    onMutate: () => {
+      toast.loading(t('updatingRole'), { id: 'update-role' });
+    },
+    onSuccess: () => {
+      utils.members.list.invalidate();
+      toast.success(t('roleUpdateSuccess'), { id: 'update-role' });
+    },
+    onError: (error) => {
+      toast.error(t('roleUpdateError', { message: error.message }), { id: 'update-role' });
+    },
+  });
+
+  const remove = trpc.members.remove.useMutation({
+    onMutate: () => {
+      toast.loading(t('removing'), { id: 'remove-member' });
+    },
+    onSuccess: () => {
+      utils.members.list.invalidate();
+      toast.success(t('removeSuccess'), { id: 'remove-member' });
+    },
+    onError: (error) => {
+      toast.error(t('removeError', { message: error.message }), { id: 'remove-member' });
+    },
+  });
+
+  const members = list.data?.members || [];
+  const total = list.data?.total || 0;
+  const isLoading = list.isLoading;
 
   // Dialog states
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -166,17 +219,17 @@ export default function MembersPage() {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'owner':
-        return 'オーナー';
+        return t('roleOwner');
       case 'admin':
-        return '管理者';
+        return t('roleAdmin');
       case 'member':
-        return 'メンバー';
+        return t('roleMember');
       default:
         return role;
     }
   };
 
-  if (isLoading || orgLoading) {
+  if (list.isLoading || orgLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -199,8 +252,8 @@ export default function MembersPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">メンバー管理</h1>
-          <p className="text-gray-600">組織メンバーの招待と管理を行います</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
+          <p className="text-gray-600">{t('description')}</p>
         </div>
 
         {/* Non-manager warning */}
@@ -209,10 +262,9 @@ export default function MembersPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <h3 className="font-medium text-yellow-900 mb-1">閲覧モード</h3>
+                <h3 className="font-medium text-yellow-900 mb-1">{t('viewMode')}</h3>
                 <p className="text-sm text-yellow-800">
-                  メンバーの招待・変更・削除は管理者またはオーナーのみ可能です。
-                  あなたの現在のロールは「{getRoleLabel(userRole)}」です。
+                  {t('viewModeDescription', { role: getRoleLabel(userRole) })}
                 </p>
               </div>
             </div>
@@ -228,8 +280,8 @@ export default function MembersPage() {
                   <Users className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">メンバー一覧</h2>
-                  <p className="text-sm text-gray-600">{total}人のメンバー</p>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('listTitle')}</h2>
+                  <p className="text-sm text-gray-600">{t('memberCount', { count: total })}</p>
                 </div>
               </div>
 
@@ -238,31 +290,31 @@ export default function MembersPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      メンバーを招待
+                      {t('inviteButton')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>メンバーを招待</DialogTitle>
+                      <DialogTitle>{t('inviteDialogTitle')}</DialogTitle>
                       <DialogDescription>
-                        招待メールを送信します。メンバーはメールのリンクから参加できます。
+                        {t('inviteDialogDescription')}
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleInviteMember}>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label htmlFor="email">メールアドレス</Label>
+                          <Label htmlFor="email">{t('emailLabel')}</Label>
                           <Input
                             id="email"
                             type="email"
-                            placeholder="example@company.com"
+                            placeholder={t('emailPlaceholder')}
                             value={inviteEmail}
                             onChange={(e) => setInviteEmail(e.target.value)}
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="role">ロール</Label>
+                          <Label htmlFor="role">{t('roleLabel')}</Label>
                           <Select
                             value={inviteRole}
                             onValueChange={(value: 'member' | 'admin') => setInviteRole(value)}
@@ -271,12 +323,12 @@ export default function MembersPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="member">メンバー</SelectItem>
-                              <SelectItem value="admin">管理者</SelectItem>
+                              <SelectItem value="member">{t('roleMember')}</SelectItem>
+                              <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-gray-500">
-                            管理者はメンバーの招待と管理ができます
+                            {t('roleHelp')}
                           </p>
                         </div>
                       </div>
@@ -286,11 +338,11 @@ export default function MembersPage() {
                           variant="outline"
                           onClick={() => setInviteDialogOpen(false)}
                         >
-                          キャンセル
+                          {t('cancel')}
                         </Button>
                         <Button type="submit" disabled={invite.isPending}>
                           <Mail className="mr-2 h-4 w-4" />
-                          招待を送信
+                          {t('sendInvite')}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -305,15 +357,15 @@ export default function MembersPage() {
               <div className="p-12 text-center">
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  メンバーがいません
+                  {t('noMembers')}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  まだメンバーが招待されていません。
+                  {t('noMembersDescription')}
                 </p>
                 {canManageMembers && (
                   <Button onClick={() => setInviteDialogOpen(true)}>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    最初のメンバーを招待
+                    {t('inviteFirstMember')}
                   </Button>
                 )}
               </div>
@@ -321,10 +373,10 @@ export default function MembersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>メンバー</TableHead>
-                    <TableHead>ロール</TableHead>
-                    <TableHead>参加日</TableHead>
-                    {canManageMembers && <TableHead className="text-right">アクション</TableHead>}
+                    <TableHead>{t('tableHeaderMember')}</TableHead>
+                    <TableHead>{t('tableHeaderRole')}</TableHead>
+                    <TableHead>{t('tableHeaderJoinedAt')}</TableHead>
+                    {canManageMembers && <TableHead className="text-right">{t('tableHeaderActions')}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -412,12 +464,12 @@ export default function MembersPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
             <div className="text-sm text-blue-900">
-              <p className="font-medium mb-1">ヒント</p>
+              <p className="font-medium mb-1">{t('hintsTitle')}</p>
               <ul className="space-y-1 list-disc list-inside">
-                <li>招待されたメンバーにはメールで通知が送信されます</li>
-                <li>管理者はメンバーの招待と管理ができます</li>
-                <li>オーナーのロールは変更できません</li>
-                <li>自分自身を削除することはできません</li>
+                <li>{t('hintEmailNotification')}</li>
+                <li>{t('hintAdminPermissions')}</li>
+                <li>{t('hintOwnerRole')}</li>
+                <li>{t('hintCannotRemoveSelf')}</li>
               </ul>
             </div>
           </div>
@@ -427,23 +479,21 @@ export default function MembersPage() {
         <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>メンバーを削除しますか？</AlertDialogTitle>
+              <AlertDialogTitle>{t('removeDialogTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {memberToRemove && (
-                  <>
-                    <strong>{memberToRemove.name}</strong> ({memberToRemove.email})
-                    を組織から削除します。この操作は取り消せません。
-                  </>
-                )}
+                {memberToRemove && t('removeDialogDescription', {
+                  name: memberToRemove.name,
+                  email: memberToRemove.email
+                })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleRemoveMember}
                 className="bg-red-600 hover:bg-red-700"
               >
-                削除する
+                {t('removeButton')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -453,18 +503,17 @@ export default function MembersPage() {
         <Dialog open={!!memberToChangeRole} onOpenChange={(open) => !open && setMemberToChangeRole(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>ロールを変更</DialogTitle>
+              <DialogTitle>{t('changeRoleDialogTitle')}</DialogTitle>
               <DialogDescription>
-                {memberToChangeRole && (
-                  <>
-                    <strong>{memberToChangeRole.name}</strong> のロールを変更します
-                  </>
-                )}
+                {memberToChangeRole && t('changeRoleDialogDescription', {
+                  name: memberToChangeRole.name,
+                  email: memberToChangeRole.email
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="new-role">新しいロール</Label>
+                <Label htmlFor="new-role">{t('newRoleLabel')}</Label>
                 <Select
                   value={newRole}
                   onValueChange={(value: 'member' | 'admin' | 'owner') => setNewRole(value)}
@@ -473,15 +522,15 @@ export default function MembersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">メンバー</SelectItem>
-                    <SelectItem value="admin">管理者</SelectItem>
+                    <SelectItem value="member">{t('roleMember')}</SelectItem>
+                    <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
                     {userRole === 'owner' && (
-                      <SelectItem value="owner">オーナー</SelectItem>
+                      <SelectItem value="owner">{t('roleOwner')}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500">
-                  管理者はメンバーの招待と管理ができます
+                  {t('roleHelp')}
                 </p>
               </div>
             </div>
@@ -491,10 +540,10 @@ export default function MembersPage() {
                 variant="outline"
                 onClick={() => setMemberToChangeRole(null)}
               >
-                キャンセル
+                {t('cancel')}
               </Button>
               <Button onClick={handleChangeRole} disabled={updateRole.isPending}>
-                変更を保存
+                {t('saveChanges')}
               </Button>
             </DialogFooter>
           </DialogContent>
