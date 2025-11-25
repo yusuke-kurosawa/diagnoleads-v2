@@ -1661,7 +1661,7 @@ leads                 -- リード（organization_id でスコープ）
 **優先度**: P1 (High)
 **依存**: Task 1完了 ✅
 **進捗**: 4/4時間完了 (100%)
-**完了コミット**: TBD
+**完了コミット**: `bb6e873` - feat(i18n): Phase 2.6 Task 2 - Complete authentication pages i18n
 
 **対象ページ**:
 
