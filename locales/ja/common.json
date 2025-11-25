@@ -27,6 +27,7 @@
     "create": "作成",
     "update": "更新",
     "search": "検索",
+    "searching": "検索中...",
     "filter": "フィルター",
     "export": "エクスポート",
     "import": "インポート",
@@ -369,7 +370,18 @@
       "aiSummary": "AI要約",
       "regenerate": "再生成",
       "generate": "生成",
-      "noSummaryAvailable": "要約はまだ生成されていません"
+      "noSummaryAvailable": "要約はまだ生成されていません",
+      "semanticSearch": "セマンティック検索",
+      "semanticSearchDescription": "自然言語でリードを検索できます（例：「東京のテック企業」）",
+      "semanticSearchPlaceholder": "探しているリードを説明してください...",
+      "searchResultsCount": "{count}件の結果",
+      "match": "一致",
+      "noSearchResults": "検索結果が見つかりません",
+      "noSearchResultsHint": "別のキーワードで検索してみてください",
+      "exampleQueries": "例",
+      "exampleQuery1": "東京のテック企業",
+      "exampleQuery2": "決定権を持つエンタープライズ顧客",
+      "exampleQuery3": "SaaSに興味のある企業"
     },
     "errorPages": {
       "error": {

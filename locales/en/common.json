@@ -27,6 +27,7 @@
     "create": "Create",
     "update": "Update",
     "search": "Search",
+    "searching": "Searching...",
     "filter": "Filter",
     "export": "Export",
     "import": "Import",
@@ -369,7 +370,18 @@
       "aiSummary": "AI Summary",
       "regenerate": "Regenerate",
       "generate": "Generate",
-      "noSummaryAvailable": "No summary has been generated yet"
+      "noSummaryAvailable": "No summary has been generated yet",
+      "semanticSearch": "Semantic Search",
+      "semanticSearchDescription": "Search leads using natural language (e.g., \"tech companies in San Francisco\")",
+      "semanticSearchPlaceholder": "Describe what you're looking for...",
+      "searchResultsCount": "{count} results",
+      "match": "Match",
+      "noSearchResults": "No results found",
+      "noSearchResultsHint": "Try different keywords or adjust your query",
+      "exampleQueries": "Examples",
+      "exampleQuery1": "Tech companies in San Francisco",
+      "exampleQuery2": "Decision makers at enterprise companies",
+      "exampleQuery3": "Companies interested in SaaS"
     },
     "errorPages": {
       "error": {
