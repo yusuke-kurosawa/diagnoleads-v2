@@ -114,10 +114,11 @@ export {
 } from './adapters/factory';
 
 // =============================================================================
-// Mock Adapter (Testing)
+// Adapters
 // =============================================================================
 
 export { MockCMSAdapter } from './adapters/mock/adapter';
+export { PayloadCMSAdapter } from './adapters/payload/adapter';
 
 // =============================================================================
 // Helpers (Multi-tenant & Utilities)
