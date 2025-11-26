@@ -34,7 +34,7 @@
 | **Phase 2.7**: ホールディングス基盤 ⭐ | ✅ **完了** | 5/5 | 100% | 16h |
 | **Phase 3**: AI機能 | ✅ **完了** | 2/2 | 100% | 41h |
 | **Phase 4**: 公開ページ & CMS統合 | ✅ **完了** | 5/5 | 100% | 74h |
-| **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/4 | 0% | 15h |
+| **Phase 5**: 統合・Webhook | ✅ **完了** | 4/4 | 100% | 15h |
 | **Phase 6**: 分析・改善 | ⏸️ 待機中 | 0/3 | 0% | 10h |
 | **Phase 7**: 本番移行 | ⏸️ 待機中 | 0/5 | 0% | 12h |
 
@@ -43,6 +43,26 @@
 ---
 
 ### 📅 最新実装 (2025-11-26)
+
+**🎉 Phase 5 完了: 統合・Webhook (100%完了)**
+
+**Phase 5 完了: 統合・Webhook**
+- ✅ **Webhook基盤** (lib/features/webhooks/)
+  - DBスキーマ: webhooks, webhookDeliveries テーブル
+  - HMAC署名、指数バックオフリトライ、配信ログ
+  - tRPCルーター: CRUD、テスト送信、ログ取得
+  - CASL権限: Webhook, Integration サブジェクト
+- ✅ **メール統合** (lib/features/integrations/email/)
+  - Resendサービス（6種類のHTMLテンプレート）
+  - リード通知、診断結果、招待、レポートメール
+- ✅ **Slack統合** (lib/features/integrations/slack/)
+  - Block Kit対応メッセージ
+  - リード通知、サマリー、アラート
+- ✅ **Zapier/Make統合** (lib/features/integrations/zapier/)
+  - REST Hook エンドポイント
+  - ペイロードフォーマット、HMAC署名
+
+---
 
 **🎉 Phase 4 完了: 公開ページ & CMS統合 (100%完了)**
 
@@ -690,12 +710,12 @@
 
 ---
 
-## 🔗 Phase 5: 統合・Webhook ⏸️ 待機中
+## 🔗 Phase 5: 統合・Webhook ✅ **完了**
 
 > **目標**: 外部サービス統合とWebhook実装
 > **期間**: Day 41-45 (5営業日)
-> **完了タスク**: 0/4
-> **完了率**: 0%
+> **完了タスク**: 4/4
+> **完了率**: 100%
 > **総工数**: 15時間
 > **依存**: Phase 2完了 ✅
 
@@ -703,10 +723,64 @@
 
 | Task | 機能 | 工数 | 依存関係 | ステータス |
 |------|------|------|---------|-----------|
-| **5.1** | Webhook基盤 | 4h | Phase 2 | ⏸️ 未実装 |
-| **5.2** | メール統合 | 4h | 5.1 | ⏸️ 未実装 |
-| **5.3** | Slack統合 | 3h | 5.1 | ⏸️ 未実装 |
-| **5.4** | Zapier/Make統合 | 4h | 5.1 | ⏸️ 未実装 |
+| **5.1** | Webhook基盤 | 4h | Phase 2 | ✅ **完了** |
+| **5.2** | メール統合 | 4h | 5.1 | ✅ **完了** |
+| **5.3** | Slack統合 | 3h | 5.1 | ✅ **完了** |
+| **5.4** | Zapier/Make統合 | 4h | 5.1 | ✅ **完了** |
+
+### 5.1 Webhook基盤 (4時間) ✅ 完了
+
+**実装内容**:
+- **DBスキーマ** (lib/db/schema.ts)
+  - webhooks: 設定テーブル（URL、シークレット、イベント、リトライ設定）
+  - webhookDeliveries: 配信ログテーブル（ステータス、リトライ）
+- **Webhookサービス** (lib/features/webhooks/services/webhook-service.ts)
+  - HMAC署名生成・検証
+  - シークレット生成
+  - Webhook配信（タイムアウト、リトライ対応）
+  - 指数バックオフリトライ
+  - 古い配信ログクリーンアップ
+- **tRPCルーター** (lib/features/webhooks/api/router.ts)
+  - CRUD操作（list, get, create, update, delete）
+  - シークレット再生成
+  - テスト送信
+  - 配信ログ取得
+- **CASL権限** - Webhook, Integration サブジェクト追加
+
+### 5.2 メール統合 (4時間) ✅ 完了
+
+**実装内容**:
+- **Resendサービス** (lib/features/integrations/email/resend-service.ts)
+  - 6種類のメールテンプレート（HTML + テキスト版）
+    - lead_notification: 新規リード通知
+    - diagnostic_result: 診断結果
+    - welcome: ウェルカムメール
+    - member_invitation: メンバー招待
+    - password_reset: パスワードリセット
+    - weekly_report: 週次レポート
+  - 汎用sendEmail関数
+  - 専用送信関数（sendLeadNotificationEmail等）
+
+### 5.3 Slack統合 (3時間) ✅ 完了
+
+**実装内容**:
+- **Slackサービス** (lib/features/integrations/slack/slack-service.ts)
+  - Block Kit対応メッセージ送信
+  - リード通知（sendLeadNotificationToSlack）
+  - サマリー通知（sendSummaryToSlack）
+  - アラート通知（sendAlertToSlack）
+  - リッチなフォーマット（スコア色分け、フィールド表示）
+
+### 5.4 Zapier/Make統合 (4時間) ✅ 完了
+
+**実装内容**:
+- **Zapierサービス** (lib/features/integrations/zapier/zapier-service.ts)
+  - Webhook ペイロードフォーマット
+  - HMAC署名付きWebhook送信
+  - REST Hook エンドポイント定義
+  - Zapier CLI アプリ定義（参照用）
+  - サンプルデータ生成（テスト用）
+  - 認証検証
 
 ---
 

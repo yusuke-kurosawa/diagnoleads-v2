@@ -18,6 +18,8 @@ export type Subject =
   | 'Settings'
   | 'Hierarchy'  // 🆕 Hierarchy management
   | 'GroupReport' // 🆕 Group-wide reports
+  | 'Webhook' // Phase 5.1: Webhook management
+  | 'Integration' // Phase 5.2-5.4: External integrations
   | 'all';
 
 /**
@@ -155,6 +157,9 @@ export function defineAbilitiesFor(
     can('update', 'Organization');
     can('read', 'Settings');
     can('update', 'Settings');
+    // Phase 5: Webhook and integration management
+    can('manage', 'Webhook');
+    can('manage', 'Integration');
   }
 
   // =========================================================================
@@ -168,6 +173,9 @@ export function defineAbilitiesFor(
     can('read', 'Analytics');
     can('read', 'Organization');
     can('read', 'User');
+    // Phase 5: Read-only access to webhooks
+    can('read', 'Webhook');
+    can('read', 'Integration');
   }
 
   return build();

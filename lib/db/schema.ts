@@ -260,3 +260,113 @@ export type OrganizationWithHierarchy = Organization & {
   parentOrganization?: Organization | null;
   childOrganizations?: Organization[];
 };
+
+// ============================================================================
+// Phase 5: Webhook & Integration Tables
+// ============================================================================
+
+/**
+ * Webhook Event Types
+ */
+export type WebhookEventType =
+  | 'lead.created'
+  | 'lead.updated'
+  | 'lead.deleted'
+  | 'lead.status_changed'
+  | 'lead.scored'
+  | 'diagnostic.submitted'
+  | 'diagnostic.completed'
+  | 'organization.member_added'
+  | 'organization.member_removed'
+  | 'blog.published'
+  | 'faq.published';
+
+/**
+ * Webhook Status
+ */
+export type WebhookStatus = 'active' | 'inactive' | 'failed';
+
+/**
+ * Webhook Delivery Status
+ */
+export type WebhookDeliveryStatus = 'pending' | 'success' | 'failed';
+
+/**
+ * Webhook Retry Configuration
+ */
+export interface WebhookRetryConfig {
+  maxRetries: number;
+  retryDelayMs: number;
+}
+
+/**
+ * Webhooks Table
+ * Stores webhook configurations for each organization
+ */
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  secret: text('secret').notNull(),
+  events: jsonb('events').$type<WebhookEventType[]>().notNull(),
+  status: text('status').$type<WebhookStatus>().default('active').notNull(),
+  headers: jsonb('headers').$type<Record<string, string>>().default({}),
+  retryConfig: jsonb('retry_config').$type<WebhookRetryConfig>().default({
+    maxRetries: 3,
+    retryDelayMs: 5000,
+  }),
+  lastTriggeredAt: timestamp('last_triggered_at'),
+  failureCount: integer('failure_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Webhook Deliveries Table
+ * Stores delivery logs for each webhook event
+ */
+export const webhookDeliveries = pgTable('webhook_deliveries', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  webhookId: uuid('webhook_id')
+    .notNull()
+    .references(() => webhooks.id, { onDelete: 'cascade' }),
+  eventType: text('event_type').$type<WebhookEventType>().notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+  status: text('status').$type<WebhookDeliveryStatus>().default('pending').notNull(),
+  statusCode: integer('status_code'),
+  response: text('response'),
+  error: text('error'),
+  attempts: integer('attempts').default(0).notNull(),
+  nextRetryAt: timestamp('next_retry_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+});
+
+/**
+ * Webhook Relations
+ */
+export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [webhooks.organizationId],
+    references: [organizations.id],
+  }),
+  deliveries: many(webhookDeliveries),
+}));
+
+export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
+  webhook: one(webhooks, {
+    fields: [webhookDeliveries.webhookId],
+    references: [webhooks.id],
+  }),
+}));
+
+/**
+ * Webhook Type Exports
+ */
+export type Webhook = typeof webhooks.$inferSelect;
+export type NewWebhook = typeof webhooks.$inferInsert;
+export type WebhookDelivery = typeof webhookDeliveries.$inferSelect;
+export type NewWebhookDelivery = typeof webhookDeliveries.$inferInsert;
