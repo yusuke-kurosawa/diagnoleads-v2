@@ -84,6 +84,25 @@
         "copyright": "© {year} DiagnoLeads. All rights reserved."
       }
     },
+    "faq": {
+      "meta": {
+        "title": "Frequently Asked Questions",
+        "description": "Find answers to common questions about DiagnoLeads."
+      },
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to your questions about DiagnoLeads",
+      "categories": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "technical": "Technical",
+        "general": "General"
+      },
+      "contact": {
+        "title": "Can't find what you're looking for?",
+        "description": "Feel free to contact us. Our team will be happy to assist you.",
+        "button": "Contact Us"
+      }
+    },
     "diagnostic": {
       "meta": {
         "title": "Free Diagnostic",

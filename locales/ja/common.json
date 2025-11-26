@@ -192,6 +192,25 @@
         "scoreMax": "/ 100",
         "followUp": "担当者より、診断結果に基づいた具体的なご提案をさせていただきます。"
       }
+    },
+    "faq": {
+      "meta": {
+        "title": "よくある質問",
+        "description": "DiagnoLeadsに関するよくある質問と回答をまとめました。"
+      },
+      "title": "よくある質問",
+      "subtitle": "DiagnoLeadsについてのご質問にお答えします",
+      "categories": {
+        "features": "機能について",
+        "pricing": "料金について",
+        "technical": "技術的な質問",
+        "general": "その他"
+      },
+      "contact": {
+        "title": "お探しの回答が見つかりませんか？",
+        "description": "お気軽にお問い合わせください。担当者がご質問にお答えします。",
+        "button": "お問い合わせ"
+      }
     }
   },
   "navigation": {

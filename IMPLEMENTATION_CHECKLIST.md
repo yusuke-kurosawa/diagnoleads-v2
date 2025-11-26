@@ -23,7 +23,7 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 91% 完了 🚀
+### 全体進捗: 93% 完了 🚀
 
 | フェーズ | ステータス | 完了タスク | 進捗率 | 工数 |
 |---------|-----------|-----------|--------|------|
@@ -32,18 +32,40 @@
 | **Phase 2.5**: i18n基盤 | ✅ **完了** | 5/5 | 100% | 40h |
 | **Phase 2.6**: i18n完全化 | ✅ **完了** | 4/4 | 100% | 18h |
 | **Phase 3**: AI機能 | ✅ **完了** | 2/2 | 100% | 41h |
-| **Phase 4**: 公開ページ & メッセージ統合 | 🚧 **進行中** | 1/5 | 32% | 74h |
+| **Phase 4**: 公開ページ & CMS統合 | 🚧 **進行中** | 2/5 | 50% | 74h |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/4 | 0% | 15h |
 | **Phase 6**: 分析・改善 | ⏸️ 待機中 | 0/3 | 0% | 10h |
 | **Phase 7**: 本番移行 | ⏸️ 待機中 | 0/5 | 0% | 12h |
 
-**総計**: 完了238h / 総計313h (+24h)
+**総計**: 完了254h / 総計313h (+40h)
 
 ---
 
 ### 📅 最新実装 (2025-11-26)
 
-**🎉 Phase 4.1 完了: 公開ページ実装 (100%完了)**
+**🎉 Phase 4.2 完了: CMS疎結合アーキテクチャ (100%完了)**
+
+**Phase 4.2 完了: CMS疎結合アーキテクチャ**
+- ✅ **CMS抽象化レイヤー** (lib/cms/)
+  - 依存性逆転原則に基づく設計
+  - CMSAdapter インターフェース（CRUD、検索、バルク操作）
+  - Repository パターン（Blog, FAQ, Assessment）
+  - Factory パターン（プロバイダー選択）
+- ✅ **コアTypes** (lib/cms/core/types.ts)
+  - LocalizedString, LocalizedRichText
+  - BlogPost, FAQ, AssessmentTemplate
+  - LandingPage, StaticPage, EmailTemplate
+- ✅ **Mock Adapter** (lib/cms/adapters/mock/)
+  - 開発・テスト用の完全実装
+  - サンプルFAQ・Blogデータ
+- ✅ **FAQページ実装** (app/[locale]/(public)/faq/)
+  - カテゴリ別表示、アコーディオンUI
+  - i18n対応（日英）
+- ✅ **マルチテナント対応** (lib/cms/helpers/tenant.ts)
+  - セッション連携ヘルパー
+  - organizationIdコンテキスト自動取得
+
+---
 
 **Phase 4.1 完了: 公開ページ**
 - ✅ **ランディングページ** (app/[locale]/(public)/landing/page.tsx)
@@ -389,12 +411,12 @@
 
 ---
 
-## 🌐 Phase 4: 公開ページ & メッセージ統合管理 🚧 進行中
+## 🌐 Phase 4: 公開ページ & CMS統合 🚧 進行中
 
-> **目標**: SEO最適化された公開ページ + 包括的なメッセージ統合管理
+> **目標**: SEO最適化された公開ページ + CMS疎結合アーキテクチャ
 > **期間**: Day 26-40 (15営業日)
-> **完了タスク**: 1/5
-> **完了率**: 32%
+> **完了タスク**: 2/5
+> **完了率**: 50%
 > **総工数**: 74時間
 > **依存**: Phase 2.5完了 ✅
 
@@ -403,10 +425,10 @@
 | Task | 機能 | 工数 | 依存関係 | ステータス |
 |------|------|------|---------|-----------|
 | **4.1** | 公開ページ実装 | 24h | Phase 2.5 | ✅ 完了 |
-| **4.2** | Intlayer基盤セットアップ | 12h | 4.1 | ⏸️ 未実装 |
-| **4.3** | メッセージ定義 | 16h | 4.2 | ⏸️ 未実装 |
-| **4.4** | ロケール実装 | 8h | 4.3 | ⏸️ 未実装 |
-| **4.5** | UI/UX & AI支援翻訳 | 14h | 4.4 | ⏸️ 未実装 |
+| **4.2** | CMS疎結合アーキテクチャ | 16h | 4.1 | ✅ 完了 |
+| **4.3** | PayloadCMS統合 | 16h | 4.2 | ⏸️ 未実装 |
+| **4.4** | コンテンツ管理UI | 8h | 4.3 | ⏸️ 未実装 |
+| **4.5** | ブログ・お知らせ機能 | 10h | 4.4 | ⏸️ 未実装 |
 
 ### 4.1 公開ページ実装 (24時間) ✅ 完了
 
@@ -440,43 +462,64 @@
   - public.diagnostic.* (80キー)
   - 日英100%一致
 
-### 4.2 Intlayer基盤セットアップ (12時間)
+### 4.2 CMS疎結合アーキテクチャ (16時間) ✅ 完了
+
+| 項目 | 説明 | 工数 | ステータス |
+|------|------|------|-----------|
+| コア抽象化 | CMSAdapter、Repository、Factory パターン | 6h | ✅ 完了 |
+| 型定義 | LocalizedString、コンテンツタイプ | 2h | ✅ 完了 |
+| Mock Adapter | 開発・テスト用の完全実装 | 4h | ✅ 完了 |
+| FAQページ | カテゴリ別表示、i18n | 2h | ✅ 完了 |
+| マルチテナント | セッション連携ヘルパー | 2h | ✅ 完了 |
+
+**実装内容**:
+- **CMS抽象化レイヤー** (lib/cms/)
+  - CMSAdapter インターフェース (CRUD、検索、バルク操作、import/export)
+  - Repository パターン (BlogRepository, FAQRepository, AssessmentRepository)
+  - Factory パターン (getCMSAdapter, CMS_PROVIDER環境変数による切り替え)
+  - 依存性逆転原則に基づく設計
+- **コアTypes** (lib/cms/core/types.ts)
+  - LocalizedString, LocalizedRichText (Portable Text形式)
+  - BlogPost, FAQ, AssessmentTemplate, LandingPage, StaticPage
+  - ContentStatus, SEOMetadata, Author, MediaAsset
+- **エラー処理** (lib/cms/core/errors.ts)
+  - CMSError, CMSNotFoundError, CMSAccessDeniedError
+  - CMSOrganizationMismatchError（マルチテナント対応）
+- **Mock Adapter** (lib/cms/adapters/mock/)
+  - 完全なCMSAdapter実装（CRUD、検索、ページネーション）
+  - サンプルFAQ・Blogデータ
+  - テストヘルパー（setMockData, clearData, reset）
+- **FAQページ** (app/[locale]/(public)/faq/)
+  - FAQAccordion コンポーネント（アコーディオン形式）
+  - カテゴリ別グループ化表示
+  - i18n翻訳キー（日英対応）
+- **マルチテナント** (lib/cms/helpers/tenant.ts)
+  - getTenantContext（セッションからorganizationId取得）
+  - requireTenantContext（認証必須操作用ガード）
+  - getPublicContentContext（パブリックコンテンツ用）
+
+### 4.3 PayloadCMS統合 (16時間)
 
 | タスク | 説明 | 工数 |
 |------|------|------|
-| Intlayer設定 | コンポーネント単位メッセージ管理 | 6h |
-| next-intl統合 | ルーティング・ミドルウェア | 4h |
-| ディレクトリ構造 | content/、locales/セットアップ | 2h |
+| PayloadCMS設定 | PostgreSQL、認証、Admin UI | 6h |
+| PayloadCMSAdapter | CMSAdapter実装 | 6h |
+| コレクション定義 | FAQs、Blogs、Assessments | 4h |
 
-### 4.3 メッセージ定義 (16時間)
-
-| タスク | 説明 | 工数 |
-|------|------|------|
-| 共通メッセージ | ナビゲーション、ボタン、ステータス | 4h |
-| エラーメッセージ統合 | APIエラーコード → 多言語メッセージ | 3h |
-| バリデーションメッセージ | Zod + 多言語エラーメッセージ | 3h |
-| 診断・リード管理 | 業界別カスタマイズ対応 | 4h |
-| テナント別メッセージ | DB/CMS連携準備 | 2h |
-
-### 4.4 ロケール実装 (8時間)
-
-| ロケール | 対象ユーザー | 工数 |
-|---------|------------|------|
-| 日本語（ja） | 国内ユーザー | 2h |
-| 英語（en） | グローバル | 2h |
-| フランス語（fr） | 欧州市場 | 2h |
-| スペイン語（es） | 南米・スペイン | 2h |
-
-### 4.5 UI/UX & AI支援翻訳 (14時間)
+### 4.4 コンテンツ管理UI (8時間)
 
 | タスク | 説明 | 工数 |
 |------|------|------|
-| 言語切り替えUI | ヘッダー・ユーザー設定 | 3h |
-| ロケール検出 | Accept-Languageヘッダー | 1h |
-| 永続化 | Cookie/DB保存 | 2h |
-| Claude統合 | コンテキスト考慮翻訳 | 4h |
-| 翻訳ワークフロー | 初期翻訳 → レビュー | 2h |
-| 翻訳品質管理 | 専門用語辞書 | 2h |
+| FAQ管理画面 | 一覧、作成、編集、並び替え | 4h |
+| Blog管理画面 | 一覧、作成、編集、プレビュー | 4h |
+
+### 4.5 ブログ・お知らせ機能 (10時間)
+
+| タスク | 説明 | 工数 |
+|------|------|------|
+| ブログ一覧ページ | ISR対応、ページネーション | 4h |
+| ブログ詳細ページ | Markdown/Rich Text表示 | 3h |
+| お知らせ機能 | バナー、新着通知 | 3h |
 
 ---
 
