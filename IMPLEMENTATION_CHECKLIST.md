@@ -33,7 +33,7 @@
 | **Phase 2.6**: i18n完全化 | ✅ **完了** | 4/4 | 100% | 18h |
 | **Phase 2.7**: ホールディングス基盤 ⭐ | ✅ **完了** | 5/5 | 100% | 16h |
 | **Phase 3**: AI機能 | ✅ **完了** | 2/2 | 100% | 41h |
-| **Phase 4**: 公開ページ & CMS統合 | 🚧 **進行中** | 3/5 | 70% | 74h |
+| **Phase 4**: 公開ページ & CMS統合 | 🚧 **進行中** | 4/5 | 90% | 74h |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/4 | 0% | 15h |
 | **Phase 6**: 分析・改善 | ⏸️ 待機中 | 0/3 | 0% | 10h |
 | **Phase 7**: 本番移行 | ⏸️ 待機中 | 0/5 | 0% | 12h |
@@ -43,6 +43,33 @@
 ---
 
 ### 📅 最新実装 (2025-11-26)
+
+**🎉 Phase 4.4 完了: コンテンツ管理UI (100%完了)**
+
+**Phase 4.4 完了: コンテンツ管理UI**
+- ✅ **FAQ管理画面** (app/[locale]/(dashboard)/content/faqs/)
+  - FAQ一覧表示（カテゴリ別グループ化、ステータスフィルター）
+  - FAQ作成ダイアログ（日英入力、カテゴリ選択、表示順序）
+  - FAQ編集ダイアログ（既存データの編集）
+  - FAQ削除ダイアログ（確認付き削除）
+- ✅ **Blog管理画面** (app/[locale]/(dashboard)/content/blog/)
+  - 記事一覧表示（カバー画像サムネイル、ステータスバッジ）
+  - 記事作成ダイアログ（日英タブ切り替え、スラッグ自動生成）
+  - 記事編集ダイアログ（Rich Text対応）
+  - 記事削除ダイアログ（確認付き削除）
+- ✅ **tRPCルーター** (lib/features/content/api/router.ts)
+  - FAQ CRUD操作（list, create, update, delete）
+  - Blog CRUD操作（list, create, update, delete）
+  - マルチテナント対応（organizationId）
+- ✅ **ナビゲーション統合**
+  - ダッシュボードサイドバーにContent管理セクション追加
+  - FAQ/Blogへのリンク追加
+- ✅ **i18n翻訳キー追加**
+  - content.faqs.*（35キー）- 日英100%一致
+  - content.blog.*（45キー）- 日英100%一致
+  - navigation.content, navigation.faqs, navigation.blog
+
+---
 
 **🎉 Phase 4.3 完了: PayloadCMS統合 (100%完了)**
 
@@ -484,7 +511,7 @@
 | **4.1** | 公開ページ実装 | 24h | Phase 2.5 | ✅ 完了 |
 | **4.2** | CMS疎結合アーキテクチャ | 16h | 4.1 | ✅ 完了 |
 | **4.3** | PayloadCMS統合 | 16h | 4.2 | ✅ **完了** |
-| **4.4** | コンテンツ管理UI | 8h | 4.3 | ⏸️ 未実装 |
+| **4.4** | コンテンツ管理UI | 8h | 4.3 | ✅ **完了** |
 | **4.5** | ブログ・お知らせ機能 | 10h | 4.4 | ⏸️ 未実装 |
 
 ### 4.1 公開ページ実装 (24時間) ✅ 完了
@@ -587,12 +614,33 @@
   - CMS_PROVIDER環境変数で切り替え（mock, payload, sanity）
   - PayloadCMS未インストール時のMockフォールバック
 
-### 4.4 コンテンツ管理UI (8時間)
+### 4.4 コンテンツ管理UI (8時間) ✅ 完了
 
-| タスク | 説明 | 工数 |
-|------|------|------|
-| FAQ管理画面 | 一覧、作成、編集、並び替え | 4h |
-| Blog管理画面 | 一覧、作成、編集、プレビュー | 4h |
+| タスク | 説明 | 工数 | ステータス |
+|------|------|------|-----------|
+| FAQ管理画面 | 一覧、作成、編集、削除 | 4h | ✅ 完了 |
+| Blog管理画面 | 一覧、作成、編集、削除 | 4h | ✅ 完了 |
+
+**実装内容**:
+- **FAQ管理** (app/[locale]/(dashboard)/content/faqs/)
+  - FAQList: 一覧表示、カテゴリ別グループ化、ステータスフィルター
+  - FAQDialog: 作成・編集フォーム（日英入力、カテゴリ、表示順序）
+  - FAQDeleteDialog: 削除確認ダイアログ
+- **Blog管理** (app/[locale]/(dashboard)/content/blog/)
+  - BlogList: 一覧表示、カバー画像、著者、ステータスバッジ
+  - BlogDialog: 作成・編集フォーム（言語タブ、スラッグ自動生成、Rich Text）
+  - BlogDeleteDialog: 削除確認ダイアログ
+- **tRPCルーター** (lib/features/content/api/router.ts)
+  - faqsRouter: list, create, update, delete
+  - blogRouter: list, create, update, delete
+  - Zodバリデーション、マルチテナント対応
+- **ナビゲーション統合**
+  - ダッシュボードレイアウトにContent管理セクション追加
+  - FAQ/Blogページへのリンク
+- **i18n**
+  - content.faqs.* (35キー)
+  - content.blog.* (45キー)
+  - 日英100%一致
 
 ### 4.5 ブログ・お知らせ機能 (10時間)
 

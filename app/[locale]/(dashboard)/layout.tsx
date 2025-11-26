@@ -76,6 +76,32 @@ export default async function DashboardLayout({
                     {t('leads')}
                   </Link>
                 </li>
+
+                {/* Content Management Section */}
+                <li className="pt-4">
+                  <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {t('content')}
+                  </span>
+                  <ul className="mt-2 space-y-1">
+                    <li>
+                      <Link
+                        href={`/${locale}/content/faqs`}
+                        className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
+                      >
+                        {t('faqs')}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href={`/${locale}/content/blog`}
+                        className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
+                      >
+                        {t('blog')}
+                      </Link>
+                    </li>
+                  </ul>
+                </li>
+
                 <li>
                   <Link
                     href={`/${locale}/organizations`}
