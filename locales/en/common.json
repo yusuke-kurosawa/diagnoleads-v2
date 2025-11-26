@@ -84,6 +84,24 @@
         "copyright": "© {year} DiagnoLeads. All rights reserved."
       }
     },
+    "blog": {
+      "meta": {
+        "title": "Blog",
+        "description": "Get the latest news, use cases, and industry insights from DiagnoLeads."
+      },
+      "title": "Blog",
+      "subtitle": "Latest lead generation tips, use cases, and industry trends",
+      "noPosts": "No posts yet",
+      "noPostsDescription": "There are no published posts at the moment. Please check back later.",
+      "previous": "Previous",
+      "next": "Next",
+      "backToList": "Back to Blog",
+      "cta": {
+        "title": "Ready to try our free diagnostic?",
+        "description": "Let AI analyze the best lead generation strategy for your business.",
+        "button": "Take Free Diagnostic"
+      }
+    },
     "faq": {
       "meta": {
         "title": "Frequently Asked Questions",
