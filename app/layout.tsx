@@ -1,11 +1,17 @@
+import './globals.css';
+
 /**
- * Root Layout (Locale Redirect)
+ * Root Layout
  *
- * このレイアウトは直接レンダリングされません
- * ミドルウェアがすべてのリクエストを /[locale]/* にリダイレクトします
+ * Next.js App Routerの要件として、ルートレイアウトは
+ * <html>と<body>タグを含む必要があります。
  *
- * Note: この構造はNext.jsの要件により必要です
+ * 実際のロケール対応レイアウトは app/[locale]/layout.tsx で定義されています。
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <html lang="ja" suppressHydrationWarning>
+      <body>{children}</body>
+    </html>
+  );
 }
