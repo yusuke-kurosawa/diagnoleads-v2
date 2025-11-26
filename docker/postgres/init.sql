@@ -5,9 +5,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
-
--- 将来的な AI 機能用（フェーズ3以降）
--- CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE EXTENSION IF NOT EXISTS "ltree";
 
 -- データベースの設定
 ALTER DATABASE diagnoleads_dev SET timezone TO 'Asia/Tokyo';
