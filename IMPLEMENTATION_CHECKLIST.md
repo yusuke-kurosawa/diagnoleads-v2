@@ -23,7 +23,7 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 93% 完了 🚀
+### 全体進捗: 95% 完了 🚀
 
 | フェーズ | ステータス | 完了タスク | 進捗率 | 工数 |
 |---------|-----------|-----------|--------|------|
@@ -31,17 +31,48 @@
 | **Phase 2**: コア機能実装 | ✅ **完了** | 10/10 | 100% | 47h |
 | **Phase 2.5**: i18n基盤 | ✅ **完了** | 5/5 | 100% | 40h |
 | **Phase 2.6**: i18n完全化 | ✅ **完了** | 4/4 | 100% | 18h |
+| **Phase 2.7**: ホールディングス基盤 ⭐ | ✅ **完了** | 5/5 | 100% | 16h |
 | **Phase 3**: AI機能 | ✅ **完了** | 2/2 | 100% | 41h |
 | **Phase 4**: 公開ページ & CMS統合 | 🚧 **進行中** | 2/5 | 50% | 74h |
 | **Phase 5**: 統合・Webhook | ⏸️ 待機中 | 0/4 | 0% | 15h |
 | **Phase 6**: 分析・改善 | ⏸️ 待機中 | 0/3 | 0% | 10h |
 | **Phase 7**: 本番移行 | ⏸️ 待機中 | 0/5 | 0% | 12h |
 
-**総計**: 完了254h / 総計313h (+40h)
+**総計**: 完了270h / 総計329h (+16h)
 
 ---
 
 ### 📅 最新実装 (2025-11-26)
+
+**🎉 Phase 2.7 完了: ホールディングス基盤 (100%完了)** ⭐ コアコンピタンス
+
+**Phase 2.7 完了: 階層的組織構造**
+- ✅ **DBスキーマ拡張** (lib/db/schema.ts)
+  - organizations: parent_organization_id, organization_type, hierarchy_path (ltree)
+  - hierarchy_level, group_id, data_sharing_policy
+  - OrganizationRole拡張: group_owner, group_admin, parent_viewer
+- ✅ **マイグレーション** (db/migrations/0007_add_organization_hierarchy.sql)
+  - ltree拡張有効化
+  - 階層自動更新トリガー
+  - get_descendant_organizations(), get_ancestor_organizations() 関数
+  - get_accessible_organizations() 関数
+- ✅ **RLS階層ポリシー** (db/migrations/0008_add_hierarchical_rls_policies.sql)
+  - can_access_organization() 関数（階層アクセス判定）
+  - 階層対応SELECT/INSERT/UPDATE/DELETEポリシー
+  - set_rls_context(), clear_rls_context() 関数
+- ✅ **CASL権限拡張** (lib/auth/permissions.ts)
+  - HierarchyContext インターフェース
+  - group_owner, group_admin, parent_viewer ロール対応
+  - Hierarchy, GroupReport サブジェクト追加
+  - isGroupRole(), canAccessChildOrganizations(), getAccessScope() ヘルパー
+- ✅ **階層管理API** (lib/features/hierarchy/api/router.ts)
+  - getHierarchy, getChildren, getDescendants, getAncestors
+  - setParent, updateDataSharingPolicy, updateOrganizationType
+  - getAccessibleOrganizations, getGroupStats
+- ✅ **React Hooks** (hooks/use-hierarchy.ts)
+  - useHierarchy, useAccessibleOrganizations, useDescendants
+
+---
 
 **🎉 Phase 4.2 完了: CMS疎結合アーキテクチャ (100%完了)**
 

@@ -23,19 +23,50 @@ const tsvector = customType<{ data: string }>({
 });
 
 /**
+ * Custom PostgreSQL ltree type for hierarchical data
+ * Used for efficient ancestor/descendant queries
+ */
+const ltree = customType<{ data: string }>({
+  dataType() {
+    return 'ltree';
+  },
+});
+
+/**
+ * Organization Type
+ * Defines the role of an organization in a hierarchy
+ */
+export type OrganizationType = 'holding' | 'subsidiary' | 'independent';
+
+/**
+ * Data Sharing Policy
+ * Controls cross-organization data access
+ */
+export interface DataSharingPolicy {
+  /** Allow parent organization to access this organization's data */
+  allowParentAccess: boolean;
+  /** Allow child organizations to access this organization's data */
+  allowChildAccess: boolean;
+  /** Allow sibling organizations (same parent) to access data */
+  allowSiblingAccess: boolean;
+  /** Specific fields that are shared (empty = all fields) */
+  sharedFields?: string[];
+}
+
+/**
  * Organizations (Tenants)
  * Core multi-tenant table - all data is scoped to an organization
  *
  * 🏢 CORE COMPETENCE: Hierarchical Organization Support
- * This table is designed to support holding companies, group companies, and M&A scenarios.
+ * Supports holding companies, group companies, and M&A scenarios.
  *
- * Current: Flat organization structure
- * Future (Phase 2.5): Hierarchical structure with:
- *   - parent_organization_id: uuid | null (parent company)
+ * Hierarchy Features:
+ *   - parent_organization_id: Link to parent company
  *   - organization_type: 'holding' | 'subsidiary' | 'independent'
- *   - hierarchy_path: text (ltree: '1.2.3' for efficient queries)
- *   - group_id: uuid (top-level organization ID)
- *   - data_sharing_policy: jsonb (cross-org access control)
+ *   - hierarchy_path: ltree for efficient ancestor/descendant queries
+ *   - hierarchy_level: 0=root, 1=child, 2=grandchild, etc.
+ *   - group_id: Top-level organization ID for group-wide queries
+ *   - data_sharing_policy: Cross-organization access control
  *
  * See: docs/MULTI_TENANT_STRATEGY.md for detailed architecture
  */
@@ -44,6 +75,24 @@ export const organizations = pgTable('organizations', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   settings: jsonb('settings').$type<Record<string, unknown>>().default({}),
+
+  // 🏢 Hierarchy fields (Phase 2.7)
+  /** Parent organization ID (null for root/independent organizations) */
+  parentOrganizationId: uuid('parent_organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+  /** Organization type in hierarchy */
+  organizationType: text('organization_type').$type<OrganizationType>().default('independent').notNull(),
+  /** Hierarchy path for efficient tree queries (e.g., 'root.child.grandchild') */
+  hierarchyPath: ltree('hierarchy_path'),
+  /** Level in hierarchy (0 = root, 1 = child, etc.) */
+  hierarchyLevel: integer('hierarchy_level').default(0).notNull(),
+  /** Group identifier (ID of the root organization in the group) */
+  groupId: uuid('group_id'),
+  /** Data sharing policy for cross-organization access */
+  dataSharingPolicy: jsonb('data_sharing_policy').$type<DataSharingPolicy>().default({
+    allowParentAccess: false,
+    allowChildAccess: false,
+    allowSiblingAccess: false,
+  }),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -65,14 +114,34 @@ export const users = pgTable('users', {
 });
 
 /**
+ * Organization Member Role
+ * Extended roles supporting hierarchical organization access
+ */
+export type OrganizationRole =
+  | 'owner'           // Full control of the organization
+  | 'admin'           // Admin access to the organization
+  | 'member'          // Standard member access
+  | 'group_owner'     // Full control of entire group (all descendant orgs)
+  | 'group_admin'     // Read access to entire group
+  | 'parent_viewer';  // Read-only access to child organizations
+
+/**
  * Organization Members
  * Maps users to organizations with roles
+ *
+ * Role Hierarchy:
+ * - owner: Full control of single organization
+ * - admin: Admin access to single organization
+ * - member: Standard member access
+ * - group_owner: Full control of group (holding company owner)
+ * - group_admin: Read access to entire group
+ * - parent_viewer: Read-only access to child orgs (for parent company users)
  */
 export const organizationMembers = pgTable('organization_members', {
   id: uuid('id').defaultRandom().primaryKey(),
   organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  role: text('role').notNull().default('member'), // 'owner', 'admin', 'member'
+  role: text('role').$type<OrganizationRole>().notNull().default('member'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -126,9 +195,18 @@ export const leads = pgTable('leads', {
 /**
  * Relations
  */
-export const organizationsRelations = relations(organizations, ({ many }) => ({
+export const organizationsRelations = relations(organizations, ({ one, many }) => ({
   members: many(organizationMembers),
   leads: many(leads),
+  // 🏢 Hierarchy relations
+  parentOrganization: one(organizations, {
+    fields: [organizations.parentOrganizationId],
+    references: [organizations.id],
+    relationName: 'parentChild',
+  }),
+  childOrganizations: many(organizations, {
+    relationName: 'parentChild',
+  }),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -171,3 +249,14 @@ export type NewSession = typeof sessions.$inferInsert;
 
 export type Lead = typeof leads.$inferSelect;
 export type NewLead = typeof leads.$inferInsert;
+
+// Re-export hierarchy-related types
+export type { OrganizationType, DataSharingPolicy, OrganizationRole };
+
+/**
+ * Organization with hierarchy info (for queries that include parent/children)
+ */
+export type OrganizationWithHierarchy = Organization & {
+  parentOrganization?: Organization | null;
+  childOrganizations?: Organization[];
+};
