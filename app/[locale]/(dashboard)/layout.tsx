@@ -76,6 +76,14 @@ export default async function DashboardLayout({
                     {t('leads')}
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href={`/${locale}/analytics`}
+                    className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
+                  >
+                    {t('analytics')}
+                  </Link>
+                </li>
 
                 {/* Content Management Section */}
                 <li className="pt-4">

@@ -731,6 +731,51 @@
         "deleteSuccess": "記事を削除しました",
         "deleteError": "記事の削除に失敗しました"
       }
+    },
+    "analytics": {
+      "title": "分析ダッシュボード",
+      "description": "リード獲得とコンバージョンのパフォーマンスを詳細に分析",
+      "export": "エクスポート",
+      "dateRange": {
+        "7d": "過去7日",
+        "30d": "過去30日",
+        "90d": "過去90日",
+        "all": "全期間"
+      },
+      "granularity": {
+        "daily": "日次",
+        "monthly": "月次"
+      },
+      "stats": {
+        "totalLeads": "総リード数",
+        "newLeadsThisMonth": "今月の新規リード",
+        "conversionRate": "コンバージョン率",
+        "averageScore": "平均スコア",
+        "vsLastPeriod": "前期間比"
+      },
+      "tabs": {
+        "overview": "概要",
+        "sources": "ソース分析",
+        "funnel": "ファネル",
+        "performance": "パフォーマンス"
+      },
+      "charts": {
+        "leadTrend": "リード推移",
+        "statusBreakdown": "ステータス分布",
+        "sourceBreakdown": "ソース分布",
+        "sourceTable": "ソース別詳細",
+        "conversionFunnel": "コンバージョンファネル",
+        "scoreDistribution": "スコア分布",
+        "responseTime": "応答時間"
+      },
+      "funnel": {
+        "total": "総計",
+        "conversionRate": "コンバージョン率",
+        "overallConversion": "全体コンバージョン率",
+        "fromInitial": "初回リードからの変換率"
+      },
+      "noData": "データがありません",
+      "comingSoon": "近日公開予定"
     }
   }
 }

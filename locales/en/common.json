@@ -731,6 +731,51 @@
         "deleteSuccess": "Post deleted successfully",
         "deleteError": "Failed to delete post"
       }
+    },
+    "analytics": {
+      "title": "Analytics Dashboard",
+      "description": "Analyze lead acquisition and conversion performance in detail",
+      "export": "Export",
+      "dateRange": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days",
+        "all": "All time"
+      },
+      "granularity": {
+        "daily": "Daily",
+        "monthly": "Monthly"
+      },
+      "stats": {
+        "totalLeads": "Total Leads",
+        "newLeadsThisMonth": "New Leads This Month",
+        "conversionRate": "Conversion Rate",
+        "averageScore": "Average Score",
+        "vsLastPeriod": "vs. last period"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "sources": "Sources",
+        "funnel": "Funnel",
+        "performance": "Performance"
+      },
+      "charts": {
+        "leadTrend": "Lead Trend",
+        "statusBreakdown": "Status Breakdown",
+        "sourceBreakdown": "Source Breakdown",
+        "sourceTable": "Source Details",
+        "conversionFunnel": "Conversion Funnel",
+        "scoreDistribution": "Score Distribution",
+        "responseTime": "Response Time"
+      },
+      "funnel": {
+        "total": "Total",
+        "conversionRate": "Conversion Rate",
+        "overallConversion": "Overall Conversion Rate",
+        "fromInitial": "From initial lead to conversion"
+      },
+      "noData": "No data available",
+      "comingSoon": "Coming soon"
     }
   }
 }

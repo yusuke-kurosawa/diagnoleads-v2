@@ -23,7 +23,7 @@
 
 ## 📊 プロジェクト進捗サマリー
 
-### 全体進捗: 95% 完了 🚀
+### 全体進捗: 97% 完了 🚀
 
 | フェーズ | ステータス | 完了タスク | 進捗率 | 工数 |
 |---------|-----------|-----------|--------|------|
@@ -35,14 +35,38 @@
 | **Phase 3**: AI機能 | ✅ **完了** | 2/2 | 100% | 41h |
 | **Phase 4**: 公開ページ & CMS統合 | ✅ **完了** | 5/5 | 100% | 74h |
 | **Phase 5**: 統合・Webhook | ✅ **完了** | 4/4 | 100% | 15h |
-| **Phase 6**: 分析・改善 | ⏸️ 待機中 | 0/3 | 0% | 10h |
+| **Phase 6**: 分析・改善 | ✅ **完了** | 3/3 | 100% | 10h |
 | **Phase 7**: 本番移行 | ⏸️ 待機中 | 0/5 | 0% | 12h |
 
-**総計**: 完了270h / 総計329h (+16h)
+**総計**: 完了280h / 総計329h (+16h)
 
 ---
 
 ### 📅 最新実装 (2025-11-26)
+
+**🎉 Phase 6 完了: 分析・改善 (100%完了)**
+
+**Phase 6 完了: 分析・改善**
+- ✅ **分析ダッシュボード** (app/[locale]/(dashboard)/analytics/)
+  - 専用分析ページ（日付範囲フィルター、粒度選択）
+  - 統計カード（総リード、新規、コンバージョン率、平均スコア）
+  - タブ切り替え（概要、ソース、ファネル、パフォーマンス）
+- ✅ **チャートコンポーネント** (components/analytics/)
+  - SourceChart: ソース別DonutChart
+  - StatusChart: ステータス別BarChart
+  - ConversionFunnel: ビジュアルファネル表示
+- ✅ **コンバージョントラッキングAPI**
+  - getConversionFunnel エンドポイント
+  - ステージ別コンバージョン率
+  - 平均コンバージョン日数
+- ✅ **レポートエクスポート機能** (lib/features/reports/)
+  - CSV/JSONエクスポート
+  - フルレポート生成
+  - useExport React hook
+- ✅ **i18n翻訳キー追加**
+  - settings.analytics.*（30キー）- 日英100%一致
+
+---
 
 **🎉 Phase 5 完了: 統合・Webhook (100%完了)**
 
@@ -242,20 +266,13 @@
 
 ### 🚀 次のステップ
 
-**Phase 4 - 公開ページ & メッセージ統合管理** (推奨)
-- 🎯 **期間**: 15営業日（74時間）
-- 🌐 **内容**: SEO最適化ランディングページ、診断フォーム、Intlayer統合
-- 📦 **技術**: ISR、Metadata API、Intlayer 3.0+、zod-i18n
-- ✨ **メリット**: リード獲得チャネルの確立、多言語展開の強化
-- 🔄 **依存**: Phase 2.5完了 ✅
+**Phase 7 - 本番移行** (最終フェーズ)
+- 🎯 **期間**: 5営業日（12時間）
+- 🚀 **内容**: 本番環境セットアップ、デプロイ、監視設定
+- 📦 **技術**: Vercel、Supabase、Sentry、Datadog
+- 🔄 **依存**: Phase 1-6完了 ✅
 
-**Phase 5 - 統合・Webhook**
-- 🎯 **期間**: 5営業日（15時間）
-- 🔗 **内容**: 外部サービス統合（Slack、メール、CRM）
-- 📦 **技術**: Webhook、外部API統合
-- 🔄 **依存**: Phase 2完了 ✅
-
-**推奨**: Phase 3完了により、Phase 4（公開ページ）に進み、リード獲得チャネルを確立することを推奨
+**推奨**: Phase 6完了により、本番環境への移行準備が整いました。Phase 7で本番デプロイを実施してください。
 
 ---
 
@@ -784,12 +801,12 @@
 
 ---
 
-## 📊 Phase 6: 分析・改善 ⏸️ 待機中
+## 📊 Phase 6: 分析・改善 ✅ **完了**
 
 > **目標**: ビジネス分析機能とコンバージョン最適化
 > **期間**: Day 46-50 (5営業日)
-> **完了タスク**: 0/3
-> **完了率**: 0%
+> **完了タスク**: 3/3
+> **完了率**: 100%
 > **総工数**: 10時間
 > **依存**: Phase 2完了 ✅
 
@@ -797,9 +814,66 @@
 
 | Task | 機能 | 工数 | 依存関係 | ステータス |
 |------|------|------|---------|-----------|
-| **6.1** | 分析ダッシュボード | 4h | Phase 2 | ⏸️ 未実装 |
-| **6.2** | コンバージョントラッキング | 3h | 6.1 | ⏸️ 未実装 |
-| **6.3** | レポート機能 | 3h | 6.1 | ⏸️ 未実装 |
+| **6.1** | 分析ダッシュボード | 4h | Phase 2 | ✅ **完了** |
+| **6.2** | コンバージョントラッキング | 3h | 6.1 | ✅ **完了** |
+| **6.3** | レポート機能 | 3h | 6.1 | ✅ **完了** |
+
+### 6.1 分析ダッシュボード (4時間) ✅ 完了
+
+**実装内容**:
+- **分析専用ページ** (app/[locale]/(dashboard)/analytics/page.tsx)
+  - 日付範囲フィルター（7日、30日、90日、全期間）
+  - 粒度選択（日次/月次）
+  - タブ切り替え（概要、ソース分析、ファネル、パフォーマンス）
+- **統計カード**
+  - 総リード数、今月の新規リード、コンバージョン率、平均スコア
+  - 前期間比較表示
+- **チャートコンポーネント** (components/analytics/)
+  - SourceChart: Tremor DonutChart（ソース別分布）
+  - StatusChart: Tremor BarChart（ステータス別分布）
+  - ConversionFunnel: ビジュアルファネル表示
+- **ナビゲーション統合**
+  - ダッシュボードサイドバーにAnalyticsリンク追加
+
+### 6.2 コンバージョントラッキング (3時間) ✅ 完了
+
+**実装内容**:
+- **Conversion Funnel API** (lib/features/analytics/api/router.ts)
+  - getConversionFunnel エンドポイント
+  - ステージ別カウント（new, contacted, qualified, converted）
+  - 累積カウントとパーセンテージ
+  - ステージ間コンバージョン率
+  - 平均コンバージョン日数
+- **型定義** (lib/features/analytics/types/schemas.ts)
+  - FunnelStage, ConversionFunnelData インターフェース
+  - getConversionFunnelSchema Zodスキーマ
+- **React Hook** (hooks/use-analytics.ts)
+  - useConversionFunnel hook追加
+- **ConversionFunnel UIコンポーネント**
+  - ステージ別バー表示
+  - コンバージョン率アロー表示
+  - サマリー統計
+  - 全体コンバージョン率表示
+
+### 6.3 レポート機能 (3時間) ✅ 完了
+
+**実装内容**:
+- **エクスポートサービス** (lib/features/reports/export-service.ts)
+  - leadsToCSV: リードデータCSV変換
+  - overviewToCSV: 概要統計CSV変換
+  - trendToCSV: トレンドデータCSV変換
+  - sourceBreakdownToCSV: ソース分布CSV変換
+  - statusBreakdownToCSV: ステータス分布CSV変換
+  - funnelToCSV: ファネルデータCSV変換
+  - generateFullReportCSV: フルレポート生成
+- **useExport Hook** (hooks/use-export.ts)
+  - exportLeadsCSV, exportLeadsJSON
+  - exportAnalyticsReport, exportAnalyticsJSON
+- **エクスポートUI**
+  - ドロップダウンメニュー（CSV/JSON選択）
+  - ワンクリックダウンロード
+- **i18n**
+  - settings.analytics.*（30キー）- 日英100%一致
 
 ---
 

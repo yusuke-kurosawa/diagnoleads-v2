@@ -1,15 +1,18 @@
 import { router, organizationProcedure } from '@/lib/trpc/init';
 import { leads } from '@/lib/db/schema';
-import { and, eq, gte, count, sql, desc } from 'drizzle-orm';
+import { and, eq, gte, count, sql, desc, avg, lte } from 'drizzle-orm';
 import {
   getOverviewSchema,
   getLeadTrendSchema,
   getSourceBreakdownSchema,
   getStatusBreakdownSchema,
+  getConversionFunnelSchema,
   type OverviewStats,
   type TrendDataPoint,
   type SourceBreakdown,
   type StatusBreakdown,
+  type ConversionFunnelData,
+  type FunnelStage,
 } from '../types/schemas';
 
 /**
@@ -249,6 +252,111 @@ export const analyticsRouter = router({
         count: row.count,
         percentage: total > 0 ? Math.round((row.count / total) * 10000) / 100 : 0,
       }));
+    }),
+
+  /**
+   * Get Conversion Funnel Data
+   * Returns detailed funnel analysis with stage-to-stage conversion rates
+   */
+  getConversionFunnel: organizationProcedure
+    .input(getConversionFunnelSchema)
+    .query(async ({ ctx, input }): Promise<ConversionFunnelData> => {
+      const { organizationId, dateRange } = input;
+
+      const dateThreshold = getDateThreshold(dateRange);
+
+      // Get counts for each status
+      const statusCounts = await ctx.db
+        .select({
+          status: leads.status,
+          count: count().as('count'),
+        })
+        .from(leads)
+        .where(
+          and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold))
+        )
+        .groupBy(leads.status);
+
+      // Build status map
+      const statusMap: Record<string, number> = {};
+      for (const row of statusCounts) {
+        statusMap[row.status] = row.count;
+      }
+
+      const newCount = statusMap['new'] || 0;
+      const contactedCount = statusMap['contacted'] || 0;
+      const qualifiedCount = statusMap['qualified'] || 0;
+      const convertedCount = statusMap['converted'] || 0;
+
+      const totalLeads = newCount + contactedCount + qualifiedCount + convertedCount;
+
+      // Calculate cumulative values for funnel
+      const newTotal = totalLeads;
+      const contactedTotal = contactedCount + qualifiedCount + convertedCount;
+      const qualifiedTotal = qualifiedCount + convertedCount;
+      const convertedTotal = convertedCount;
+
+      // Build funnel stages
+      const stages: FunnelStage[] = [
+        {
+          name: 'new',
+          count: newCount,
+          cumulativeCount: newTotal,
+          percentage: totalLeads > 0 ? Math.round((newTotal / totalLeads) * 10000) / 100 : 100,
+          conversionRate: 100, // First stage always 100%
+        },
+        {
+          name: 'contacted',
+          count: contactedCount,
+          cumulativeCount: contactedTotal,
+          percentage: totalLeads > 0 ? Math.round((contactedTotal / totalLeads) * 10000) / 100 : 0,
+          conversionRate:
+            newTotal > 0 ? Math.round((contactedTotal / newTotal) * 10000) / 100 : 0,
+        },
+        {
+          name: 'qualified',
+          count: qualifiedCount,
+          cumulativeCount: qualifiedTotal,
+          percentage: totalLeads > 0 ? Math.round((qualifiedTotal / totalLeads) * 10000) / 100 : 0,
+          conversionRate:
+            contactedTotal > 0 ? Math.round((qualifiedTotal / contactedTotal) * 10000) / 100 : 0,
+        },
+        {
+          name: 'converted',
+          count: convertedCount,
+          cumulativeCount: convertedTotal,
+          percentage: totalLeads > 0 ? Math.round((convertedTotal / totalLeads) * 10000) / 100 : 0,
+          conversionRate:
+            qualifiedTotal > 0 ? Math.round((convertedTotal / qualifiedTotal) * 10000) / 100 : 0,
+        },
+      ];
+
+      // Calculate average conversion time (for leads that have been converted)
+      const avgTimeResult = await ctx.db
+        .select({
+          avgDays: sql<number>`COALESCE(
+            AVG(EXTRACT(EPOCH FROM (${leads.updatedAt} - ${leads.createdAt})) / 86400),
+            0
+          )`.as('avgDays'),
+        })
+        .from(leads)
+        .where(
+          and(
+            eq(leads.organizationId, organizationId),
+            eq(leads.status, 'converted'),
+            gte(leads.createdAt, dateThreshold)
+          )
+        );
+
+      const averageConversionDays = Math.round(Number(avgTimeResult[0]?.avgDays) * 10) / 10 || 0;
+
+      return {
+        stages,
+        totalLeads,
+        overallConversionRate:
+          totalLeads > 0 ? Math.round((convertedTotal / totalLeads) * 10000) / 100 : 0,
+        averageConversionDays,
+      };
     }),
 });
 

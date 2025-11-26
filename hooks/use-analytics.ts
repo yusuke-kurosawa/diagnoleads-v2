@@ -56,6 +56,19 @@ export function useStatusBreakdown(
 }
 
 /**
+ * Hook to get conversion funnel data
+ */
+export function useConversionFunnel(
+  organizationId: string,
+  dateRange: DateRange = '30d'
+) {
+  return trpc.analytics.getConversionFunnel.useQuery({
+    organizationId,
+    dateRange,
+  });
+}
+
+/**
  * Composite hook for all analytics data
  * Useful when you need multiple analytics queries in a component
  */

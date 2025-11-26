@@ -55,6 +55,15 @@ export const getStatusBreakdownSchema = z.object({
 export type GetStatusBreakdownInput = z.infer<typeof getStatusBreakdownSchema>;
 
 /**
+ * Get Conversion Funnel Schema
+ */
+export const getConversionFunnelSchema = z.object({
+  organizationId: z.string().uuid(),
+  dateRange: dateRangeSchema.default('30d'),
+});
+export type GetConversionFunnelInput = z.infer<typeof getConversionFunnelSchema>;
+
+/**
  * Response Types
  */
 
@@ -87,4 +96,19 @@ export interface StatusBreakdown {
   status: string;
   count: number;
   percentage: number;
+}
+
+export interface FunnelStage {
+  name: string;
+  count: number;
+  cumulativeCount: number;
+  percentage: number;
+  conversionRate: number;
+}
+
+export interface ConversionFunnelData {
+  stages: FunnelStage[];
+  totalLeads: number;
+  overallConversionRate: number;
+  averageConversionDays: number;
 }
