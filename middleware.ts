@@ -38,12 +38,12 @@ function getSecurityHeaders(request: NextRequest) {
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
-    font-src 'self';
+    font-src 'self' data:;
+    connect-src 'self' ws: wss:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    upgrade-insecure-requests;
   `
     : // Production: 厳格な CSP
       `
@@ -51,7 +51,7 @@ function getSecurityHeaders(request: NextRequest) {
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
     style-src 'self' 'nonce-${nonce}';
     img-src 'self' blob: data: https:;
-    font-src 'self';
+    font-src 'self' data:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
