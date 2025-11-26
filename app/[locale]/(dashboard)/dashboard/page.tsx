@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
-import { useRequiredOrganizationId } from '@/hooks/use-organization';
+import { useOrganizationId } from '@/hooks/use-organization';
 import { useOverview, useLeadTrend } from '@/hooks/use-analytics';
 import { useListLeads } from '@/hooks/use-leads';
 import { StatsCard } from '@/components/dashboard/stats-card';
@@ -38,7 +38,9 @@ const LeadChart = dynamic(
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const tStatus = useTranslations('status');
-  const organizationId = useRequiredOrganizationId();
+  // organizationIdがない場合はデモ用のIDを使用
+  const urlOrganizationId = useOrganizationId();
+  const organizationId = urlOrganizationId || 'demo-organization';
   const [dateRange] = useState<DateRange>('30d');
 
   // Fetch analytics data
