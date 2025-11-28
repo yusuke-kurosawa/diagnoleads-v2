@@ -22,13 +22,27 @@ tRPC: trpc.analytics.*
 
 ---
 
+## 実装ファイル
+
+```
+lib/features/analytics/
+├── api/
+│   └── router.ts          # tRPCルーター
+└── types/
+    └── schemas.ts         # Zodスキーマ・型定義
+
+hooks/
+└── use-analytics.ts       # Reactフック
+```
+
+---
+
 ## 認証・認可
 
 | レイヤー | 内容 |
 |---------|------|
 | 認証 | `protectedProcedure` - BetterAuth セッション必須 |
 | 組織スコープ | `organizationProcedure` - 組織メンバーシップ検証 |
-| データ分離 | PostgreSQL RLS - 自動フィルタリング |
 
 ---
 
@@ -44,22 +58,29 @@ tRPC: trpc.analytics.*
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  dateRange: z.enum(['7d', '30d', '90d', '365d', 'all']).default('30d'),
+  dateRange: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
-{
+interface OverviewStats {
   totalLeads: number;
   newLeadsThisMonth: number;
-  newLeadsLastMonth: number;
-  conversionRate: number;        // 成約率 (0-100)
-  averageScore: number | null;   // 平均AIスコア
-  leadsByStatus: Record<LeadStatus, number>;
-  growthRate: number;            // 前月比成長率
+  conversionRate: number;        // 成約率 (0-100, 小数点2桁)
+  averageScore: number;          // 平均スコア（整数、nullスコア除外）
+  leadsByStatus: {
+    new: number;
+    contacted: number;
+    qualified: number;
+    converted: number;
+  };
 }
 ```
+
+**計算ロジック**:
+- `conversionRate` = (converted / totalLeads) * 100
+- `averageScore` = AVG(score) WHERE score IS NOT NULL
 
 ---
 
@@ -73,21 +94,20 @@ z.object({
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  dateRange: z.enum(['7d', '30d', '90d', '365d']).default('30d'),
-  granularity: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
+  dateRange: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
+  granularity: z.enum(['daily', 'monthly']).default('daily'),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
-Array<{
-  date: string;      // ISO日付
-  new: number;       // 新規リード数
-  contacted: number; // コンタクト済み
-  qualified: number; // 見込み確定
-  won: number;       // 成約
-  lost: number;      // 失注
-}>
+type TrendDataPoint = {
+  date: string;      // ISO日付文字列
+  count: number;     // 作成されたリード数
+  converted: number; // その日のconvertedリード数
+};
+
+TrendDataPoint[]
 ```
 
 **用途**: Tremorの AreaChart / LineChart
@@ -104,18 +124,19 @@ Array<{
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  dateRange: z.enum(['7d', '30d', '90d', '365d', 'all']).default('30d'),
+  dateRange: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
-Array<{
-  source: SourceChannel;
+type SourceBreakdown = {
+  source: string;      // 'website' | 'embed' | 'api' | 'unknown'
   count: number;
-  percentage: number;       // 全体に占める割合
-  conversionRate: number;   // この経路の成約率
-}>
+  percentage: number;  // 0-100, 小数点2桁
+};
+
+SourceBreakdown[]
 ```
 
 **用途**: Tremorの DonutChart / BarList
@@ -132,78 +153,22 @@ Array<{
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  dateRange: z.enum(['7d', '30d', '90d', '365d', 'all']).default('30d'),
+  dateRange: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
-Array<{
-  status: LeadStatus;
+type StatusBreakdown = {
+  status: string;      // 'new' | 'contacted' | 'qualified' | 'converted'
   count: number;
-  percentage: number;
-}>
+  percentage: number;  // 0-100, 小数点2桁
+};
+
+StatusBreakdown[]
 ```
 
 **用途**: Tremorの DonutChart / ProgressBar
-
----
-
-### analytics.getIndustryBreakdown
-
-業界別のリード内訳を取得します。
-
-**Type**: Query
-
-**入力スキーマ**:
-```typescript
-z.object({
-  organizationId: z.string().uuid(),
-  dateRange: z.enum(['7d', '30d', '90d', '365d', 'all']).default('30d'),
-  limit: z.number().int().min(1).max(20).default(10),
-})
-```
-
-**出力スキーマ**:
-```typescript
-Array<{
-  industry: string;
-  count: number;
-  percentage: number;
-  averageScore: number | null;
-}>
-```
-
----
-
-### analytics.getRecentActivity
-
-最近のアクティビティ一覧を取得します。
-
-**Type**: Query
-
-**入力スキーマ**:
-```typescript
-z.object({
-  organizationId: z.string().uuid(),
-  limit: z.number().int().min(1).max(50).default(10),
-})
-```
-
-**出力スキーマ**:
-```typescript
-Array<{
-  id: string;
-  type: 'lead_created' | 'lead_updated' | 'status_changed' | 'score_updated';
-  leadId: string;
-  leadName: string;
-  leadCompany: string;
-  description: string;
-  timestamp: Date;
-  userId: string;
-  userName: string;
-}>
-```
 
 ---
 
@@ -212,13 +177,13 @@ Array<{
 ### DateRange
 
 ```typescript
-type DateRange = '7d' | '30d' | '90d' | '365d' | 'all';
+type DateRange = '7d' | '30d' | '90d' | 'all';
 ```
 
 ### TrendGranularity
 
 ```typescript
-type TrendGranularity = 'daily' | 'weekly' | 'monthly';
+type TrendGranularity = 'daily' | 'monthly';
 ```
 
 ---
@@ -231,7 +196,7 @@ type TrendGranularity = 'daily' | 'weekly' | 'monthly';
 function useOverview(
   organizationId: string,
   dateRange?: DateRange
-): UseQueryResult<OverviewData>
+): UseQueryResult<OverviewStats>
 ```
 
 ### useLeadTrend
@@ -241,7 +206,7 @@ function useLeadTrend(
   organizationId: string,
   dateRange?: DateRange,
   granularity?: TrendGranularity
-): UseQueryResult<TrendData[]>
+): UseQueryResult<TrendDataPoint[]>
 ```
 
 ### useSourceBreakdown
@@ -250,7 +215,7 @@ function useLeadTrend(
 function useSourceBreakdown(
   organizationId: string,
   dateRange?: DateRange
-): UseQueryResult<SourceBreakdownData[]>
+): UseQueryResult<SourceBreakdown[]>
 ```
 
 ### useStatusBreakdown
@@ -259,7 +224,7 @@ function useSourceBreakdown(
 function useStatusBreakdown(
   organizationId: string,
   dateRange?: DateRange
-): UseQueryResult<StatusBreakdownData[]>
+): UseQueryResult<StatusBreakdown[]>
 ```
 
 ### useAnalytics（統合フック）
@@ -269,10 +234,10 @@ function useAnalytics(
   organizationId: string,
   dateRange?: DateRange
 ): {
-  overview: UseQueryResult<OverviewData>;
-  leadTrend: UseQueryResult<TrendData[]>;
-  sourceBreakdown: UseQueryResult<SourceBreakdownData[]>;
-  statusBreakdown: UseQueryResult<StatusBreakdownData[]>;
+  overview: UseQueryResult<OverviewStats>;
+  leadTrend: UseQueryResult<TrendDataPoint[]>;
+  sourceBreakdown: UseQueryResult<SourceBreakdown[]>;
+  statusBreakdown: UseQueryResult<StatusBreakdown[]>;
   isLoading: boolean;
   isError: boolean;
 }
@@ -280,128 +245,67 @@ function useAnalytics(
 
 ---
 
-## UIコンポーネント
+## ヘルパー関数
 
-### StatsCard
+### getDateThreshold
 
-統計カード。
-
-```typescript
-interface StatsCardProps {
-  title: string;
-  value: number | string;
-  change?: number;        // 前期比変化率
-  changeLabel?: string;   // "vs last month"
-  icon?: ReactNode;
-}
-```
-
-### LeadChart
-
-リード推移チャート（Tremor AreaChart）。
+日付範囲から閾値を計算。
 
 ```typescript
-interface LeadChartProps {
-  organizationId: string;
-  dateRange?: DateRange;
-  granularity?: TrendGranularity;
-}
-```
-
-### SourceBreakdownChart
-
-流入経路チャート（Tremor DonutChart）。
-
-```typescript
-interface SourceBreakdownChartProps {
-  organizationId: string;
-  dateRange?: DateRange;
-}
-```
-
-### RecentActivity
-
-最近のアクティビティフィード。
-
-```typescript
-interface RecentActivityProps {
-  organizationId: string;
-  limit?: number;
+function getDateThreshold(dateRange: DateRange): Date {
+  const now = new Date();
+  switch (dateRange) {
+    case '7d':
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    case '30d':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case '90d':
+      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    case 'all':
+      return new Date(0); // Beginning of time
+  }
 }
 ```
 
 ---
 
-## キャッシュ戦略
-
-| 操作 | キャッシュ動作 |
-|------|---------------|
-| overview | staleTime: 5分 |
-| leadTrend | staleTime: 10分 |
-| breakdowns | staleTime: 10分 |
-| recentActivity | staleTime: 1分 |
-
-### 無効化トリガー
-
-- リード作成/更新/削除
-- ステータス変更
-- AIスコア更新
-
----
-
-## SQLクエリ最適化
+## SQLクエリ例
 
 ### 概要統計
 
 ```sql
-SELECT
-  COUNT(*) as total_leads,
-  COUNT(*) FILTER (WHERE created_at >= date_trunc('month', now())) as new_this_month,
-  COUNT(*) FILTER (WHERE created_at >= date_trunc('month', now() - interval '1 month')
-                     AND created_at < date_trunc('month', now())) as new_last_month,
-  AVG(ai_score) as average_score,
-  COUNT(*) FILTER (WHERE status = 'won')::float /
-    NULLIF(COUNT(*) FILTER (WHERE status IN ('won', 'lost')), 0) * 100 as conversion_rate
-FROM leads
+-- 総リード数
+SELECT COUNT(*) as total_leads FROM leads
+WHERE organization_id = $1;
+
+-- 今月の新規リード
+SELECT COUNT(*) as new_this_month FROM leads
 WHERE organization_id = $1
-  AND deleted_at IS NULL;
+  AND created_at >= date_trunc('month', now());
+
+-- 成約率
+SELECT
+  COUNT(*) FILTER (WHERE status = 'converted')::float /
+  NULLIF(COUNT(*), 0) * 100 as conversion_rate
+FROM leads WHERE organization_id = $1;
+
+-- 平均スコア
+SELECT COALESCE(AVG(score), 0) as average_score
+FROM leads WHERE organization_id = $1 AND score IS NOT NULL;
 ```
 
 ### トレンド集計
 
 ```sql
 SELECT
-  date_trunc($2, created_at) as date,
-  COUNT(*) FILTER (WHERE status = 'new') as new,
-  COUNT(*) FILTER (WHERE status = 'contacted') as contacted,
-  COUNT(*) FILTER (WHERE status = 'qualified') as qualified,
-  COUNT(*) FILTER (WHERE status = 'won') as won,
-  COUNT(*) FILTER (WHERE status = 'lost') as lost
+  DATE(created_at) as date,
+  COUNT(*) as count,
+  SUM(CASE WHEN status = 'converted' THEN 1 ELSE 0 END) as converted
 FROM leads
 WHERE organization_id = $1
-  AND created_at >= $3
-  AND deleted_at IS NULL
-GROUP BY date_trunc($2, created_at)
-ORDER BY date;
-```
-
-### インデックス
-
-```sql
--- 日付範囲クエリ最適化
-CREATE INDEX idx_leads_organization_created
-  ON leads(organization_id, created_at DESC)
-  WHERE deleted_at IS NULL;
-
--- ステータス集計最適化
-CREATE INDEX idx_leads_organization_status
-  ON leads(organization_id, status)
-  WHERE deleted_at IS NULL;
-
--- 流入経路集計最適化
-CREATE INDEX idx_leads_organization_source
-  ON leads(organization_id, source_channel)
-  WHERE deleted_at IS NULL;
+  AND created_at >= $2
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
 ```
 
 ---
@@ -414,34 +318,21 @@ CREATE INDEX idx_leads_organization_source
 | getLeadTrend | < 300ms |
 | getSourceBreakdown | < 200ms |
 | getStatusBreakdown | < 200ms |
-| getRecentActivity | < 100ms |
 
 ---
 
 ## 将来の拡張（Phase 6）
 
-### 高度な分析
+### 追加予定エンドポイント
 
-- コンバージョンファネル分析
-- コホート分析
-- 予測分析（AIスコア活用）
+- `getIndustryBreakdown` - 業界別分析
+- `getRecentActivity` - 最近のアクティビティ
+- `getConversionFunnel` - ファネル分析
 
 ### エクスポート機能
 
 - CSV/Excel出力
 - 定期レポートメール
-- カスタムダッシュボード
-
----
-
-## 実装ファイル
-
-| ファイル | 役割 |
-|---------|------|
-| `server/routers/analytics.ts` | tRPCルーター |
-| `hooks/use-analytics.ts` | Reactフック |
-| `components/dashboard/` | ダッシュボードUI |
-| `types/analytics.ts` | 型定義 |
 
 ---
 

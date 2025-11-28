@@ -10,7 +10,7 @@
 ## 概要
 
 組織管理APIとメンバー管理APIは、マルチテナントSaaSの核となる組織機能を提供します。
-BetterAuthの組織機能と連携し、CASL権限管理によるきめ細かいアクセス制御を実現します。
+BetterAuthの組織機能と連携し、ロールベースの権限管理を実現します。
 
 ---
 
@@ -19,6 +19,28 @@ BetterAuthの組織機能と連携し、CASL権限管理によるきめ細かい
 ```
 tRPC: trpc.organizations.*
 tRPC: trpc.members.*
+```
+
+---
+
+## 実装ファイル
+
+```
+lib/features/organizations/
+├── api/
+│   └── router.ts          # 組織tRPCルーター
+└── types/
+    └── schemas.ts         # Zodスキーマ
+
+lib/features/members/
+├── api/
+│   └── router.ts          # メンバーtRPCルーター
+└── types/
+    └── schemas.ts         # Zodスキーマ
+
+hooks/
+├── use-organization.ts    # 組織フック
+└── use-members.ts         # メンバーフック
 ```
 
 ---
@@ -40,10 +62,9 @@ tRPC: trpc.members.*
 | 操作 | owner | admin | member |
 |------|-------|-------|--------|
 | list (所属組織) | ✅ | ✅ | ✅ |
-| get | ✅ | ✅ | ✅ |
-| create | ✅ (新規) | - | - |
-| update | ✅ | ✅ | ❌ |
-| delete | ✅ | ❌ | ❌ |
+| getById | ✅ | ✅ | ✅ |
+| create | ✅ (誰でも新規作成可) | ✅ | ✅ |
+| update | ✅ | ❌ | ❌ |
 
 #### Members
 
@@ -58,6 +79,8 @@ tRPC: trpc.members.*
 
 ## Organizations API
 
+**注意**: `protectedProcedure`を使用（複数組織にまたがる操作のため）
+
 ### organizations.list
 
 ユーザーが所属する組織一覧を取得します。
@@ -66,19 +89,27 @@ tRPC: trpc.members.*
 
 **入力スキーマ**:
 ```typescript
-z.void() // 引数なし（セッションから取得）
+z.object({
+  limit: z.number().int().min(1).max(100).optional(),
+  offset: z.number().int().min(0).optional(),
+})
 ```
 
 **出力スキーマ**:
 ```typescript
-Array<{
-  id: string;
-  name: string;
-  slug: string;
-  logo: string | null;
-  role: 'owner' | 'admin' | 'member';
-  createdAt: Date;
-}>
+{
+  organizations: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    settings: Record<string, unknown>;
+    createdAt: Date;
+    updatedAt: Date;
+    role: 'owner' | 'admin' | 'member';
+    membershipId: string;
+  }>;
+  total: number;
+}
 ```
 
 ---
@@ -92,7 +123,7 @@ Array<{
 **入力スキーマ**:
 ```typescript
 z.object({
-  organizationId: z.string().uuid(),
+  id: z.string().uuid(),
 })
 ```
 
@@ -102,12 +133,55 @@ z.object({
   id: string;
   name: string;
   slug: string;
-  logo: string | null;
-  metadata: Record<string, unknown> | null;
+  settings: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
-} | null
+  role: 'owner' | 'admin' | 'member';
+  membershipId: string;
+}
 ```
+
+**エラー**:
+| コード | 条件 |
+|--------|------|
+| NOT_FOUND | 組織が見つからないか、アクセス権限がない |
+
+---
+
+### organizations.create
+
+新しい組織を作成します。作成者は自動的にownerになります。
+
+**Type**: Mutation
+
+**入力スキーマ**:
+```typescript
+z.object({
+  name: z.string().min(1).max(255),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
+  settings: z.record(z.unknown()).optional(),
+})
+```
+
+**出力スキーマ**:
+```typescript
+{
+  id: string;
+  name: string;
+  slug: string;
+  settings: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+**副作用**:
+- 作成者をownerとして自動追加
+
+**エラー**:
+| コード | 条件 |
+|--------|------|
+| CONFLICT | スラッグが既に使用されている |
 
 ---
 
@@ -117,16 +191,15 @@ z.object({
 
 **Type**: Mutation
 
-**権限**: owner, admin
+**権限**: owner のみ
 
 **入力スキーマ**:
 ```typescript
 z.object({
-  organizationId: z.string().uuid(),
+  id: z.string().uuid(),
   name: z.string().min(1).max(255).optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
-  logo: z.string().url().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  settings: z.record(z.unknown()).optional(),
 })
 ```
 
@@ -136,15 +209,22 @@ z.object({
   id: string;
   name: string;
   slug: string;
-  logo: string | null;
-  metadata: Record<string, unknown> | null;
+  settings: Record<string, unknown>;
   updatedAt: Date;
 }
 ```
 
+**エラー**:
+| コード | 条件 |
+|--------|------|
+| NOT_FOUND | 組織が見つからない |
+| FORBIDDEN | ownerではない |
+
 ---
 
 ## Members API
+
+**注意**: `organizationProcedure`を使用（組織スコープで自動フィルタリング）
 
 ### members.list
 
@@ -156,8 +236,8 @@ z.object({
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  page: z.number().int().positive().default(1),
   limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0),
 })
 ```
 
@@ -170,11 +250,13 @@ z.object({
     organizationId: string;
     role: 'owner' | 'admin' | 'member';
     createdAt: Date;
+    updatedAt: Date;
     user: {
       id: string;
-      name: string;
       email: string;
+      name: string | null;
       image: string | null;
+      createdAt: Date;
     };
   }>;
   total: number;
@@ -203,19 +285,21 @@ z.object({
 **出力スキーマ**:
 ```typescript
 {
-  invitation: {
-    id: string;
-    email: string;
-    role: 'admin' | 'member';
-    expiresAt: Date;
-    status: 'pending';
-  };
+  success: boolean;
+  invitationId: string;
+  message: string;
 }
 ```
 
 **副作用**:
-- 招待メール送信
-- 招待レコード作成（7日間有効）
+- BetterAuth経由で招待作成
+- 招待メール送信（Phase 5で実装予定）
+
+**エラー**:
+| コード | 条件 |
+|--------|------|
+| FORBIDDEN | 権限不足 |
+| CONFLICT | 既にメンバー |
 
 ---
 
@@ -231,25 +315,30 @@ z.object({
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  memberId: z.string().uuid(),
-  role: z.enum(['admin', 'member']),
+  membershipId: z.string().uuid(),
+  role: z.enum(['owner', 'admin', 'member']),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
 {
-  member: {
-    id: string;
-    role: 'admin' | 'member';
-  };
+  id: string;
+  role: 'owner' | 'admin' | 'member';
+  updatedAt: Date;
 }
 ```
 
 **制約**:
-- ownerロールへの変更は不可（別途オーナー譲渡フロー）
-- 自分自身のロール変更は不可
-- 最後のownerの降格は不可
+- ownerのロールは変更不可
+- adminはownerに昇格不可
+- ownerのみがownerに昇格可能
+
+**エラーメッセージ**:
+```typescript
+'オーナーのロールは変更できません'
+'オーナーへの昇格は現在のオーナーのみ可能です'
+```
 
 ---
 
@@ -265,7 +354,7 @@ z.object({
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  memberId: z.string().uuid(),
+  membershipId: z.string().uuid(),
 })
 ```
 
@@ -273,13 +362,19 @@ z.object({
 ```typescript
 {
   success: boolean;
+  message: string;
 }
 ```
 
 **制約**:
-- 自分自身の削除は不可（別途脱退フロー）
-- 最後のownerの削除は不可
-- adminはownerを削除不可
+- 自分自身は削除不可
+- ownerは削除不可
+
+**エラーメッセージ**:
+```typescript
+'オーナーは削除できません'
+'自分自身を削除することはできません'
+```
 
 ---
 
@@ -292,8 +387,7 @@ interface Organization {
   id: string;                          // UUID
   name: string;                        // 組織名
   slug: string;                        // URLスラッグ（一意）
-  logo: string | null;                 // ロゴURL
-  metadata: Record<string, unknown> | null; // カスタムメタデータ
+  settings: Record<string, unknown>;   // 設定（JSONオブジェクト）
   createdAt: Date;
   updatedAt: Date;
 }
@@ -308,22 +402,37 @@ interface OrganizationMember {
   userId: string;                      // ユーザーID
   role: 'owner' | 'admin' | 'member';  // ロール
   createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
-### Invitation
+---
+
+## データベーススキーマ
 
 ```typescript
-interface Invitation {
-  id: string;
-  organizationId: string;
-  email: string;
-  role: 'admin' | 'member';
-  inviterId: string;
-  expiresAt: Date;
-  status: 'pending' | 'accepted' | 'expired';
-  createdAt: Date;
-}
+// lib/db/schema.ts
+export const organizations = pgTable('organizations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  settings: jsonb('settings').$type<Record<string, unknown>>().default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const organizationMembers = pgTable('organization_members', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  role: text('role').notNull().default('member'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 ```
 
 ---
@@ -372,139 +481,28 @@ function useMembers(organizationId: string): {
 
 ---
 
-## UIコンポーネント
-
-### OrganizationSwitcher
-
-組織切り替えドロップダウン。
+## 日本語エラーメッセージ
 
 ```typescript
-interface OrganizationSwitcherProps {
-  onSwitch?: (organizationId: string) => void;
-}
+// Organizations
+'組織が見つからないか、アクセス権限がありません'
+'組織が見つかりません'
+'組織の更新は オーナーのみ可能です'
+'このスラッグは既に使用されています'
+
+// Members
+'メンバーの招待は管理者またはオーナーのみ可能です'
+'このメールアドレスは既にメンバーです'
+'招待の作成に失敗しました'
+'ロールの変更は管理者またはオーナーのみ可能です'
+'メンバーが見つかりません'
+'オーナーのロールは変更できません'
+'オーナーへの昇格は現在のオーナーのみ可能です'
+'メンバーの削除は管理者またはオーナーのみ可能です'
+'オーナーは削除できません'
+'自分自身を削除することはできません'
+'メンバーを削除しました'
 ```
-
-**機能**:
-- 所属組織一覧表示
-- 現在の組織ハイライト
-- 組織作成リンク
-
-### MembersList
-
-メンバー一覧テーブル。
-
-```typescript
-interface MembersListProps {
-  organizationId: string;
-}
-```
-
-**機能**:
-- メンバー一覧表示
-- ロール変更
-- メンバー削除
-- 招待ボタン
-
-### InviteMemberDialog
-
-メンバー招待ダイアログ。
-
-```typescript
-interface InviteMemberDialogProps {
-  organizationId: string;
-  onSuccess?: () => void;
-}
-```
-
----
-
-## キャッシュ戦略
-
-| 操作 | キャッシュ動作 |
-|------|---------------|
-| organizations.list | staleTime: 5分 |
-| organizations.getById | staleTime: 5分 |
-| members.list | staleTime: 2分 |
-| 変更操作 | 関連キャッシュ無効化 |
-
-### 組織切り替え時
-
-```typescript
-// 全キャッシュをクリアして再取得
-queryClient.invalidateQueries();
-```
-
----
-
-## 招待フロー
-
-### 1. 招待送信
-
-```
-Admin/Owner → members.invite → 招待メール送信
-```
-
-### 2. 招待受諾
-
-```
-招待リンククリック → /accept-invite?token=xxx → 認証確認 → メンバー追加
-```
-
-### 3. 招待メール
-
-```typescript
-// emails/member-invite.tsx
-interface InviteEmailProps {
-  organizationName: string;
-  inviterName: string;
-  role: 'admin' | 'member';
-  inviteLink: string;
-  expiresAt: Date;
-}
-```
-
----
-
-## エラーハンドリング
-
-### エラーコード
-
-| コード | 説明 |
-|--------|------|
-| FORBIDDEN | ロールが不足 |
-| CONFLICT | スラッグ重複 / 既存メンバー招待 |
-| NOT_FOUND | 組織/メンバーが存在しない |
-| BAD_REQUEST | 最後のowner削除など |
-
----
-
-## RLSポリシー
-
-```sql
--- 組織メンバーのみアクセス可能
-CREATE POLICY org_members_select ON organization_members
-  FOR SELECT
-  USING (
-    user_id = auth.user_id()
-    OR organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.user_id()
-    )
-  );
-```
-
----
-
-## 実装ファイル
-
-| ファイル | 役割 |
-|---------|------|
-| `server/routers/organizations.ts` | 組織tRPCルーター |
-| `server/routers/members.ts` | メンバーtRPCルーター |
-| `hooks/use-organization.ts` | 組織フック |
-| `hooks/use-members.ts` | メンバーフック |
-| `components/organization/` | UIコンポーネント |
-| `emails/member-invite.tsx` | 招待メールテンプレート |
 
 ---
 

@@ -39,7 +39,6 @@ DiagnoLeads v2は、ホールディングス・グループ企業・会社合併
 ├─────────────────────────────────────────┤
 │           Database Layer (RLS)          │
 │ ├── organization_id フィルタリング       │
-│ ├── ソフトデリート除外                   │
 │ └── ロールベースポリシー                 │
 └─────────────────────────────────────────┘
 ```
@@ -252,7 +251,6 @@ CREATE POLICY leads_select ON leads
   FOR SELECT
   USING (
     organization_id IN (SELECT auth.user_organization_ids())
-    AND deleted_at IS NULL
   );
 
 -- INSERT: 所属組織のみ
@@ -300,11 +298,10 @@ export async function withRLS(db: Database, userId: string) {
 ```typescript
 export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }).notNull(),
-  slug: varchar('slug', { length: 100 }).unique().notNull(),
-  logo: text('logo'),
-  metadata: jsonb('metadata'),
-  parentId: uuid('parent_id').references(() => organizations.id), // 階層構造
+  name: text('name').notNull(),
+  slug: text('slug').unique().notNull(),
+  settings: jsonb('settings').$type<Record<string, unknown>>().default({}),
+  // parentId: uuid('parent_id').references(() => organizations.id), // 階層構造（Phase 2.5予定）
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -339,8 +336,24 @@ export const leads = pgTable('leads', {
   organizationId: uuid('organization_id')
     .notNull()
     .references(() => organizations.id, { onDelete: 'cascade' }),
-  // ... その他のフィールド
-  deletedAt: timestamp('deleted_at'), // ソフトデリート
+
+  email: text('email').notNull(),
+  name: text('name'),
+  company: text('company'),
+  phone: text('phone'),
+
+  status: text('status').notNull().default('new'), // 'new', 'contacted', 'qualified', 'converted'
+  score: integer('score'),
+  source: text('source'), // 'website', 'embed', 'api'
+  responses: jsonb('responses').$type<Record<string, unknown>>().default({}),
+
+  // AI features (Phase 3)
+  embedding: vector('embedding'), // 1536次元
+  searchVector: tsvector('search_vector'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  // Note: 物理削除を使用（ソフトデリートではない）
 });
 ```
 

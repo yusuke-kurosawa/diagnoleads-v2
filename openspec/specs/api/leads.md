@@ -10,7 +10,7 @@
 ## 概要
 
 リード管理APIは、マルチテナント対応のCRUD操作を提供します。
-すべてのエンドポイントは`organizationProcedure`を使用し、組織スコープの自動適用とRLSによるデータ分離を実現します。
+すべてのエンドポイントは`organizationProcedure`を使用し、組織スコープの自動適用とCASL権限チェックを実現します。
 
 ---
 
@@ -22,6 +22,21 @@ tRPC: trpc.leads.*
 
 ---
 
+## 実装ファイル
+
+```
+lib/features/leads/
+├── api/
+│   └── router.ts          # tRPCルーター
+├── types/
+│   ├── index.ts           # 型エクスポート
+│   └── schemas.ts         # Zodスキーマ
+hooks/
+└── use-leads.ts           # Reactフック
+```
+
+---
+
 ## 認証・認可
 
 | レイヤー | 内容 |
@@ -29,7 +44,6 @@ tRPC: trpc.leads.*
 | 認証 | `protectedProcedure` - BetterAuth セッション必須 |
 | 組織スコープ | `organizationProcedure` - 組織メンバーシップ検証 |
 | 権限管理 | CASL - ロールベースアクセス制御 |
-| データ分離 | PostgreSQL RLS - 自動フィルタリング |
 
 ### ロール権限マトリクス
 
@@ -56,30 +70,23 @@ tRPC: trpc.leads.*
 z.object({
   organizationId: z.string().uuid(),
   // ページネーション
-  page: z.number().int().positive().default(1),
   limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0),
   // フィルタリング
-  status: z.enum(['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost']).optional(),
-  industry: z.string().optional(),
-  sourceChannel: z.string().optional(),
-  // 検索
+  status: z.enum(['new', 'contacted', 'qualified', 'converted']).optional(),
+  source: z.enum(['website', 'embed', 'api']).optional(),
+  // 検索（name, email, companyで検索）
   search: z.string().optional(),
-  // ソート
-  sortBy: z.enum(['createdAt', 'updatedAt', 'company', 'status']).default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
 ```
 
 **出力スキーマ**:
 ```typescript
 {
-  leads: Lead[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  items: Lead[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 ```
 
@@ -87,12 +94,11 @@ z.object({
 ```typescript
 const { data } = trpc.leads.list.useQuery({
   organizationId: 'org-uuid',
-  page: 1,
   limit: 20,
+  offset: 0,
   status: 'new',
-  sortBy: 'createdAt',
-  sortOrder: 'desc'
 });
+// data.items, data.total, data.limit, data.offset
 ```
 
 ---
@@ -113,14 +119,14 @@ z.object({
 
 **出力スキーマ**:
 ```typescript
-Lead | null
+Lead
 ```
 
 **エラー**:
 | コード | 条件 |
 |--------|------|
 | NOT_FOUND | リードが存在しない |
-| FORBIDDEN | 組織に所属していない |
+| FORBIDDEN | Lead読み取り権限がない |
 
 ---
 
@@ -134,21 +140,14 @@ Lead | null
 ```typescript
 z.object({
   organizationId: z.string().uuid(),
-  name: z.string().min(1).max(255),
-  email: z.string().email().optional(),
+  email: z.string().email('有効なメールアドレスを入力してください'),
+  name: z.string().optional(),
+  company: z.string().optional(),
   phone: z.string().optional(),
-  company: z.string().min(1).max(255),
-  industry: z.string().optional(),
-  position: z.string().optional(),
-  sourceChannel: z.enum([
-    'website', 'referral', 'social', 'email',
-    'cold_call', 'event', 'advertising', 'other'
-  ]).default('website'),
-  status: z.enum([
-    'new', 'contacted', 'qualified', 'proposal',
-    'negotiation', 'won', 'lost'
-  ]).default('new'),
-  notes: z.string().optional(),
+  status: z.enum(['new', 'contacted', 'qualified', 'converted']).default('new'),
+  score: z.number().int().min(0).max(100).optional(),
+  source: z.enum(['website', 'embed', 'api']).optional(),
+  responses: z.record(z.unknown()).default({}),
 })
 ```
 
@@ -156,10 +155,6 @@ z.object({
 ```typescript
 Lead
 ```
-
-**副作用**:
-- 作成時に埋め込みベクトル生成（非同期）
-- アクティビティログ記録
 
 ---
 
@@ -174,16 +169,15 @@ Lead
 z.object({
   organizationId: z.string().uuid(),
   id: z.string().uuid(),
-  // 部分更新対応
-  name: z.string().min(1).max(255).optional(),
+  // 部分更新対応（すべてオプション）
   email: z.string().email().optional(),
+  name: z.string().optional(),
+  company: z.string().optional(),
   phone: z.string().optional(),
-  company: z.string().min(1).max(255).optional(),
-  industry: z.string().optional(),
-  position: z.string().optional(),
-  sourceChannel: z.enum([...]).optional(),
-  status: z.enum([...]).optional(),
-  notes: z.string().optional(),
+  status: z.enum(['new', 'contacted', 'qualified', 'converted']).optional(),
+  score: z.number().int().min(0).max(100).optional(),
+  source: z.enum(['website', 'embed', 'api']).optional(),
+  responses: z.record(z.unknown()).optional(),
 })
 ```
 
@@ -193,14 +187,13 @@ Lead
 ```
 
 **副作用**:
-- 更新時刻自動設定
-- アクティビティログ記録
+- `updatedAt`を現在時刻に更新
 
 ---
 
 ### leads.delete
 
-リードをソフトデリートします。
+リードを削除します。
 
 **Type**: Mutation
 
@@ -218,8 +211,8 @@ z.object({
 ```
 
 **動作**:
-- 物理削除ではなく`deletedAt`を設定
-- RLSにより以降のクエリから除外
+- **物理削除**（ソフトデリートではない）
+- 削除後はデータベースから完全に消去
 
 ---
 
@@ -231,21 +224,28 @@ z.object({
 interface Lead {
   id: string;                    // UUID
   organizationId: string;        // UUID (外部キー)
-  name: string;                  // 担当者名
-  email: string | null;          // メールアドレス
+
+  // 連絡先情報
+  email: string;                 // メールアドレス（必須）
+  name: string | null;           // 担当者名
+  company: string | null;        // 会社名
   phone: string | null;          // 電話番号
-  company: string;               // 会社名
-  industry: string | null;       // 業界
-  position: string | null;       // 役職
-  sourceChannel: SourceChannel;  // 流入経路
+
+  // リードメタデータ
   status: LeadStatus;            // ステータス
-  notes: string | null;          // 備考
+  score: number | null;          // スコア (0-100)
+  source: LeadSource | null;     // 流入経路
+
+  // 診断データ
+  responses: Record<string, unknown>; // 診断回答（JSONオブジェクト）
+
+  // AI機能（Phase 3）
   embedding: number[] | null;    // 埋め込みベクトル (1536次元)
-  searchVector: string | null;   // 全文検索ベクトル
-  aiScore: number | null;        // AIスコア (0-100)
-  createdAt: Date;               // 作成日時
-  updatedAt: Date;               // 更新日時
-  deletedAt: Date | null;        // 削除日時 (ソフトデリート)
+  searchVector: string | null;   // 全文検索ベクトル (tsvector)
+
+  // タイムスタンプ
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -256,24 +256,16 @@ type LeadStatus =
   | 'new'          // 新規
   | 'contacted'    // コンタクト済み
   | 'qualified'    // 見込み確定
-  | 'proposal'     // 提案中
-  | 'negotiation'  // 交渉中
-  | 'won'          // 成約
-  | 'lost';        // 失注
+  | 'converted';   // 成約
 ```
 
-### SourceChannel
+### LeadSource
 
 ```typescript
-type SourceChannel =
+type LeadSource =
   | 'website'      // Webサイト
-  | 'referral'     // 紹介
-  | 'social'       // SNS
-  | 'email'        // メール
-  | 'cold_call'    // コールドコール
-  | 'event'        // イベント
-  | 'advertising'  // 広告
-  | 'other';       // その他
+  | 'embed'        // 埋め込みフォーム
+  | 'api';         // API経由
 ```
 
 ---
@@ -286,11 +278,9 @@ type SourceChannel =
 
 ```typescript
 function useLeads(organizationId: string): {
-  // Mutations
   createLead: UseMutationResult;
   updateLead: UseMutationResult;
   deleteLead: UseMutationResult;
-  // Helper functions
   create: (input: Omit<CreateLeadInput, 'organizationId'>) => void;
   update: (input: Omit<UpdateLeadInput, 'organizationId'>) => void;
   delete: (id: string) => void;
@@ -303,8 +293,10 @@ function useLeads(organizationId: string): {
 
 ```typescript
 function useListLeads(input: ListLeadsInput): UseQueryResult<{
-  leads: Lead[];
-  pagination: Pagination;
+  items: Lead[];
+  total: number;
+  limit: number;
+  offset: number;
 }>
 ```
 
@@ -313,7 +305,17 @@ function useListLeads(input: ListLeadsInput): UseQueryResult<{
 単一リード取得フック。
 
 ```typescript
-function useGetLead(input: GetLeadInput): UseQueryResult<Lead | null>
+function useGetLead(input: GetLeadInput): UseQueryResult<Lead>
+```
+
+### useCreateLead / useUpdateLead / useDeleteLead
+
+個別のミューテーションフック。トースト通知付き。
+
+```typescript
+// トースト通知例
+// 成功: 'リードを作成しました' / 'リードを更新しました' / 'リードを削除しました'
+// エラー: 'エラー: {error.message}'
 ```
 
 ---
@@ -322,11 +324,11 @@ function useGetLead(input: GetLeadInput): UseQueryResult<Lead | null>
 
 | 操作 | キャッシュ動作 |
 |------|---------------|
-| list | staleTime: 2分 |
-| get | staleTime: 5分 |
-| create | リスト自動無効化 |
-| update | リスト + 詳細無効化 |
-| delete | リスト自動無効化 |
+| list | 自動キャッシュ |
+| get | 自動キャッシュ |
+| create | `leads.list` を無効化 |
+| update | `leads.list` + `leads.get` を無効化 |
+| delete | `leads.list` を無効化 |
 
 ---
 
@@ -338,107 +340,56 @@ function useGetLead(input: GetLeadInput): UseQueryResult<Lead | null>
 |--------|---------|------|
 | BAD_REQUEST | 400 | 入力バリデーションエラー |
 | UNAUTHORIZED | 401 | 認証が必要 |
-| FORBIDDEN | 403 | 権限不足 |
+| FORBIDDEN | 403 | CASL権限不足 |
 | NOT_FOUND | 404 | リードが見つからない |
-| INTERNAL_SERVER_ERROR | 500 | サーバーエラー |
 
-### バリデーションエラー
+### 日本語エラーメッセージ
 
 ```typescript
-{
-  code: 'BAD_REQUEST',
-  message: 'Validation error',
-  issues: [
-    { path: ['name'], message: '名前は必須です' },
-    { path: ['email'], message: '有効なメールアドレスを入力してください' }
-  ]
-}
+// FORBIDDEN
+'リードを作成する権限がありません'
+'リードを閲覧する権限がありません'
+'リードを更新する権限がありません'
+'リードを削除する権限がありません'
+
+// NOT_FOUND
+'リードが見つかりません'
+
+// Validation
+'有効なメールアドレスを入力してください'
 ```
 
 ---
 
-## インデックス
+## データベーススキーマ
 
-```sql
--- 組織ごとのリード検索
-CREATE INDEX idx_leads_organization_id ON leads(organization_id);
+```typescript
+// lib/db/schema.ts
+export const leads = pgTable('leads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
 
--- ステータスフィルタリング
-CREATE INDEX idx_leads_organization_status
-  ON leads(organization_id, status);
+  email: text('email').notNull(),
+  name: text('name'),
+  company: text('company'),
+  phone: text('phone'),
 
--- 作成日順ソート
-CREATE INDEX idx_leads_organization_created
-  ON leads(organization_id, created_at DESC);
+  status: text('status').notNull().default('new'),
+  score: integer('score'),
+  source: text('source'),
 
--- 全文検索
-CREATE INDEX idx_leads_search_vector
-  ON leads USING gin(search_vector);
+  responses: jsonb('responses').$type<Record<string, unknown>>().default({}),
 
--- ベクトル検索
-CREATE INDEX idx_leads_embedding
-  ON leads USING hnsw(embedding vector_cosine_ops);
+  // AI features (Phase 3)
+  embedding: vector('embedding'),        // 1536次元ベクトル
+  searchVector: tsvector('search_vector'), // 全文検索
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 ```
-
----
-
-## RLSポリシー
-
-```sql
--- SELECT: 組織メンバーのみ
-CREATE POLICY leads_select ON leads
-  FOR SELECT
-  USING (
-    organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.user_id()
-    )
-    AND deleted_at IS NULL
-  );
-
--- INSERT: 組織メンバーのみ
-CREATE POLICY leads_insert ON leads
-  FOR INSERT
-  WITH CHECK (
-    organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.user_id()
-    )
-  );
-
--- UPDATE: 組織メンバーのみ
-CREATE POLICY leads_update ON leads
-  FOR UPDATE
-  USING (
-    organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.user_id()
-    )
-  );
-
--- DELETE: owner/adminのみ
-CREATE POLICY leads_delete ON leads
-  FOR DELETE
-  USING (
-    organization_id IN (
-      SELECT organization_id FROM organization_members
-      WHERE user_id = auth.user_id()
-        AND role IN ('owner', 'admin')
-    )
-  );
-```
-
----
-
-## 実装ファイル
-
-| ファイル | 役割 |
-|---------|------|
-| `server/routers/leads.ts` | tRPCルーター |
-| `lib/db/schema/leads.ts` | Drizzleスキーマ |
-| `hooks/use-leads.ts` | Reactフック |
-| `types/lead.ts` | 型定義 |
-| `components/leads/` | UIコンポーネント |
 
 ---
 

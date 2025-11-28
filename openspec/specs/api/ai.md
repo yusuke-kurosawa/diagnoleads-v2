@@ -142,7 +142,6 @@ interface SemanticSearchResult {
   name: string | null;
   email: string | null;
   company: string | null;
-  industry: string | null;
   similarity: number; // 0-1 コサイン類似度
 }
 ```
