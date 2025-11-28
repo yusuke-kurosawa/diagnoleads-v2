@@ -5,11 +5,11 @@
  * マルチテナント環境でのデータアクセスを簡潔に記述可能にする
  */
 
-import { headers } from 'next/headers';
 import { auth } from '@/lib/auth/config';
+import { headers } from 'next/headers';
+import { AssessmentRepository } from '../repositories/assessment.repository';
 import { BlogRepository } from '../repositories/blog.repository';
 import { FAQRepository } from '../repositories/faq.repository';
-import { AssessmentRepository } from '../repositories/assessment.repository';
 
 export interface TenantContext {
   userId: string | null;
@@ -37,7 +37,8 @@ export async function getTenantContext(): Promise<TenantContext> {
 
     // activeOrganizationIdはセッションから取得
     // better-authのorganizationプラグインが管理
-    const organizationId = (session.session as { activeOrganizationId?: string })?.activeOrganizationId || null;
+    const organizationId =
+      (session.session as { activeOrganizationId?: string })?.activeOrganizationId || null;
 
     return {
       userId: session.user.id,

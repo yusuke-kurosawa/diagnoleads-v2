@@ -6,7 +6,7 @@
  * @see https://payloadcms.com/docs/upload/overview
  */
 
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig } from '../types/payload-stubs';
 
 export const Media: CollectionConfig = {
   slug: 'media',

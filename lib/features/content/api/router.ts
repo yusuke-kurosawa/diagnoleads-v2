@@ -6,11 +6,11 @@
  * FAQとBlog記事のCRUD操作を提供
  */
 
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
+import { BlogRepository, FAQRepository } from '@/lib/cms';
+import type { BlogPost, FAQ } from '@/lib/cms/core/types';
 import { protectedProcedure, publicProcedure, router } from '@/lib/trpc/init';
-import { FAQRepository, BlogRepository } from '@/lib/cms';
-import type { FAQ, BlogPost } from '@/lib/cms/core/types';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 // =============================================================================
 // Input Schemas
@@ -59,7 +59,10 @@ const blogCreateSchema = z.object({
 const blogUpdateSchema = z.object({
   id: z.string(),
   title: localizedStringSchema.optional(),
-  slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   content: localizedRichTextSchema.optional(),
   excerpt: localizedStringSchema.optional(),
   category: z.string().optional(),
@@ -88,7 +91,6 @@ const faqsRouter = router({
       const faqRepo = new FAQRepository();
 
       const result = await faqRepo.findAll({
-        locale: input.locale,
         category: input.category,
         limit: input.limit,
         offset: input.offset,
@@ -97,55 +99,49 @@ const faqsRouter = router({
       return {
         faqs: result.faqs,
         total: result.total,
-        hasMore: result.hasMore,
       };
     }),
 
   /**
    * FAQ作成
    */
-  create: protectedProcedure
-    .input(faqCreateSchema)
-    .mutation(async ({ input, ctx }) => {
-      const faqRepo = new FAQRepository();
+  create: protectedProcedure.input(faqCreateSchema).mutation(async ({ input, ctx }) => {
+    const faqRepo = new FAQRepository();
 
-      const faq = await faqRepo.create({
-        question: input.question,
-        answer: input.answer,
-        category: input.category,
-        order: input.order,
-        publishedAt: new Date(),
-        organizationId: ctx.session?.organizationId,
-      });
+    const faq = await faqRepo.create({
+      question: input.question,
+      answer: input.answer,
+      category: input.category,
+      order: input.order,
+      organizationId: (ctx.session as any)?.activeOrganizationId,
+    } as any);
 
-      return { faq };
-    }),
+    return { faq };
+  }),
 
   /**
    * FAQ更新
    */
-  update: protectedProcedure
-    .input(faqUpdateSchema)
-    .mutation(async ({ input, ctx }) => {
-      const faqRepo = new FAQRepository();
+  update: protectedProcedure.input(faqUpdateSchema).mutation(async ({ input, ctx }) => {
+    const faqRepo = new FAQRepository();
 
-      const existing = await faqRepo.findById(input.id);
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'FAQ not found',
-        });
-      }
-
-      const faq = await faqRepo.update(input.id, {
-        question: input.question,
-        answer: input.answer,
-        category: input.category,
-        order: input.order,
+    const existing = await faqRepo.findById(input.id);
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'FAQ not found',
       });
+    }
 
-      return { faq };
-    }),
+    const faq = await faqRepo.update(input.id, {
+      question: input.question,
+      answer: input.answer,
+      category: input.category,
+      order: input.order,
+    });
+
+    return { faq };
+  }),
 
   /**
    * FAQ削除
@@ -191,8 +187,7 @@ const blogRouter = router({
       const blogRepo = new BlogRepository();
 
       const result = await blogRepo.findAll({
-        locale: input.locale,
-        status: input.status === 'all' ? undefined : input.status,
+        status: input.status === 'all' ? 'all' : input.status,
         category: input.category,
         limit: input.limit,
         offset: input.offset,
@@ -201,7 +196,7 @@ const blogRouter = router({
       return {
         posts: result.posts,
         total: result.total,
-        hasMore: result.hasMore,
+        hasNextPage: result.hasNextPage,
       };
     }),
 
@@ -232,78 +227,71 @@ const blogRouter = router({
   /**
    * ブログ記事作成
    */
-  create: protectedProcedure
-    .input(blogCreateSchema)
-    .mutation(async ({ input, ctx }) => {
-      const blogRepo = new BlogRepository();
+  create: protectedProcedure.input(blogCreateSchema).mutation(async ({ input, ctx }) => {
+    const blogRepo = new BlogRepository();
 
-      // スラッグの重複チェック
-      const existing = await blogRepo.findBySlug(input.slug);
-      if (existing) {
+    // スラッグの重複チェック
+    const existing = await blogRepo.findBySlug(input.slug);
+    if (existing) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'Slug already exists',
+      });
+    }
+
+    const post = await blogRepo.create({
+      title: input.title,
+      slug: input.slug,
+      content: input.content,
+      excerpt: input.excerpt,
+      status: input.status,
+      author: {
+        id: ctx.user.id,
+        name: ctx.user.name || 'Anonymous',
+        email: ctx.user.email,
+      },
+      seo: {},
+    } as any);
+
+    return { post };
+  }),
+
+  /**
+   * ブログ記事更新
+   */
+  update: protectedProcedure.input(blogUpdateSchema).mutation(async ({ input, ctx }) => {
+    const blogRepo = new BlogRepository();
+
+    const existing = await blogRepo.findById(input.id);
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Post not found',
+      });
+    }
+
+    // スラッグの重複チェック（変更がある場合）
+    if (input.slug && input.slug !== existing.slug) {
+      const slugExists = await blogRepo.findBySlug(input.slug);
+      if (slugExists) {
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'Slug already exists',
         });
       }
+    }
 
-      const post = await blogRepo.create({
-        title: input.title,
-        slug: input.slug,
-        content: input.content,
-        excerpt: input.excerpt,
-        status: input.status,
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-        organizationId: ctx.session?.organizationId,
-        author: {
-          id: ctx.user.id,
-          name: ctx.user.name || 'Anonymous',
-          email: ctx.user.email,
-        },
-        seo: {},
-      });
+    const post = await blogRepo.update(input.id, {
+      title: input.title,
+      slug: input.slug,
+      content: input.content,
+      excerpt: input.excerpt,
+      status: input.status,
+      updatedAt: new Date(),
+    });
 
-      return { post };
-    }),
-
-  /**
-   * ブログ記事更新
-   */
-  update: protectedProcedure
-    .input(blogUpdateSchema)
-    .mutation(async ({ input, ctx }) => {
-      const blogRepo = new BlogRepository();
-
-      const existing = await blogRepo.findById(input.id);
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Post not found',
-        });
-      }
-
-      // スラッグの重複チェック（変更がある場合）
-      if (input.slug && input.slug !== existing.slug) {
-        const slugExists = await blogRepo.findBySlug(input.slug);
-        if (slugExists) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Slug already exists',
-          });
-        }
-      }
-
-      const post = await blogRepo.update(input.id, {
-        title: input.title,
-        slug: input.slug,
-        content: input.content,
-        excerpt: input.excerpt,
-        status: input.status,
-        updatedAt: new Date(),
-      });
-
-      return { post };
-    }),
+    return { post };
+  }),
 
   /**
    * ブログ記事削除

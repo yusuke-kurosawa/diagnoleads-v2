@@ -1,9 +1,9 @@
 'use client';
 
+import { type Locale, localeNames, locales } from '@/lib/i18n/config';
+import { Globe } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { locales, localeNames, type Locale } from '@/lib/i18n/config';
-import { Globe } from 'lucide-react';
 
 /**
  * Language Switcher Component
@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   // 現在のロケールをパスから取得
-  const currentLocale = pathname.split('/')[1] as Locale;
+  const currentLocale = (pathname?.split('/')[1] || 'ja') as Locale;
 
   /**
    * 言語を切り替える
@@ -31,7 +31,7 @@ export function LanguageSwitcher() {
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
 
     // パスのロケールを置き換え
-    const segments = pathname.split('/');
+    const segments = (pathname || '/ja').split('/');
     segments[1] = newLocale;
     const newPath = segments.join('/');
 
@@ -78,14 +78,14 @@ export function LanguageSwitcherButton() {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
 
-  const currentLocale = pathname.split('/')[1] as Locale;
+  const currentLocale = (pathname?.split('/')[1] || 'ja') as Locale;
 
   const handleLocaleChange = (newLocale: Locale) => {
     if (newLocale === currentLocale) return;
 
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
 
-    const segments = pathname.split('/');
+    const segments = (pathname || '/ja').split('/');
     segments[1] = newLocale;
     const newPath = segments.join('/');
 
@@ -138,9 +138,7 @@ export function LanguageSwitcherButton() {
                   role="menuitem"
                 >
                   {localeNames[locale]}
-                  {locale === currentLocale && (
-                    <span className="ml-2 text-blue-600">✓</span>
-                  )}
+                  {locale === currentLocale && <span className="ml-2 text-blue-600">✓</span>}
                 </button>
               ))}
             </div>

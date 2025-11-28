@@ -4,26 +4,26 @@
  * テスト用およびPayloadCMS未設定時のフォールバックアダプター
  */
 
+import { CMSNotFoundError, CMSOrganizationMismatchError } from '../../core/errors';
 import type {
+  BulkCreateParams,
+  BulkDeleteParams,
+  BulkUpdateParams,
   CMSAdapter,
-  FindParams,
+  CMSResponse,
+  CreateParams,
+  DeleteParams,
+  ExportData,
+  ExportParams,
   FindByIdParams,
   FindBySlugParams,
-  CreateParams,
-  UpdateParams,
-  DeleteParams,
-  SearchParams,
-  BulkCreateParams,
-  BulkUpdateParams,
-  BulkDeleteParams,
-  RevalidateParams,
-  ExportParams,
+  FindParams,
   ImportParams,
-  CMSResponse,
-  ExportData,
   ImportResult,
+  RevalidateParams,
+  SearchParams,
+  UpdateParams,
 } from '../../core/interfaces';
-import { CMSNotFoundError, CMSOrganizationMismatchError } from '../../core/errors';
 
 interface MockDocument {
   id: string;
@@ -63,9 +63,7 @@ export class MockCMSAdapter implements CMSAdapter {
 
     // organizationIdフィルタリング
     if (params.organizationId) {
-      items = items.filter(
-        (item) => item.organizationId === params.organizationId
-      );
+      items = items.filter((item) => item.organizationId === params.organizationId);
     }
 
     // statusフィルタリング
@@ -235,9 +233,7 @@ export class MockCMSAdapter implements CMSAdapter {
 
     // organizationIdフィルタリング
     if (params.organizationId) {
-      items = items.filter(
-        (item) => item.organizationId === params.organizationId
-      );
+      items = items.filter((item) => item.organizationId === params.organizationId);
     }
 
     // 検索フィールドで検索
@@ -330,9 +326,7 @@ export class MockCMSAdapter implements CMSAdapter {
         let items = Array.from(collection.values());
 
         if (params.organizationId) {
-          items = items.filter(
-            (item) => item.organizationId === params.organizationId
-          );
+          items = items.filter((item) => item.organizationId === params.organizationId);
         }
 
         data[collectionName] = items.map(({ id, createdAt, updatedAt, ...rest }) => rest);
@@ -386,7 +380,7 @@ export class MockCMSAdapter implements CMSAdapter {
     if (!this.data.has(collection)) {
       this.data.set(collection, new Map());
     }
-    this.data.get(collection)!.set(id, { ...data, id });
+    this.data.get(collection)?.set(id, { ...data, id });
   }
 
   /**
@@ -417,49 +411,112 @@ export class MockCMSAdapter implements CMSAdapter {
 
   private initializeSampleData(): void {
     // FAQ サンプルデータ
-    this.data.set('faqs', new Map([
-      ['faq-1', {
-        id: 'faq-1',
-        question: { ja: 'DiagnoLeadsとは何ですか？', en: 'What is DiagnoLeads?' },
-        answer: {
-          ja: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'AIを活用したB2B診断プラットフォームです。' }] }] },
-          en: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'An AI-powered B2B diagnostic platform.' }] }] },
-        },
-        category: 'features',
-        order: 1,
-        publishedAt: new Date(),
-      }],
-      ['faq-2', {
-        id: 'faq-2',
-        question: { ja: '料金はいくらですか？', en: 'How much does it cost?' },
-        answer: {
-          ja: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '無料プランからご利用いただけます。' }] }] },
-          en: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'We offer a free plan to get started.' }] }] },
-        },
-        category: 'pricing',
-        order: 2,
-        publishedAt: new Date(),
-      }],
-    ]));
+    this.data.set(
+      'faqs',
+      new Map([
+        [
+          'faq-1',
+          {
+            id: 'faq-1',
+            question: { ja: 'DiagnoLeadsとは何ですか？', en: 'What is DiagnoLeads?' },
+            answer: {
+              ja: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: 'AIを活用したB2B診断プラットフォームです。' }],
+                  },
+                ],
+              },
+              en: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: 'An AI-powered B2B diagnostic platform.' }],
+                  },
+                ],
+              },
+            },
+            category: 'features',
+            order: 1,
+            publishedAt: new Date(),
+          },
+        ],
+        [
+          'faq-2',
+          {
+            id: 'faq-2',
+            question: { ja: '料金はいくらですか？', en: 'How much does it cost?' },
+            answer: {
+              ja: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: '無料プランからご利用いただけます。' }],
+                  },
+                ],
+              },
+              en: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: 'We offer a free plan to get started.' }],
+                  },
+                ],
+              },
+            },
+            category: 'pricing',
+            order: 2,
+            publishedAt: new Date(),
+          },
+        ],
+      ])
+    );
 
     // Blog サンプルデータ
-    this.data.set('blog-posts', new Map([
-      ['post-1', {
-        id: 'post-1',
-        slug: 'getting-started',
-        title: { ja: 'DiagnoLeadsの始め方', en: 'Getting Started with DiagnoLeads' },
-        content: {
-          ja: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'DiagnoLeadsを始めましょう。' }] }] },
-          en: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Let\'s get started with DiagnoLeads.' }] }] },
-        },
-        excerpt: { ja: 'DiagnoLeadsの基本的な使い方', en: 'Basic usage of DiagnoLeads' },
-        author: { id: '1', name: 'DiagnoLeads Team', email: 'team@diagnoleads.com' },
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-        status: 'published',
-        seo: {},
-      }],
-    ]));
+    this.data.set(
+      'blog-posts',
+      new Map([
+        [
+          'post-1',
+          {
+            id: 'post-1',
+            slug: 'getting-started',
+            title: { ja: 'DiagnoLeadsの始め方', en: 'Getting Started with DiagnoLeads' },
+            content: {
+              ja: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: 'DiagnoLeadsを始めましょう。' }],
+                  },
+                ],
+              },
+              en: {
+                type: 'doc',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: "Let's get started with DiagnoLeads." }],
+                  },
+                ],
+              },
+            },
+            excerpt: { ja: 'DiagnoLeadsの基本的な使い方', en: 'Basic usage of DiagnoLeads' },
+            author: { id: '1', name: 'DiagnoLeads Team', email: 'team@diagnoleads.com' },
+            publishedAt: new Date(),
+            updatedAt: new Date(),
+            status: 'published',
+            seo: {},
+          },
+        ],
+      ])
+    );
   }
 
   private applyWhereCondition(
@@ -474,10 +531,21 @@ export class MockCMSAdapter implements CMSAdapter {
           const op = condition as Record<string, unknown>;
           if ('equals' in op && value !== op.equals) return false;
           if ('not_equals' in op && value === op.not_equals) return false;
-          if ('contains' in op && typeof value === 'string' && !value.includes(op.contains as string)) return false;
+          if (
+            'contains' in op &&
+            typeof value === 'string' &&
+            !value.includes(op.contains as string)
+          )
+            return false;
           if ('in' in op && Array.isArray(op.in) && !op.in.includes(value)) return false;
-          if ('greater_than' in op && typeof value === 'number' && value <= (op.greater_than as number)) return false;
-          if ('less_than' in op && typeof value === 'number' && value >= (op.less_than as number)) return false;
+          if (
+            'greater_than' in op &&
+            typeof value === 'number' &&
+            value <= (op.greater_than as number)
+          )
+            return false;
+          if ('less_than' in op && typeof value === 'number' && value >= (op.less_than as number))
+            return false;
         } else {
           if (value !== condition) return false;
         }
@@ -496,8 +564,11 @@ export class MockCMSAdapter implements CMSAdapter {
         const bVal = this.getNestedValue(b, field);
 
         let comparison = 0;
-        if (aVal < bVal) comparison = -1;
-        if (aVal > bVal) comparison = 1;
+        // Convert to strings for safe comparison of unknown types
+        const aStr = String(aVal ?? '');
+        const bStr = String(bVal ?? '');
+        if (aStr < bStr) comparison = -1;
+        if (aStr > bStr) comparison = 1;
 
         if (comparison !== 0) {
           return order === 'desc' ? -comparison : comparison;

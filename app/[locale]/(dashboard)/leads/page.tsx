@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { useTranslations } from 'next-intl';
-import { useRequiredOrganizationId } from '@/hooks/use-organization';
-import { useListLeads, useCreateLead, useUpdateLead, useDeleteLead } from '@/hooks/use-leads';
-import { LeadDialog } from '@/components/features/leads/lead-dialog';
 import { LeadDetails } from '@/components/features/leads/lead-details';
+import { LeadDialog } from '@/components/features/leads/lead-dialog';
+import { useCreateLead, useDeleteLead, useListLeads, useUpdateLead } from '@/hooks/use-leads';
+import { useOrganizationId } from '@/hooks/use-organization';
+import { useLocale, useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Metric, Text, Title } from '@/components/ui/metric';
+import { ProgressBar } from '@/components/ui/progress-bar';
+
 import {
   Sheet,
   SheetContent,
@@ -15,36 +21,39 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Plus } from 'lucide-react';
 import type { Lead } from '@/lib/db/schema';
 import type { CreateLeadInput, UpdateLeadInput } from '@/lib/features/leads/types';
+import { Plus, Target, TrendingUp, UserCheck, Users } from 'lucide-react';
 
 // Dynamic import for heavy table component (TanStack Table)
-// This reduces initial bundle size and improves page load performance
 const LeadTable = dynamic(
-  () => import('@/components/features/leads/lead-table').then((mod) => ({ default: mod.LeadTable })),
+  () =>
+    import('@/components/features/leads/lead-table').then((mod) => ({ default: mod.LeadTable })),
   {
     loading: () => (
-      <div className="bg-white rounded-lg border border-gray-200 animate-pulse">
-        <div className="p-4 space-y-4">
+      <Card className="animate-pulse p-4">
+        <div className="space-y-4">
           <div className="h-12 bg-gray-200 rounded" />
           <div className="h-12 bg-gray-100 rounded" />
           <div className="h-12 bg-gray-100 rounded" />
           <div className="h-12 bg-gray-100 rounded" />
         </div>
-      </div>
+      </Card>
     ),
-    ssr: false, // Don't render on server (client-only component)
+    ssr: false,
   }
 );
 
 /**
  * リード管理ページ
- * TanStack Table による高度なリード一覧表示機能を提供
+ * Tailwind v4互換のモダンなリード一覧表示
  */
 export default function LeadsPage() {
   const t = useTranslations('leads');
-  const organizationId = useRequiredOrganizationId();
+  const tStatus = useTranslations('status');
+  const locale = useLocale();
+  const urlOrganizationId = useOrganizationId();
+  const organizationId = urlOrganizationId || 'demo-organization';
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -54,7 +63,7 @@ export default function LeadsPage() {
   // Fetch leads list
   const { data: leadsData, isLoading } = useListLeads({
     organizationId,
-    limit: 50,
+    limit: 100,
     offset: 0,
   });
 
@@ -63,19 +72,39 @@ export default function LeadsPage() {
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
 
-  const handleCreateLead = async (data: Omit<CreateLeadInput, 'organizationId'>) => {
+  const leads = leadsData?.items || [];
+
+  // Calculate stats
+  const totalLeads = leads.length;
+  const newLeads = leads.filter((l) => l.status === 'new').length;
+  const contactedLeads = leads.filter((l) => l.status === 'contacted').length;
+  const qualifiedLeads = leads.filter((l) => l.status === 'qualified').length;
+  const convertedLeads = leads.filter((l) => l.status === 'converted').length;
+  const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+  const averageScore =
+    leads.length > 0 ? leads.reduce((acc, l) => acc + (l.score || 0), 0) / leads.length : 0;
+
+  const handleCreateLead = async (
+    data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>
+  ) => {
+    // Cast to CreateLeadInput for create operation (status is required)
+    const createData = data as Omit<CreateLeadInput, 'organizationId'>;
     await createLead.mutateAsync({
-      ...data,
+      ...createData,
       organizationId,
     });
     setCreateDialogOpen(false);
   };
 
-  const handleUpdateLead = async (data: Omit<UpdateLeadInput, 'organizationId' | 'id'>) => {
+  const handleUpdateLead = async (
+    data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>
+  ) => {
     if (!selectedLead) return;
 
+    // Cast to UpdateLeadInput for update operation
+    const updateData = data as Omit<UpdateLeadInput, 'organizationId' | 'id'>;
     await updateLead.mutateAsync({
-      ...data,
+      ...updateData,
       id: selectedLead.id,
       organizationId,
     });
@@ -104,30 +133,110 @@ export default function LeadsPage() {
     setEditDialogOpen(true);
   };
 
-  const leads = leadsData?.items || [];
-
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="text-gray-600 mt-1">
-            {t('description')}
-          </p>
+          <Text className="mt-1">{t('description')}</Text>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
+        <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-5 w-5 mr-2" />
           {t('createLead')}
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Leads */}
+        <Card className="p-6" decoration="top" decorationColor="blue">
+          <div className="flex items-start justify-between">
+            <div>
+              <Text>{t('totalLeads')}</Text>
+              <Metric className="mt-2">
+                {totalLeads.toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US')}
+              </Metric>
+            </div>
+            <div className="p-3 bg-blue-50 rounded-xl">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between">
+            <Badge color="blue">{tStatus('new')}</Badge>
+            <Text>{newLeads}</Text>
+          </div>
+        </Card>
+
+        {/* Active Leads */}
+        <Card className="p-6" decoration="top" decorationColor="yellow">
+          <div className="flex items-start justify-between">
+            <div>
+              <Text>{t('activeLeads') || 'Active Leads'}</Text>
+              <Metric className="mt-2">
+                {(contactedLeads + qualifiedLeads).toLocaleString(
+                  locale === 'ja' ? 'ja-JP' : 'en-US'
+                )}
+              </Metric>
+            </div>
+            <div className="p-3 bg-yellow-50 rounded-xl">
+              <Target className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <Badge color="yellow">{tStatus('contacted')}</Badge>
+              <Text>{contactedLeads}</Text>
+            </div>
+            <div className="flex items-center justify-between">
+              <Badge color="emerald">{tStatus('qualified')}</Badge>
+              <Text>{qualifiedLeads}</Text>
+            </div>
+          </div>
+        </Card>
+
+        {/* Conversion Rate */}
+        <Card className="p-6" decoration="top" decorationColor="violet">
+          <div className="flex items-start justify-between">
+            <div>
+              <Text>{t('conversionRate') || 'Conversion Rate'}</Text>
+              <Metric className="mt-2">{conversionRate.toFixed(1)}%</Metric>
+            </div>
+            <div className="p-3 bg-violet-50 rounded-xl">
+              <UserCheck className="h-6 w-6 text-violet-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <ProgressBar value={conversionRate} color="violet" />
+            <div className="mt-2 flex items-center justify-between">
+              <Badge color="violet">{tStatus('converted')}</Badge>
+              <Text>{convertedLeads}</Text>
+            </div>
+          </div>
+        </Card>
+
+        {/* Average Score */}
+        <Card className="p-6" decoration="top" decorationColor="emerald">
+          <div className="flex items-start justify-between">
+            <div>
+              <Text>{t('averageScore') || 'Average Score'}</Text>
+              <Metric className="mt-2">
+                {averageScore.toFixed(0)}
+                <span className="text-lg font-normal text-gray-500">/100</span>
+              </Metric>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded-xl">
+              <TrendingUp className="h-6 w-6 text-emerald-600" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <ProgressBar value={averageScore} color="emerald" />
+          </div>
+        </Card>
+      </div>
+
       {/* Lead Table */}
-      <LeadTable
-        leads={leads}
-        isLoading={isLoading}
-        onLeadClick={handleLeadClick}
-      />
+      <LeadTable leads={leads} isLoading={isLoading} onLeadClick={handleLeadClick} />
 
       {/* Create Lead Dialog */}
       <LeadDialog
@@ -153,9 +262,7 @@ export default function LeadsPage() {
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t('leadDetails')}</SheetTitle>
-            <SheetDescription>
-              {t('leadDetailsDescription')}
-            </SheetDescription>
+            <SheetDescription>{t('leadDetailsDescription')}</SheetDescription>
           </SheetHeader>
 
           {selectedLead && (

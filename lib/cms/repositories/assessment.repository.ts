@@ -5,9 +5,9 @@
  * CMS実装に依存しないインターフェースを提供
  */
 
-import type { AssessmentTemplate, Industry, ContentStatus } from '../core/types';
-import type { CMSAdapter } from '../core/interfaces';
 import { getCMSAdapter } from '../adapters/factory';
+import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
+import type { AssessmentTemplate, ContentStatus, Industry } from '../core/types';
 
 export interface FindAssessmentsOptions {
   organizationId?: string;
@@ -35,10 +35,10 @@ export class AssessmentRepository {
   async findAll(options: FindAssessmentsOptions = {}): Promise<AssessmentsResult> {
     const { organizationId, industry, status = 'published', limit = 50, offset = 0 } = options;
 
-    const where: Record<string, unknown> = {};
+    const where: WhereCondition = {};
 
     if (industry) {
-      where.industry = { equals: industry };
+      where.industry = { equals: industry } as WhereOperator;
     }
 
     const { data, meta } = await this.adapter.find<AssessmentTemplate>({
@@ -48,7 +48,7 @@ export class AssessmentRepository {
       offset,
       sort: [{ field: 'name.ja', order: 'asc' }],
       organizationId,
-      status: status === 'all' ? 'all' : status,
+      status: status === 'all' ? 'all' : status === 'archived' ? 'draft' : status,
     });
 
     return {

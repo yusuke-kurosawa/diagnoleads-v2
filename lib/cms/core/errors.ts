@@ -18,11 +18,7 @@ export class CMSError extends Error {
 
 export class CMSNotFoundError extends CMSError {
   constructor(collection: string, identifier: string) {
-    super(
-      `${collection} not found: ${identifier}`,
-      'CMS_NOT_FOUND',
-      404
-    );
+    super(`${collection} not found: ${identifier}`, 'CMS_NOT_FOUND', 404);
     this.name = 'CMSNotFoundError';
   }
 }
@@ -36,11 +32,7 @@ export class CMSAccessDeniedError extends CMSError {
 
 export class CMSOrganizationMismatchError extends CMSError {
   constructor() {
-    super(
-      'Organization mismatch: You do not have access to this content',
-      'CMS_ORG_MISMATCH',
-      403
-    );
+    super('Organization mismatch: You do not have access to this content', 'CMS_ORG_MISMATCH', 403);
     this.name = 'CMSOrganizationMismatchError';
   }
 }
@@ -88,10 +80,7 @@ export function toCMSError(error: unknown): CMSError {
     });
   }
 
-  return new CMSError(
-    'An unknown error occurred',
-    'CMS_UNKNOWN_ERROR',
-    500,
-    { originalError: error }
-  );
+  return new CMSError('An unknown error occurred', 'CMS_UNKNOWN_ERROR', 500, {
+    originalError: error,
+  });
 }

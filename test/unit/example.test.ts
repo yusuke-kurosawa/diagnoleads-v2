@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { formatDate, formatRelativeTime, truncate } from '@/lib/utils';
+import { describe, expect, it } from 'vitest';
 
 describe('Utility Functions', () => {
   describe('formatDate', () => {

@@ -1,29 +1,48 @@
 'use client';
 
-import { DonutChart } from '@tremor/react';
+import { ChartLegend, DonutChart } from '@/components/charts/donut-chart';
 import type { SourceBreakdown } from '@/lib/features/analytics/types/schemas';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface SourceChartProps {
   data: SourceBreakdown[];
   isLoading?: boolean;
 }
 
-const sourceColors: Record<string, string> = {
-  diagnostic_form: 'blue',
-  website: 'green',
-  referral: 'purple',
-  social_media: 'orange',
-  email_campaign: 'pink',
-  event: 'cyan',
-  partner: 'yellow',
-  cold_outreach: 'red',
-  unknown: 'gray',
-};
-
 /**
  * SourceChart - Donut chart showing lead source distribution
+ * Fully i18n supported
  */
 export function SourceChart({ data, isLoading = false }: SourceChartProps) {
+  const t = useTranslations('leadSource');
+  const tAnalytics = useTranslations('settings.analytics');
+  const locale = useLocale();
+
+  // Localized source name mapping
+  const getSourceName = (source: string): string => {
+    const sourceKey = source.replace(/_/g, '') as keyof typeof sourceKeyMap;
+    const sourceKeyMap: Record<string, string> = {
+      diagnosticform: 'diagnostic_form',
+      website: 'website',
+      referral: 'referral',
+      socialmedia: 'social',
+      emailcampaign: 'email',
+      event: 'event',
+      partner: 'advertisement',
+      coldoutreach: 'phone',
+      unknown: 'other',
+    };
+
+    // Try to get translation from leadSource namespace
+    const key = sourceKeyMap[sourceKey] || source;
+    try {
+      return t(key);
+    } catch {
+      // Fallback: capitalize and replace underscores
+      return source.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-64 flex items-center justify-center">
@@ -35,51 +54,46 @@ export function SourceChart({ data, isLoading = false }: SourceChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center">
-        <p className="text-gray-500">No data available</p>
+        <p className="text-gray-500">{tAnalytics('noData')}</p>
       </div>
     );
   }
 
-  // Transform data for Tremor
+  // Transform data for chart with localized names
   const chartData = data.map((item) => ({
-    name: formatSourceName(item.source),
+    name: getSourceName(item.source),
     value: item.count,
-    percentage: item.percentage,
   }));
 
-  // Get colors based on source names
-  const colors = data.map((item) => sourceColors[item.source] || 'gray');
+  // Locale-aware value formatter
+  const valueFormatter = (value: number) => {
+    if (locale === 'ja') {
+      return `${value.toLocaleString('ja-JP')}件`;
+    }
+    return value.toLocaleString('en-US');
+  };
+
+  const colors: ('blue' | 'green' | 'violet' | 'amber' | 'pink' | 'cyan' | 'yellow')[] = [
+    'blue',
+    'green',
+    'violet',
+    'amber',
+    'pink',
+    'cyan',
+    'yellow',
+  ];
 
   return (
     <div className="h-64">
       <DonutChart
         className="h-full"
         data={chartData}
-        category="value"
-        index="name"
         colors={colors}
-        valueFormatter={(value) => `${value.toLocaleString()}`}
+        valueFormatter={valueFormatter}
         showLabel={true}
         showAnimation={true}
       />
+      <ChartLegend className="mt-4" categories={chartData.map((d) => d.name)} colors={colors} />
     </div>
   );
-}
-
-/**
- * Format source name for display
- */
-function formatSourceName(source: string): string {
-  const names: Record<string, string> = {
-    diagnostic_form: 'Diagnostic Form',
-    website: 'Website',
-    referral: 'Referral',
-    social_media: 'Social Media',
-    email_campaign: 'Email Campaign',
-    event: 'Event',
-    partner: 'Partner',
-    cold_outreach: 'Cold Outreach',
-    unknown: 'Unknown',
-  };
-  return names[source] || source.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }

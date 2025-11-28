@@ -4,9 +4,9 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { getTranslations } from 'next-intl/server';
-import { FAQList } from '@/components/content/faq-list';
 import { FAQDialog } from '@/components/content/faq-dialog';
+import { FAQList } from '@/components/content/faq-list';
+import { getTranslations } from 'next-intl/server';
 
 interface FAQsPageProps {
   params: Promise<{ locale: string }>;

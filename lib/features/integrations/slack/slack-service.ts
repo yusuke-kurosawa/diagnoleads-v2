@@ -155,7 +155,8 @@ export async function sendLeadNotificationToSlack(
     dashboardUrl?: string;
   }
 ): Promise<SlackSendResult> {
-  const scoreColor = (leadData.score || 0) >= 70 ? '#10b981' : (leadData.score || 0) >= 40 ? '#f59e0b' : '#ef4444';
+  const scoreColor =
+    (leadData.score || 0) >= 70 ? '#10b981' : (leadData.score || 0) >= 40 ? '#f59e0b' : '#ef4444';
 
   const blocks: SlackBlock[] = [
     {

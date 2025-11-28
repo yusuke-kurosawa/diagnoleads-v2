@@ -1,7 +1,7 @@
+import { env } from '@/lib/env';
+import type { AppRouter } from '@/server/routers/_app';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
-import type { AppRouter } from '@/server/routers/_app';
-import { env } from '@/lib/env';
 
 /**
  * Server-side tRPC client

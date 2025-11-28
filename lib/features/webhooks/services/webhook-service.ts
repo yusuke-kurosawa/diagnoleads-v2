@@ -5,16 +5,16 @@
  * Handles webhook delivery, retry logic, and signature generation
  */
 
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { db } from '@/lib/db/client';
 import {
-  webhooks,
-  webhookDeliveries,
   type Webhook,
-  type WebhookEventType,
   type WebhookDeliveryStatus,
+  type WebhookEventType,
+  webhookDeliveries,
+  webhooks,
 } from '@/lib/db/schema';
-import { eq, and, lte, inArray } from 'drizzle-orm';
+import { and, eq, inArray, lte } from 'drizzle-orm';
 
 /**
  * Generate HMAC signature for webhook payload
@@ -22,10 +22,7 @@ import { eq, and, lte, inArray } from 'drizzle-orm';
 export function generateWebhookSignature(payload: string, secret: string): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const signaturePayload = `${timestamp}.${payload}`;
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(signaturePayload)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', secret).update(signaturePayload).digest('hex');
 
   return `t=${timestamp},v1=${signature}`;
 }
@@ -48,7 +45,7 @@ export function verifyWebhookSignature(
       return false;
     }
 
-    const timestamp = parseInt(timestampPart.slice(2), 10);
+    const timestamp = Number.parseInt(timestampPart.slice(2), 10);
     const expectedSignature = signaturePart.slice(3);
 
     // Check timestamp tolerance
@@ -64,10 +61,7 @@ export function verifyWebhookSignature(
       .update(signaturePayload)
       .digest('hex');
 
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(computedSignature)
-    );
+    return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(computedSignature));
   } catch {
     return false;
   }
@@ -161,17 +155,10 @@ export async function triggerWebhooks(
   const activeWebhooks = await db
     .select()
     .from(webhooks)
-    .where(
-      and(
-        eq(webhooks.organizationId, organizationId),
-        eq(webhooks.status, 'active')
-      )
-    );
+    .where(and(eq(webhooks.organizationId, organizationId), eq(webhooks.status, 'active')));
 
   // Filter webhooks that are subscribed to this event
-  const subscribedWebhooks = activeWebhooks.filter((w) =>
-    w.events.includes(eventType)
-  );
+  const subscribedWebhooks = activeWebhooks.filter((w) => w.events.includes(eventType));
 
   if (subscribedWebhooks.length === 0) {
     return { triggered: 0, failed: 0 };
@@ -195,7 +182,7 @@ export async function triggerWebhooks(
       .values({
         webhookId: webhook.id,
         eventType,
-        payload: payload as Record<string, unknown>,
+        payload: payload as unknown as Record<string, unknown>,
         status: 'pending',
         attempts: 0,
       })
@@ -265,7 +252,11 @@ export async function triggerWebhooks(
  * Process pending webhook retries
  * Should be called by a background job
  */
-export async function processWebhookRetries(): Promise<{ processed: number; succeeded: number; failed: number }> {
+export async function processWebhookRetries(): Promise<{
+  processed: number;
+  succeeded: number;
+  failed: number;
+}> {
   // Find deliveries that need to be retried
   const pendingDeliveries = await db
     .select({
@@ -275,10 +266,7 @@ export async function processWebhookRetries(): Promise<{ processed: number; succ
     .from(webhookDeliveries)
     .innerJoin(webhooks, eq(webhookDeliveries.webhookId, webhooks.id))
     .where(
-      and(
-        eq(webhookDeliveries.status, 'pending'),
-        lte(webhookDeliveries.nextRetryAt, new Date())
-      )
+      and(eq(webhookDeliveries.status, 'pending'), lte(webhookDeliveries.nextRetryAt, new Date()))
     )
     .limit(100);
 
@@ -316,7 +304,7 @@ export async function processWebhookRetries(): Promise<{ processed: number; succ
     }
 
     // Attempt redelivery
-    const payload = delivery.payload as WebhookPayload;
+    const payload = delivery.payload as unknown as WebhookPayload;
     const result = await deliverWebhook(webhook, payload, delivery.id);
 
     if (result.success) {
@@ -345,7 +333,7 @@ export async function processWebhookRetries(): Promise<{ processed: number; succ
       succeeded++;
     } else {
       // Calculate exponential backoff
-      const backoffMs = retryConfig.retryDelayMs * Math.pow(2, delivery.attempts);
+      const backoffMs = retryConfig.retryDelayMs * 2 ** delivery.attempts;
       const nextRetryAt = new Date(Date.now() + backoffMs);
 
       await db
@@ -376,14 +364,15 @@ export async function cleanupOldDeliveries(daysToKeep = 30): Promise<number> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-  const result = await db
+  const deletedRows = await db
     .delete(webhookDeliveries)
     .where(
       and(
         lte(webhookDeliveries.createdAt, cutoffDate),
         inArray(webhookDeliveries.status, ['success', 'failed'])
       )
-    );
+    )
+    .returning({ id: webhookDeliveries.id });
 
-  return result.rowCount || 0;
+  return deletedRows.length;
 }

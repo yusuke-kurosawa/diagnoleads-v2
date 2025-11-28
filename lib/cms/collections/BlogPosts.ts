@@ -6,7 +6,7 @@
  * @see https://payloadcms.com/docs/configuration/collections
  */
 
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig } from '../types/payload-stubs';
 
 export const BlogPosts: CollectionConfig = {
   slug: 'blog-posts',

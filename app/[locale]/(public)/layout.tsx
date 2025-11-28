@@ -19,7 +19,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      template: `%s | DiagnoLeads`,
+      template: '%s | DiagnoLeads',
       default: t('title'),
     },
     description: t('description'),
@@ -67,9 +67,5 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {children}
-    </div>
-  );
+  return <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">{children}</div>;
 }

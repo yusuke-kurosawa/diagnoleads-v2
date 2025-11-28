@@ -6,20 +6,20 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc/client';
 import type { FAQ } from '@/lib/cms/core/types';
+import { trpc } from '@/lib/trpc/client';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 const FAQ_CATEGORIES = [
   'general',
@@ -99,8 +99,18 @@ export function FAQDialog({
       const data = {
         question: { ja: questionJa, en: questionEn },
         answer: {
-          ja: { type: 'doc' as const, content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text: answerJa }] }] },
-          en: { type: 'doc' as const, content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text: answerEn }] }] },
+          ja: {
+            type: 'doc' as const,
+            content: [
+              { type: 'paragraph' as const, content: [{ type: 'text' as const, text: answerJa }] },
+            ],
+          },
+          en: {
+            type: 'doc' as const,
+            content: [
+              { type: 'paragraph' as const, content: [{ type: 'text' as const, text: answerEn }] },
+            ],
+          },
         },
         category,
         order,
@@ -124,7 +134,12 @@ export function FAQDialog({
         <DialogTrigger asChild>
           <Button>
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {t('createNew')}
           </Button>
@@ -132,12 +147,8 @@ export function FAQDialog({
       )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? t('createNew') : t('editFaq')}
-          </DialogTitle>
-          <DialogDescription>
-            {t('description')}
-          </DialogDescription>
+          <DialogTitle>{mode === 'create' ? t('createNew') : t('editFaq')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -204,9 +215,7 @@ export function FAQDialog({
           {/* Category & Order */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                {t('category')}
-              </label>
+              <label className="block text-sm font-medium text-gray-700">{t('category')}</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -221,13 +230,11 @@ export function FAQDialog({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                {t('order')}
-              </label>
+              <label className="block text-sm font-medium text-gray-700">{t('order')}</label>
               <input
                 type="number"
                 value={order}
-                onChange={(e) => setOrder(parseInt(e.target.value, 10))}
+                onChange={(e) => setOrder(Number.parseInt(e.target.value, 10))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 min={0}
               />

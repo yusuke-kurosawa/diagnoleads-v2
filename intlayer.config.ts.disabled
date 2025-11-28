@@ -19,7 +19,7 @@ const config: IntlayerConfig = {
     defaultLocale: Locales.JAPANESE,
 
     // Strict mode: 翻訳キーが見つからない場合にエラーをスロー（開発時）
-    strictMode: process.env.NODE_ENV === 'development' ? 'strict' : 'required_only',
+    strictMode: process.env.NODE_ENV === 'development' ? 'strict' : undefined,
   },
 
   /**
@@ -43,12 +43,6 @@ const config: IntlayerConfig = {
       'test',
       '__tests__',
     ],
-
-    // マルチテナント対応: テナント別のコンテンツオーバーライドを許可
-    dictionaryOutput: ['./locales'],
-
-    // TypeScript型定義の出力先
-    typesOutput: ['./types/intlayer.d.ts'],
   },
 
   /**
@@ -71,30 +65,6 @@ const config: IntlayerConfig = {
     clientSecret: process.env.INTLAYER_CLIENT_SECRET,
   },
 
-  /**
-   * Next.js統合設定
-   */
-  middleware: {
-    // URLに自動的にロケールプレフィックスを追加
-    prefixDefault: true,
-
-    // ロケール検出の優先順位
-    // 1. URLパス (/ja/*, /en/*)
-    // 2. Cookie (NEXT_LOCALE)
-    // 3. Accept-Language ヘッダー
-    // 4. デフォルトロケール
-    noPrefix: false,
-
-    // ミドルウェアを適用しないパス
-    ignoredPaths: [
-      '/api',
-      '/_next',
-      '/static',
-      '/favicon.ico',
-      '/robots.txt',
-      '/sitemap.xml',
-    ],
-  },
 };
 
 export default config;

@@ -6,20 +6,20 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { trpc } from '@/lib/trpc/client';
 import type { FAQ } from '@/lib/cms/core/types';
+import { trpc } from '@/lib/trpc/client';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 interface FAQDeleteDialogProps {
   faq: FAQ;
@@ -66,9 +66,7 @@ export function FAQDeleteDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('deleteConfirmMessage')}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{t('deleteConfirmMessage')}</AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="my-4 p-4 bg-gray-50 rounded-lg">
@@ -78,9 +76,7 @@ export function FAQDeleteDialog({
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
-            {tCommon('cancel')}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={isDeleting}

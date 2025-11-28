@@ -5,9 +5,9 @@
  * CMS実装に依存しないインターフェースを提供
  */
 
-import type { FAQ } from '../core/types';
-import type { CMSAdapter } from '../core/interfaces';
 import { getCMSAdapter } from '../adapters/factory';
+import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
+import type { FAQ } from '../core/types';
 
 export interface FindFAQsOptions {
   organizationId?: string;
@@ -39,10 +39,10 @@ export class FAQRepository {
   async findAll(options: FindFAQsOptions = {}): Promise<FAQsResult> {
     const { organizationId, category, limit = 100, offset = 0 } = options;
 
-    const where: Record<string, unknown> = {};
+    const where: WhereCondition = {};
 
     if (category) {
-      where.category = { equals: category };
+      where.category = { equals: category } as WhereOperator;
     }
 
     const { data, meta } = await this.adapter.find<FAQ>({
@@ -101,7 +101,7 @@ export class FAQRepository {
       if (!grouped.has(category)) {
         grouped.set(category, []);
       }
-      grouped.get(category)!.push(faq);
+      grouped.get(category)?.push(faq);
     }
 
     // カテゴリ順にソート
@@ -130,10 +130,7 @@ export class FAQRepository {
   /**
    * FAQを作成
    */
-  async create(
-    faq: Omit<FAQ, 'id' | 'publishedAt'>,
-    organizationId?: string
-  ): Promise<FAQ> {
+  async create(faq: Omit<FAQ, 'id' | 'publishedAt'>, organizationId?: string): Promise<FAQ> {
     const { data } = await this.adapter.create<FAQ>({
       collection: 'faqs',
       data: {

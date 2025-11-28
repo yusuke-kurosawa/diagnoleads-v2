@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { intlMiddleware, shouldSkipI18nMiddleware, stripLocalePrefix } from './lib/i18n/middleware';
 // import { auth } from './lib/auth/config'; // TODO: Edge Runtimeで動作しないため一時的にコメントアウト
 import {
   checkRateLimit,
   getRateLimitConfig,
   setRateLimitHeaders,
 } from './lib/middleware/rate-limit';
-import {
-  intlMiddleware,
-  shouldSkipI18nMiddleware,
-  stripLocalePrefix,
-} from './lib/i18n/middleware';
 
 /**
  * Public routes that don't require authentication

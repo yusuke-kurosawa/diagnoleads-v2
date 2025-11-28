@@ -3,8 +3,8 @@
  * Generate OpenAPI specification from tRPC routers
  * Run: npm run openapi:generate
  */
-import { writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
 const registry = new OpenAPIRegistry();

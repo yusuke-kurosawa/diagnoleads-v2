@@ -9,14 +9,11 @@
  * Usage: pnpm tsx scripts/check-hardcoded-strings.ts
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { glob } from 'glob';
 
-const COMPONENT_DIRS = [
-  'app/**/*.tsx',
-  'components/**/*.tsx',
-];
+const COMPONENT_DIRS = ['app/**/*.tsx', 'components/**/*.tsx'];
 
 const EXCLUDE_PATTERNS = [
   '**/node_modules/**',
@@ -67,9 +64,23 @@ function shouldExclude(text: string): boolean {
 
   // 一般的な技術用語（除外リスト）
   const technicalTerms = [
-    'email', 'password', 'username', 'id', 'uuid', 'url', 'api',
-    'status', 'error', 'success', 'warning', 'info', 'debug',
-    'true', 'false', 'null', 'undefined',
+    'email',
+    'password',
+    'username',
+    'id',
+    'uuid',
+    'url',
+    'api',
+    'status',
+    'error',
+    'success',
+    'warning',
+    'info',
+    'debug',
+    'true',
+    'false',
+    'null',
+    'undefined',
   ];
   if (technicalTerms.includes(text.toLowerCase())) return true;
 
@@ -188,7 +199,9 @@ async function main() {
     return;
   }
 
-  console.log(`⚠️  Found ${filesWithHardcodedStrings.length} files with potential hardcoded strings:\n`);
+  console.log(
+    `⚠️  Found ${filesWithHardcodedStrings.length} files with potential hardcoded strings:\n`
+  );
 
   for (const { file, strings, hasTranslationHook } of filesWithHardcodedStrings) {
     console.log(`📄 ${file}`);
@@ -208,12 +221,9 @@ async function main() {
     console.log('');
   }
 
-  const totalStrings = filesWithHardcodedStrings.reduce(
-    (sum, f) => sum + f.strings.length,
-    0
-  );
+  const totalStrings = filesWithHardcodedStrings.reduce((sum, f) => sum + f.strings.length, 0);
 
-  console.log(`\n📊 Summary:`);
+  console.log('\n📊 Summary:');
   console.log(`   - Files with hardcoded strings: ${filesWithHardcodedStrings.length}`);
   console.log(`   - Total hardcoded strings: ${totalStrings}\n`);
 

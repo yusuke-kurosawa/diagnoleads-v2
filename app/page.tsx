@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
 import { defaultLocale } from '@/lib/i18n/config';
+import { redirect } from 'next/navigation';
 
 /**
  * Root Page (Locale Redirect)

@@ -1,11 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { useOrganization } from '@/hooks/use-organization';
 import { trpc } from '@/lib/trpc/client';
-import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 /**
  * Organization Switcher Component
@@ -29,7 +29,12 @@ export function OrganizationSwitcher() {
     }
   );
 
-  const organizations = orgsData?.organizations || [];
+  const organizations = (orgsData?.organizations || []) as unknown as Array<{
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+  }>;
   const currentOrg = organization || organizations.find((o) => o.id === organizationId);
 
   const utils = trpc.useContext();
@@ -37,7 +42,7 @@ export function OrganizationSwitcher() {
   const handleSelectOrganization = async (orgId: string) => {
     const selected = organizations.find((o) => o.id === orgId);
     if (selected) {
-      setOrganization(orgId, selected);
+      setOrganization(orgId, selected as any);
 
       // Clear all tRPC cache when switching organizations
       // This prevents data from previous organization from showing
@@ -49,9 +54,7 @@ export function OrganizationSwitcher() {
   };
 
   if (isLoading || orgsLoading) {
-    return (
-      <div className="w-[200px] h-10 bg-gray-200 animate-pulse rounded-md" />
-    );
+    return <div className="w-[200px] h-10 bg-gray-200 animate-pulse rounded-md" />;
   }
 
   if (organizations.length === 0) {
@@ -71,9 +74,7 @@ export function OrganizationSwitcher() {
     <div className="relative">
       <details className="group">
         <summary className="flex items-center justify-between w-[200px] px-3 py-2 text-sm border rounded-md hover:bg-gray-50 cursor-pointer list-none">
-          <div className="flex-1 truncate">
-            {currentOrg?.name || '組織を選択'}
-          </div>
+          <div className="flex-1 truncate">{currentOrg?.name || '組織を選択'}</div>
           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
         </summary>
 
@@ -91,9 +92,7 @@ export function OrganizationSwitcher() {
                 <Check
                   className={cn(
                     'mr-2 h-4 w-4',
-                    org.id === organizationId
-                      ? 'opacity-100'
-                      : 'opacity-0'
+                    org.id === organizationId ? 'opacity-100' : 'opacity-0'
                   )}
                 />
                 <div className="flex-1 text-left">

@@ -7,29 +7,22 @@
  * - Lead summaries and insights
  */
 
-import { TRPCError } from '@trpc/server';
-import { eq, and, sql } from 'drizzle-orm';
-import { router, organizationProcedure } from '@/lib/trpc/init';
 import { leads } from '@/lib/db/schema';
-import {
-  scoreLeadSchema,
-  semanticSearchSchema,
-  findSimilarLeadsSchema,
-  generateSummarySchema,
-  updateEmbeddingSchema,
-  batchScoreLeadsSchema,
-} from '../types/schemas';
-import {
-  scoreLeadWithAI,
-  scoreLeadsBatch,
-} from '../scoring/claude';
-import {
-  semanticSearch,
-  findSimilarLeads,
-  updateLeadEmbedding,
-} from '../search/semantic';
+import { organizationProcedure, router } from '@/lib/trpc/init';
+import { TRPCError } from '@trpc/server';
+import { and, eq, sql } from 'drizzle-orm';
 import { generateLeadSummary } from '../chat/assistant';
 import { prepareLeadText } from '../embeddings/openai';
+import { scoreLeadWithAI, scoreLeadsBatch } from '../scoring/claude';
+import { findSimilarLeads, semanticSearch, updateLeadEmbedding } from '../search/semantic';
+import {
+  batchScoreLeadsSchema,
+  findSimilarLeadsSchema,
+  generateSummarySchema,
+  scoreLeadSchema,
+  semanticSearchSchema,
+  updateEmbeddingSchema,
+} from '../types/schemas';
 
 /**
  * AI features tRPC router
@@ -38,55 +31,45 @@ export const aiRouter = router({
   /**
    * Score a single lead using AI
    */
-  scoreLead: organizationProcedure
-    .input(scoreLeadSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Check permission
-      if (!ctx.ability.can('update', 'Lead')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'リードをスコアリングする権限がありません',
-        });
-      }
-
-      // Get lead
-      const lead = await ctx.db.query.leads.findFirst({
-        where: and(
-          eq(leads.id, input.leadId),
-          eq(leads.organizationId, input.organizationId)
-        ),
+  scoreLead: organizationProcedure.input(scoreLeadSchema).mutation(async ({ ctx, input }) => {
+    // Check permission
+    if (!ctx.ability.can('update', 'Lead')) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'リードをスコアリングする権限がありません',
       });
+    }
 
-      if (!lead) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'リードが見つかりません',
-        });
-      }
+    // Get lead
+    const lead = await ctx.db.query.leads.findFirst({
+      where: and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)),
+    });
 
-      // Score the lead
-      const aiScore = await scoreLeadWithAI(lead);
+    if (!lead) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'リードが見つかりません',
+      });
+    }
 
-      // Update lead with AI score
-      const [updated] = await ctx.db
-        .update(leads)
-        .set({
-          score: aiScore.score,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(leads.id, input.leadId),
-            eq(leads.organizationId, input.organizationId)
-          )
-        )
-        .returning();
+    // Score the lead
+    const aiScore = await scoreLeadWithAI(lead);
 
-      return {
-        lead: updated,
-        aiScore,
-      };
-    }),
+    // Update lead with AI score
+    const [updated] = await ctx.db
+      .update(leads)
+      .set({
+        score: aiScore.score,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)))
+      .returning();
+
+    return {
+      lead: updated,
+      aiScore,
+    };
+  }),
 
   /**
    * Batch score multiple leads
@@ -132,12 +115,7 @@ export const aiRouter = router({
             score: aiScore.score,
             updatedAt: new Date(),
           })
-          .where(
-            and(
-              eq(leads.id, lead.id),
-              eq(leads.organizationId, input.organizationId)
-            )
-          )
+          .where(and(eq(leads.id, lead.id), eq(leads.organizationId, input.organizationId)))
           .returning();
       });
 
@@ -177,40 +155,31 @@ export const aiRouter = router({
   /**
    * Find similar leads
    */
-  findSimilar: organizationProcedure
-    .input(findSimilarLeadsSchema)
-    .query(async ({ ctx, input }) => {
-      // Check permission
-      if (!ctx.ability.can('read', 'Lead')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'リードを閲覧する権限がありません',
-        });
-      }
-
-      // Verify lead exists
-      const lead = await ctx.db.query.leads.findFirst({
-        where: and(
-          eq(leads.id, input.leadId),
-          eq(leads.organizationId, input.organizationId)
-        ),
+  findSimilar: organizationProcedure.input(findSimilarLeadsSchema).query(async ({ ctx, input }) => {
+    // Check permission
+    if (!ctx.ability.can('read', 'Lead')) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'リードを閲覧する権限がありません',
       });
+    }
 
-      if (!lead) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'リードが見つかりません',
-        });
-      }
+    // Verify lead exists
+    const lead = await ctx.db.query.leads.findFirst({
+      where: and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)),
+    });
 
-      const similar = await findSimilarLeads(
-        input.leadId,
-        input.organizationId,
-        input.limit
-      );
+    if (!lead) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'リードが見つかりません',
+      });
+    }
 
-      return similar;
-    }),
+    const similar = await findSimilarLeads(input.leadId, input.organizationId, input.limit);
+
+    return similar;
+  }),
 
   /**
    * Generate lead summary
@@ -228,10 +197,7 @@ export const aiRouter = router({
 
       // Get lead
       const lead = await ctx.db.query.leads.findFirst({
-        where: and(
-          eq(leads.id, input.leadId),
-          eq(leads.organizationId, input.organizationId)
-        ),
+        where: and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)),
       });
 
       if (!lead) {
@@ -262,10 +228,7 @@ export const aiRouter = router({
 
       // Verify lead exists
       const lead = await ctx.db.query.leads.findFirst({
-        where: and(
-          eq(leads.id, input.leadId),
-          eq(leads.organizationId, input.organizationId)
-        ),
+        where: and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)),
       });
 
       if (!lead) {

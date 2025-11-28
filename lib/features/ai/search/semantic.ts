@@ -64,7 +64,7 @@ export async function semanticSearch(
       LIMIT ${limit}
     `);
 
-    return results.rows as SemanticSearchResult[];
+    return results as unknown as SemanticSearchResult[];
   } catch (error) {
     console.error('Error performing semantic search:', error);
     throw new Error('Semantic search failed');
@@ -81,7 +81,7 @@ export async function semanticSearch(
 export async function findSimilarLeads(
   leadId: string,
   organizationId: string,
-  limit: number = 5
+  limit = 5
 ): Promise<SemanticSearchResult[]> {
   try {
     // Get the reference lead's embedding
@@ -114,7 +114,7 @@ export async function findSimilarLeads(
       LIMIT ${limit}
     `);
 
-    return results.rows as SemanticSearchResult[];
+    return results as unknown as SemanticSearchResult[];
   } catch (error) {
     console.error('Error finding similar leads:', error);
     throw new Error('Finding similar leads failed');
@@ -125,10 +125,7 @@ export async function findSimilarLeads(
  * Update lead embedding
  * Used when a lead is created or updated
  */
-export async function updateLeadEmbedding(
-  leadId: string,
-  text: string
-): Promise<void> {
+export async function updateLeadEmbedding(leadId: string, text: string): Promise<void> {
   try {
     const embedding = await generateEmbedding(text);
     const embeddingString = `[${embedding.join(',')}]`;

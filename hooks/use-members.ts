@@ -1,18 +1,30 @@
+import type {
+  InviteMemberInput,
+  ListMembersInput,
+  RemoveMemberInput,
+  UpdateRoleInput,
+} from '@/lib/features/members/types/schemas';
 import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
-import type {
-  ListMembersInput,
-  InviteMemberInput,
-  UpdateRoleInput,
-  RemoveMemberInput,
-} from '@/lib/features/members/types/schemas';
+
+/**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
 
 /**
  * Hook to list organization members
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useListMembers(input: ListMembersInput) {
+  const isValidOrg = isValidUUID(input.organizationId);
+
   return trpc.members.list.useQuery(input, {
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: isValidOrg,
   });
 }
 
@@ -28,7 +40,7 @@ export function useInviteMember() {
     },
     onSuccess: (data) => {
       utils.members.list.invalidate();
-      toast.success(data.message ||'招待を送信しました', { id: 'invite-member' });
+      toast.success(data.message || '招待を送信しました', { id: 'invite-member' });
     },
     onError: (error) => {
       toast.error(`エラー: ${error.message}`, { id: 'invite-member' });

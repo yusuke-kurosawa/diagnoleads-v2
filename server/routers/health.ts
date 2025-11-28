@@ -1,5 +1,5 @@
+import { publicProcedure, router } from '@/lib/trpc/init';
 import { z } from 'zod';
-import { router, publicProcedure } from '@/lib/trpc/init';
 
 /**
  * Health check router

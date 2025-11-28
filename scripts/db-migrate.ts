@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { env } from '@/lib/env';
 /**
  * Run database migrations
  * Usage: npm run db:migrate
@@ -6,7 +7,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import { env } from '@/lib/env';
 
 async function runMigrations() {
   console.log('🔄 Running database migrations...');

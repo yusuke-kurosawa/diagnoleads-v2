@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
 import type { Organization } from '@/lib/db/schema';
+import { usePathname } from 'next/navigation';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 /**
  * Organization Context Type
@@ -25,9 +25,7 @@ export interface OrganizationContextType {
 /**
  * Organization Context
  */
-const OrganizationContext = createContext<OrganizationContextType | undefined>(
-  undefined
-);
+const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'diagnoleads:current-organization';
 
@@ -83,7 +81,7 @@ export function OrganizationProvider({
    */
   useEffect(() => {
     const match = pathname?.match(/\/dashboard\/([a-f0-9-]{36})\//);
-    if (match && match[1] && match[1] !== organizationId) {
+    if (match?.[1] && match[1] !== organizationId) {
       setOrganizationId(match[1]);
     }
   }, [pathname, organizationId]);
@@ -137,11 +135,7 @@ export function OrganizationProvider({
     isLoading,
   };
 
-  return (
-    <OrganizationContext.Provider value={value}>
-      {children}
-    </OrganizationContext.Provider>
-  );
+  return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
 }
 
 /**
@@ -159,9 +153,7 @@ export function useOrganizationContext(): OrganizationContextType {
   const context = useContext(OrganizationContext);
 
   if (!context) {
-    throw new Error(
-      'useOrganizationContext must be used within OrganizationProvider'
-    );
+    throw new Error('useOrganizationContext must be used within OrganizationProvider');
   }
 
   return context;

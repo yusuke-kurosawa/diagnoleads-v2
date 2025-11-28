@@ -16,9 +16,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         {/* プロフィール設定 */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('profileSection')}
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('profileSection')}</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -41,9 +39,7 @@ export default function SettingsPage() {
                 placeholder={t('emailPlaceholder')}
                 disabled
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {t('emailHelp')}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{t('emailHelp')}</p>
             </div>
 
             <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
@@ -54,9 +50,7 @@ export default function SettingsPage() {
 
         {/* パスワード変更 */}
         <div className="border-t pt-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('passwordSection')}
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('passwordSection')}</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -96,12 +90,8 @@ export default function SettingsPage() {
 
         {/* アカウント削除 */}
         <div className="border-t pt-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-4">
-            {t('deleteAccountSection')}
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            {t('deleteAccountWarning')}
-          </p>
+          <h2 className="text-lg font-semibold text-red-900 mb-4">{t('deleteAccountSection')}</h2>
+          <p className="text-sm text-gray-600 mb-4">{t('deleteAccountWarning')}</p>
           <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
             {t('deleteAccount')}
           </button>

@@ -6,12 +6,12 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { BlogDialog } from './blog-dialog';
-import { BlogDeleteDialog } from './blog-delete-dialog';
-import { trpc } from '@/lib/trpc/client';
 import type { BlogPost } from '@/lib/cms/core/types';
+import { trpc } from '@/lib/trpc/client';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { BlogDeleteDialog } from './blog-delete-dialog';
+import { BlogDialog } from './blog-dialog';
 
 interface BlogListProps {
   locale: string;
@@ -43,7 +43,9 @@ export function BlogList({ locale }: BlogListProps) {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">{tCommon('error')}: {error.message}</p>
+        <p className="text-red-600">
+          {tCommon('error')}: {error.message}
+        </p>
       </div>
     );
   }
@@ -97,8 +99,18 @@ export function BlogList({ locale }: BlogListProps) {
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-gray-400">
-                        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="h-8 w-8"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
@@ -120,9 +132,7 @@ export function BlogList({ locale }: BlogListProps) {
                         {post.status === 'published' ? t('published') : t('draft')}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500 truncate">
-                      /{post.slug}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-500 truncate">/{post.slug}</p>
                     <div className="mt-1 flex items-center text-xs text-gray-400 space-x-4">
                       <span>{post.author.name}</span>
                       <span>{new Date(post.publishedAt).toLocaleDateString(locale)}</span>
@@ -136,8 +146,18 @@ export function BlogList({ locale }: BlogListProps) {
                       className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                       title={tCommon('edit')}
                     >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
                       </svg>
                     </button>
                     <button
@@ -145,8 +165,18 @@ export function BlogList({ locale }: BlogListProps) {
                       className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                       title={tCommon('delete')}
                     >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                     </button>
                   </div>

@@ -1,31 +1,31 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  CheckCircle,
-  ChevronRight,
-  ChevronLeft,
-  Loader2,
-  Building2,
-  User,
-  Mail,
-  Phone,
-  Briefcase,
-  Target,
-  TrendingUp,
-  Clock,
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Briefcase,
+  Building2,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Loader2,
+  Mail,
+  Phone,
+  Target,
+  TrendingUp,
+  User,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 // Diagnostic form schema
 const diagnosticFormSchema = z.object({
@@ -140,12 +140,8 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {t('complete.title')}
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            {t('complete.message')}
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('complete.title')}</h2>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">{t('complete.message')}</p>
           {score && (
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-8">
               <div className="text-sm text-gray-500 mb-2">{t('complete.scoreLabel')}</div>
@@ -153,9 +149,7 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
               <div className="text-sm text-gray-500">{t('complete.scoreMax')}</div>
             </div>
           )}
-          <p className="text-sm text-gray-500">
-            {t('complete.followUp')}
-          </p>
+          <p className="text-sm text-gray-500">{t('complete.followUp')}</p>
         </CardContent>
       </Card>
     );
@@ -215,14 +209,16 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
                   }}
                   className="grid grid-cols-2 gap-3"
                 >
-                  {['technology', 'finance', 'healthcare', 'manufacturing', 'retail', 'other'].map((industry) => (
-                    <div key={industry} className="flex items-center space-x-2">
-                      <RadioGroupItem value={industry} id={industry} />
-                      <Label htmlFor={industry} className="cursor-pointer">
-                        {t(`industries.${industry}`)}
-                      </Label>
-                    </div>
-                  ))}
+                  {['technology', 'finance', 'healthcare', 'manufacturing', 'retail', 'other'].map(
+                    (industry) => (
+                      <div key={industry} className="flex items-center space-x-2">
+                        <RadioGroupItem value={industry} id={industry} />
+                        <Label htmlFor={industry} className="cursor-pointer">
+                          {t(`industries.${industry}`)}
+                        </Label>
+                      </div>
+                    )
+                  )}
                 </RadioGroup>
                 {errors.industry && (
                   <p className="text-sm text-red-500">{t('validation.required')}</p>
@@ -277,9 +273,7 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
                   {...register('name')}
                   className={cn(errors.name && 'border-red-500')}
                 />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{t('validation.required')}</p>
-                )}
+                {errors.name && <p className="text-sm text-red-500">{t('validation.required')}</p>}
               </div>
 
               <div className="space-y-2">
@@ -349,14 +343,19 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
                   }}
                   className="space-y-3"
                 >
-                  {['leadGeneration', 'conversion', 'efficiency', 'dataManagement', 'scaling'].map((challenge) => (
-                    <div key={challenge} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value={challenge} id={`challenge-${challenge}`} />
-                      <Label htmlFor={`challenge-${challenge}`} className="cursor-pointer flex-1">
-                        {t(`challenges.${challenge}`)}
-                      </Label>
-                    </div>
-                  ))}
+                  {['leadGeneration', 'conversion', 'efficiency', 'dataManagement', 'scaling'].map(
+                    (challenge) => (
+                      <div
+                        key={challenge}
+                        className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <RadioGroupItem value={challenge} id={`challenge-${challenge}`} />
+                        <Label htmlFor={`challenge-${challenge}`} className="cursor-pointer flex-1">
+                          {t(`challenges.${challenge}`)}
+                        </Label>
+                      </div>
+                    )
+                  )}
                 </RadioGroup>
                 {errors.currentChallenge && (
                   <p className="text-sm text-red-500">{t('validation.required')}</p>
@@ -375,14 +374,19 @@ export function DiagnosticForm({ locale }: DiagnosticFormProps) {
                   }}
                   className="grid grid-cols-2 gap-3"
                 >
-                  {['increaseLeads', 'improveConversion', 'reduceTime', 'betterInsights'].map((goal) => (
-                    <div key={goal} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value={goal} id={`goal-${goal}`} />
-                      <Label htmlFor={`goal-${goal}`} className="cursor-pointer text-sm">
-                        {t(`goals.${goal}`)}
-                      </Label>
-                    </div>
-                  ))}
+                  {['increaseLeads', 'improveConversion', 'reduceTime', 'betterInsights'].map(
+                    (goal) => (
+                      <div
+                        key={goal}
+                        className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50"
+                      >
+                        <RadioGroupItem value={goal} id={`goal-${goal}`} />
+                        <Label htmlFor={`goal-${goal}`} className="cursor-pointer text-sm">
+                          {t(`goals.${goal}`)}
+                        </Label>
+                      </div>
+                    )
+                  )}
                 </RadioGroup>
                 {errors.primaryGoal && (
                   <p className="text-sm text-red-500">{t('validation.required')}</p>

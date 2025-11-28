@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import type { FAQ } from '@/lib/cms';
 import { cn } from '@/lib/utils';
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 interface FAQAccordionProps {
   faqs: FAQ[];
@@ -25,7 +25,7 @@ function FAQItem({ faq, locale, isOpen, onToggle }: FAQItemProps) {
   const answerText = answer.content
     .map((node) => {
       if ('content' in node && node.content) {
-        return node.content.map((textNode) => textNode.text).join('');
+        return node.content.map((textNode: any) => textNode.text || '').join('');
       }
       return '';
     })
@@ -55,9 +55,7 @@ function FAQItem({ faq, locale, isOpen, onToggle }: FAQItemProps) {
           isOpen ? 'max-h-96 pb-4' : 'max-h-0'
         )}
       >
-        <div className="text-gray-600 leading-relaxed whitespace-pre-line">
-          {answerText}
-        </div>
+        <div className="text-gray-600 leading-relaxed whitespace-pre-line">{answerText}</div>
       </div>
     </div>
   );
@@ -71,11 +69,7 @@ export function FAQAccordion({ faqs, locale }: FAQAccordionProps) {
   };
 
   if (faqs.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No FAQs available.
-      </div>
-    );
+    return <div className="text-center py-8 text-gray-500">No FAQs available.</div>;
   }
 
   return (

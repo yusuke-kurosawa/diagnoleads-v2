@@ -5,10 +5,10 @@
  * Requires authentication and organization context
  */
 
-import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
+import { type ChatMessage, generateChatResponse } from '@/lib/features/ai/chat/assistant';
 import { headers } from 'next/headers';
-import { generateChatResponse, type ChatMessage } from '@/lib/features/ai/chat/assistant';
+import type { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;

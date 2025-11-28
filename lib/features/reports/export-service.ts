@@ -4,7 +4,13 @@
  * Phase 6.3: CSV/JSON export functionality for analytics and leads
  */
 
-import type { TrendDataPoint, SourceBreakdown, StatusBreakdown, ConversionFunnelData, OverviewStats } from '../analytics/types/schemas';
+import type {
+  ConversionFunnelData,
+  OverviewStats,
+  SourceBreakdown,
+  StatusBreakdown,
+  TrendDataPoint,
+} from '../analytics/types/schemas';
 
 /**
  * Lead data for export
@@ -99,7 +105,11 @@ export function overviewToCSV(overview: OverviewStats, dateRange: string): strin
  */
 export function trendToCSV(trend: TrendDataPoint[]): string {
   const headers = ['Date', 'Total Leads', 'Converted Leads'];
-  const rows = trend.map((point) => [point.date, point.count.toString(), point.converted.toString()]);
+  const rows = trend.map((point) => [
+    point.date,
+    point.count.toString(),
+    point.converted.toString(),
+  ]);
 
   return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 }

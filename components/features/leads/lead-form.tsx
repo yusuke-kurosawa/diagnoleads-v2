@@ -1,8 +1,5 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -13,8 +10,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createLeadSchema, leadStatusEnum } from '@/lib/features/leads/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { Lead } from '@/lib/db/schema';
+import { createLeadSchema } from '@/lib/features/leads/types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
+import { useForm } from 'react-hook-form';
+import type { z } from 'zod';
 
 // Form schema without organizationId (will be added by parent component)
 const formSchema = createLeadSchema.omit({ organizationId: true });
@@ -31,6 +39,10 @@ interface LeadFormProps {
  * Used for creating and editing leads
  */
 export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
+  const t = useTranslations('leads');
+  const tStatus = useTranslations('status');
+  const tCommon = useTranslations('common');
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,9 +50,9 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
       name: lead?.name ?? '',
       company: lead?.company ?? '',
       phone: lead?.phone ?? '',
-      status: lead?.status ?? 'new',
+      status: (lead?.status as 'new' | 'contacted' | 'qualified' | 'converted') ?? 'new',
       score: lead?.score ?? undefined,
-      source: lead?.source ?? undefined,
+      source: (lead?.source as 'website' | 'embed' | 'api') ?? undefined,
       responses: lead?.responses ?? {},
     },
   });
@@ -53,13 +65,9 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>メールアドレス *</FormLabel>
+              <FormLabel>{t('email')} *</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="example@example.com"
-                  {...field}
-                />
+                <Input type="email" placeholder="example@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -71,9 +79,9 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>名前</FormLabel>
+              <FormLabel>{t('name')}</FormLabel>
               <FormControl>
-                <Input placeholder="山田 太郎" {...field} />
+                <Input placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -85,9 +93,9 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="company"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>会社名</FormLabel>
+              <FormLabel>{t('company')}</FormLabel>
               <FormControl>
-                <Input placeholder="株式会社サンプル" {...field} />
+                <Input placeholder="Acme Corp" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,9 +107,9 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>電話番号</FormLabel>
+              <FormLabel>{t('phone')}</FormLabel>
               <FormControl>
-                <Input placeholder="03-1234-5678" {...field} />
+                <Input placeholder="+1 (555) 123-4567" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -113,18 +121,20 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>ステータス</FormLabel>
-              <FormControl>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  {...field}
-                >
-                  <option value="new">新規</option>
-                  <option value="contacted">連絡済</option>
-                  <option value="qualified">見込</option>
-                  <option value="converted">成約</option>
-                </select>
-              </FormControl>
+              <FormLabel>{t('status')}</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('status')} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="new">{tStatus('new')}</SelectItem>
+                  <SelectItem value="contacted">{tStatus('contacted')}</SelectItem>
+                  <SelectItem value="qualified">{tStatus('qualified')}</SelectItem>
+                  <SelectItem value="converted">{tStatus('converted')}</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -135,7 +145,7 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
           name="score"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>スコア (0-100)</FormLabel>
+              <FormLabel>{t('score')} (0-100)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -145,9 +155,7 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
                   {...field}
                   value={field.value ?? ''}
                   onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? parseInt(e.target.value) : undefined
-                    )
+                    field.onChange(e.target.value ? Number.parseInt(e.target.value) : undefined)
                   }
                 />
               </FormControl>
@@ -158,7 +166,7 @@ export function LeadForm({ lead, onSubmit, isLoading }: LeadFormProps) {
 
         <div className="flex gap-4 justify-end">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? '保存中...' : lead ? '更新' : '作成'}
+            {isLoading ? tCommon('loading') : lead ? tCommon('update') : tCommon('create')}
           </Button>
         </div>
       </form>

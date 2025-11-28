@@ -1,7 +1,7 @@
 'use client';
 
-import { LeadCard } from './lead-card';
 import type { Lead } from '@/lib/db/schema';
+import { LeadCard } from './lead-card';
 
 interface LeadListProps {
   leads: Lead[];
@@ -18,10 +18,7 @@ export function LeadList({ leads, isLoading, onLeadClick }: LeadListProps) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-32 bg-gray-200 animate-pulse rounded-lg"
-          />
+          <div key={i} className="h-32 bg-gray-200 animate-pulse rounded-lg" />
         ))}
       </div>
     );
@@ -41,11 +38,7 @@ export function LeadList({ leads, isLoading, onLeadClick }: LeadListProps) {
   return (
     <div className="space-y-4">
       {leads.map((lead) => (
-        <LeadCard
-          key={lead.id}
-          lead={lead}
-          onClick={() => onLeadClick?.(lead)}
-        />
+        <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick?.(lead)} />
       ))}
     </div>
   );

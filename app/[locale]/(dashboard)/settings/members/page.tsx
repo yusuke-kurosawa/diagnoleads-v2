@@ -1,25 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { useRequiredOrganizationId } from '@/hooks/use-organization';
 import { useListMembers } from '@/hooks/use-members';
+import { useOrganizationId } from '@/hooks/use-organization';
 import { trpc } from '@/lib/trpc/client';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,13 +18,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Callout } from '@/components/ui/callout';
+import { Card } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Metric, Text, Title } from '@/components/ui/metric';
 import {
   Table,
   TableBody,
@@ -45,8 +42,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, Mail, Crown, Shield, User as UserIcon, MoreVertical, Trash2, Edit, AlertCircle } from 'lucide-react';
+import type { OrganizationRole } from '@/lib/db/schema';
+import {
+  AlertCircle,
+  CheckCircle,
+  Crown,
+  Edit,
+  Mail,
+  Shield,
+  Trash2,
+  User as UserIcon,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 
 type MemberToRemove = {
   id: string;
@@ -58,34 +66,25 @@ type MemberToChangeRole = {
   id: string;
   name: string;
   email: string;
-  currentRole: 'owner' | 'admin' | 'member';
+  currentRole: OrganizationRole;
 } | null;
 
 /**
  * Members Management Page
- * Allows admin/owner to manage organization members
- *
- * Features:
- * - Member list with user info and roles
- * - Invite new members (admin/owner only)
- * - Change member roles (admin/owner only)
- * - Remove members (admin/owner only)
- * - Permission-based UI controls
+ * Modern UI enhanced member management
  */
 export default function MembersPage() {
   const router = useRouter();
   const t = useTranslations('settings.members');
-  const organizationId = useRequiredOrganizationId();
+  const locale = useLocale();
+  const urlOrganizationId = useOrganizationId();
+  const organizationId = urlOrganizationId || 'demo-organization';
 
-  // Fetch organization data to check permissions
   const { data: currentOrg, isLoading: orgLoading } = trpc.organizations.getById.useQuery(
     { id: organizationId },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
+    { staleTime: 5 * 60 * 1000 }
   );
 
-  // Fetch members list
   const list = useListMembers({
     organizationId,
     limit: 50,
@@ -94,7 +93,6 @@ export default function MembersPage() {
 
   const utils = trpc.useContext();
 
-  // Member operations with i18n toast notifications
   const invite = trpc.members.invite.useMutation({
     onMutate: () => {
       toast.loading(t('inviting'), { id: 'invite-member' });
@@ -136,24 +134,24 @@ export default function MembersPage() {
 
   const members = list.data?.members || [];
   const total = list.data?.total || 0;
-  const isLoading = list.isLoading;
 
-  // Dialog states
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
-
   const [memberToRemove, setMemberToRemove] = useState<MemberToRemove>(null);
   const [memberToChangeRole, setMemberToChangeRole] = useState<MemberToChangeRole>(null);
   const [newRole, setNewRole] = useState<'member' | 'admin' | 'owner'>('member');
 
-  // Permission checks
   const userRole = currentOrg?.role || 'member';
   const canManageMembers = userRole === 'admin' || userRole === 'owner';
 
+  // Calculate stats
+  const ownerCount = members.filter((m) => m.role === 'owner').length;
+  const adminCount = members.filter((m) => m.role === 'admin').length;
+  const memberCount = members.filter((m) => m.role === 'member').length;
+
   const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!inviteEmail.trim()) return;
 
     await invite.mutateAsync({
@@ -190,16 +188,14 @@ export default function MembersPage() {
     setMemberToChangeRole(null);
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role: string): 'violet' | 'blue' | 'gray' => {
     switch (role) {
       case 'owner':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'violet';
       case 'admin':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'member':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'blue';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'gray';
     }
   };
 
@@ -209,8 +205,6 @@ export default function MembersPage() {
         return <Crown className="h-3 w-3" />;
       case 'admin':
         return <Shield className="h-3 w-3" />;
-      case 'member':
-        return <UserIcon className="h-3 w-3" />;
       default:
         return <UserIcon className="h-3 w-3" />;
     }
@@ -232,9 +226,8 @@ export default function MembersPage() {
   if (list.isLoading || orgLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-2" />
-          <div className="h-4 w-64 bg-gray-200 animate-pulse rounded mb-8" />
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="h-8 w-48 bg-gray-200 animate-pulse rounded" />
           <Card className="p-6">
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -249,56 +242,94 @@ export default function MembersPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-          <p className="text-gray-600">{t('description')}</p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+          <Text className="mt-1">{t('description')}</Text>
         </div>
 
         {/* Non-manager warning */}
         {!canManageMembers && (
-          <Card className="p-4 mb-6 bg-yellow-50 border-yellow-200">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+          <Callout title={t('viewMode')} icon={AlertCircle} color="yellow">
+            {t('viewModeDescription', { role: getRoleLabel(userRole) })}
+          </Callout>
+        )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card decoration="top" decorationColor="blue" className="p-6">
+            <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-yellow-900 mb-1">{t('viewMode')}</h3>
-                <p className="text-sm text-yellow-800">
-                  {t('viewModeDescription', { role: getRoleLabel(userRole) })}
-                </p>
+                <Text>Total Members</Text>
+                <Metric className="mt-2">{total}</Metric>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </Card>
-        )}
+          <Card decoration="top" decorationColor="violet" className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <Text>{t('roleOwner')}</Text>
+                <Metric className="mt-2">{ownerCount}</Metric>
+              </div>
+              <div className="p-3 bg-violet-50 rounded-xl">
+                <Crown className="h-6 w-6 text-violet-600" />
+              </div>
+            </div>
+          </Card>
+          <Card decoration="top" decorationColor="blue" className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <Text>{t('roleAdmin')}</Text>
+                <Metric className="mt-2">{adminCount}</Metric>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <Shield className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </Card>
+          <Card decoration="top" decorationColor="emerald" className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <Text>{t('roleMember')}</Text>
+                <Metric className="mt-2">{memberCount}</Metric>
+              </div>
+              <div className="p-3 bg-emerald-50 rounded-xl">
+                <UserIcon className="h-6 w-6 text-emerald-600" />
+              </div>
+            </div>
+          </Card>
+        </div>
 
         {/* Members List */}
-        <Card>
-          <div className="p-6 border-b">
+        <Card className="overflow-hidden">
+          <div className="p-6 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Users className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{t('listTitle')}</h2>
-                  <p className="text-sm text-gray-600">{t('memberCount', { count: total })}</p>
+                  <Title>{t('listTitle')}</Title>
+                  <Text>{t('memberCount', { count: total })}</Text>
                 </div>
               </div>
 
               {canManageMembers && (
                 <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <UserPlus className="mr-2 h-4 w-4" />
+                    <Button size="lg">
+                      <UserPlus className="h-5 w-5 mr-2" />
                       {t('inviteButton')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{t('inviteDialogTitle')}</DialogTitle>
-                      <DialogDescription>
-                        {t('inviteDialogDescription')}
-                      </DialogDescription>
+                      <DialogDescription>{t('inviteDialogDescription')}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleInviteMember}>
                       <div className="space-y-4 py-4">
@@ -315,21 +346,16 @@ export default function MembersPage() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="role">{t('roleLabel')}</Label>
-                          <Select
+                          <select
+                            id="role"
                             value={inviteRole}
-                            onValueChange={(value: 'member' | 'admin') => setInviteRole(value)}
+                            onChange={(e) => setInviteRole(e.target.value as 'member' | 'admin')}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
                           >
-                            <SelectTrigger id="role">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="member">{t('roleMember')}</SelectItem>
-                              <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-gray-500">
-                            {t('roleHelp')}
-                          </p>
+                            <option value="member">{t('roleMember')}</option>
+                            <option value="admin">{t('roleAdmin')}</option>
+                          </select>
+                          <p className="text-xs text-gray-500">{t('roleHelp')}</p>
                         </div>
                       </div>
                       <DialogFooter>
@@ -355,16 +381,14 @@ export default function MembersPage() {
           <div className="overflow-x-auto">
             {members.length === 0 ? (
               <div className="p-12 text-center">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t('noMembers')}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {t('noMembersDescription')}
-                </p>
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-10 w-10 text-blue-400" />
+                </div>
+                <Title>{t('noMembers')}</Title>
+                <Text className="mt-2 mb-6">{t('noMembersDescription')}</Text>
                 {canManageMembers && (
                   <Button onClick={() => setInviteDialogOpen(true)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
+                    <UserPlus className="h-4 w-4 mr-2" />
                     {t('inviteFirstMember')}
                   </Button>
                 )}
@@ -376,7 +400,9 @@ export default function MembersPage() {
                     <TableHead>{t('tableHeaderMember')}</TableHead>
                     <TableHead>{t('tableHeaderRole')}</TableHead>
                     <TableHead>{t('tableHeaderJoinedAt')}</TableHead>
-                    {canManageMembers && <TableHead className="text-right">{t('tableHeaderActions')}</TableHead>}
+                    {canManageMembers && (
+                      <TableHead className="text-right">{t('tableHeaderActions')}</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -388,29 +414,37 @@ export default function MembersPage() {
                       <TableRow key={member.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <UserIcon className="h-5 w-5 text-gray-600" />
+                            <div className="h-10 w-10 bg-gradient-to-br from-blue-100 to-violet-100 rounded-full flex items-center justify-center">
+                              <UserIcon className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">
-                                {member.user?.name || 'Unknown User'}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {member.user?.email || 'No email'}
-                              </div>
+                              <p className="font-semibold text-gray-900">
+                                {(Array.isArray(member.user)
+                                  ? member.user[0]?.name
+                                  : member.user?.name) || 'Unknown User'}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {(Array.isArray(member.user)
+                                  ? member.user[0]?.email
+                                  : member.user?.email) || 'No email'}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getRoleBadgeColor(member.role)}>
-                            <span className="flex items-center gap-1">
+                          <Badge color={getRoleBadgeColor(member.role)}>
+                            <span className="flex items-center gap-1.5">
                               {getRoleIcon(member.role)}
                               {getRoleLabel(member.role)}
                             </span>
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-gray-600">
-                          {new Date(member.createdAt).toLocaleDateString('ja-JP')}
+                        <TableCell>
+                          <Text>
+                            {new Date(member.createdAt).toLocaleDateString(
+                              locale === 'ja' ? 'ja-JP' : 'en-US'
+                            )}
+                          </Text>
                         </TableCell>
                         {canManageMembers && (
                           <TableCell className="text-right">
@@ -420,13 +454,25 @@ export default function MembersPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
+                                    // Only standard roles (member/admin/owner) can be changed via UI
+                                    const standardRole = (
+                                      ['member', 'admin', 'owner'].includes(member.role)
+                                        ? member.role
+                                        : 'member'
+                                    ) as 'member' | 'admin' | 'owner';
                                     setMemberToChangeRole({
                                       id: member.id,
-                                      name: member.user?.name || 'Unknown',
-                                      email: member.user?.email || '',
+                                      name:
+                                        (Array.isArray(member.user)
+                                          ? member.user[0]?.name
+                                          : member.user?.name) || 'Unknown',
+                                      email:
+                                        (Array.isArray(member.user)
+                                          ? member.user[0]?.email
+                                          : member.user?.email) || '',
                                       currentRole: member.role,
                                     });
-                                    setNewRole(member.role);
+                                    setNewRole(standardRole);
                                   }}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -437,16 +483,23 @@ export default function MembersPage() {
                                   onClick={() =>
                                     setMemberToRemove({
                                       id: member.id,
-                                      name: member.user?.name || 'Unknown',
-                                      email: member.user?.email || '',
+                                      name:
+                                        (Array.isArray(member.user)
+                                          ? member.user[0]?.name
+                                          : member.user?.name) || 'Unknown',
+                                      email:
+                                        (Array.isArray(member.user)
+                                          ? member.user[0]?.email
+                                          : member.user?.email) || '',
                                     })
                                   }
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                 >
-                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             ) : (
-                              <span className="text-sm text-gray-500">—</span>
+                              <Text>—</Text>
                             )}
                           </TableCell>
                         )}
@@ -459,32 +512,30 @@ export default function MembersPage() {
           </div>
         </Card>
 
-        {/* Info Card */}
-        <Card className="mt-6 p-4 bg-blue-50 border-blue-200">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-900">
-              <p className="font-medium mb-1">{t('hintsTitle')}</p>
-              <ul className="space-y-1 list-disc list-inside">
-                <li>{t('hintEmailNotification')}</li>
-                <li>{t('hintAdminPermissions')}</li>
-                <li>{t('hintOwnerRole')}</li>
-                <li>{t('hintCannotRemoveSelf')}</li>
-              </ul>
-            </div>
-          </div>
-        </Card>
+        {/* Info Callout */}
+        <Callout title={t('hintsTitle')} icon={CheckCircle} color="blue">
+          <ul className="space-y-1 list-disc list-inside mt-2">
+            <li>{t('hintEmailNotification')}</li>
+            <li>{t('hintAdminPermissions')}</li>
+            <li>{t('hintOwnerRole')}</li>
+            <li>{t('hintCannotRemoveSelf')}</li>
+          </ul>
+        </Callout>
 
         {/* Remove Member Dialog */}
-        <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+        <AlertDialog
+          open={!!memberToRemove}
+          onOpenChange={(open) => !open && setMemberToRemove(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t('removeDialogTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                {memberToRemove && t('removeDialogDescription', {
-                  name: memberToRemove.name,
-                  email: memberToRemove.email
-                })}
+                {memberToRemove &&
+                  t('removeDialogDescription', {
+                    name: memberToRemove.name,
+                    email: memberToRemove.email,
+                  })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -500,46 +551,39 @@ export default function MembersPage() {
         </AlertDialog>
 
         {/* Change Role Dialog */}
-        <Dialog open={!!memberToChangeRole} onOpenChange={(open) => !open && setMemberToChangeRole(null)}>
+        <Dialog
+          open={!!memberToChangeRole}
+          onOpenChange={(open) => !open && setMemberToChangeRole(null)}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t('changeRoleDialogTitle')}</DialogTitle>
               <DialogDescription>
-                {memberToChangeRole && t('changeRoleDialogDescription', {
-                  name: memberToChangeRole.name,
-                  email: memberToChangeRole.email
-                })}
+                {memberToChangeRole &&
+                  t('changeRoleDialogDescription', {
+                    name: memberToChangeRole.name,
+                    email: memberToChangeRole.email,
+                  })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="new-role">{t('newRoleLabel')}</Label>
-                <Select
+                <select
+                  id="new-role"
                   value={newRole}
-                  onValueChange={(value: 'member' | 'admin' | 'owner') => setNewRole(value)}
+                  onChange={(e) => setNewRole(e.target.value as 'member' | 'admin' | 'owner')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
-                  <SelectTrigger id="new-role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">{t('roleMember')}</SelectItem>
-                    <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
-                    {userRole === 'owner' && (
-                      <SelectItem value="owner">{t('roleOwner')}</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  {t('roleHelp')}
-                </p>
+                  <option value="member">{t('roleMember')}</option>
+                  <option value="admin">{t('roleAdmin')}</option>
+                  {userRole === 'owner' && <option value="owner">{t('roleOwner')}</option>}
+                </select>
+                <p className="text-xs text-gray-500">{t('roleHelp')}</p>
               </div>
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setMemberToChangeRole(null)}
-              >
+              <Button type="button" variant="outline" onClick={() => setMemberToChangeRole(null)}>
                 {t('cancel')}
               </Button>
               <Button onClick={handleChangeRole} disabled={updateRole.isPending}>

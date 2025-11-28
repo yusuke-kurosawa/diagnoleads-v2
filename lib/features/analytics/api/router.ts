@@ -1,18 +1,22 @@
-import { router, organizationProcedure } from '@/lib/trpc/init';
 import { leads } from '@/lib/db/schema';
-import { and, eq, gte, count, sql, desc, avg, lte } from 'drizzle-orm';
+import { organizationProcedure, router } from '@/lib/trpc/init';
+import { and, avg, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import {
-  getOverviewSchema,
-  getLeadTrendSchema,
-  getSourceBreakdownSchema,
-  getStatusBreakdownSchema,
-  getConversionFunnelSchema,
-  type OverviewStats,
-  type TrendDataPoint,
-  type SourceBreakdown,
-  type StatusBreakdown,
   type ConversionFunnelData,
   type FunnelStage,
+  type OverviewStats,
+  type ResponseTimeData,
+  type ScoreDistributionData,
+  type SourceBreakdown,
+  type StatusBreakdown,
+  type TrendDataPoint,
+  getConversionFunnelSchema,
+  getLeadTrendSchema,
+  getOverviewSchema,
+  getResponseTimeSchema,
+  getScoreDistributionSchema,
+  getSourceBreakdownSchema,
+  getStatusBreakdownSchema,
 } from '../types/schemas';
 
 /**
@@ -47,10 +51,7 @@ export const analyticsRouter = router({
         .select({ count: count() })
         .from(leads)
         .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, firstDayOfMonth)
-          )
+          and(eq(leads.organizationId, organizationId), gte(leads.createdAt, firstDayOfMonth))
         );
 
       const newLeadsThisMonth = newLeadsThisMonthResult[0]?.count || 0;
@@ -59,12 +60,7 @@ export const analyticsRouter = router({
       const convertedLeadsResult = await ctx.db
         .select({ count: count() })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            eq(leads.status, 'converted')
-          )
-        );
+        .where(and(eq(leads.organizationId, organizationId), eq(leads.status, 'converted')));
 
       const convertedLeads = convertedLeadsResult[0]?.count || 0;
       const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
@@ -75,12 +71,7 @@ export const analyticsRouter = router({
           avg: sql<number>`COALESCE(AVG(${leads.score}), 0)`,
         })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            sql`${leads.score} IS NOT NULL`
-          )
-        );
+        .where(and(eq(leads.organizationId, organizationId), sql`${leads.score} IS NOT NULL`));
 
       const averageScore = Math.round(Number(avgScoreResult[0]?.avg) || 0);
 
@@ -144,12 +135,7 @@ export const analyticsRouter = router({
           ),
         })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, dateThreshold)
-          )
-        )
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)))
         .groupBy(dateFormat)
         .orderBy(desc(dateFormat));
 
@@ -175,12 +161,7 @@ export const analyticsRouter = router({
       const totalResult = await ctx.db
         .select({ count: count() })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, dateThreshold)
-          )
-        );
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)));
 
       const total = totalResult[0]?.count || 0;
 
@@ -191,12 +172,7 @@ export const analyticsRouter = router({
           count: count().as('count'),
         })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, dateThreshold)
-          )
-        )
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)))
         .groupBy(sql`COALESCE(${leads.source}, 'unknown')`)
         .orderBy(desc(count()));
 
@@ -222,12 +198,7 @@ export const analyticsRouter = router({
       const totalResult = await ctx.db
         .select({ count: count() })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, dateThreshold)
-          )
-        );
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)));
 
       const total = totalResult[0]?.count || 0;
 
@@ -238,12 +209,7 @@ export const analyticsRouter = router({
           count: count().as('count'),
         })
         .from(leads)
-        .where(
-          and(
-            eq(leads.organizationId, organizationId),
-            gte(leads.createdAt, dateThreshold)
-          )
-        )
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)))
         .groupBy(leads.status)
         .orderBy(desc(count()));
 
@@ -272,9 +238,7 @@ export const analyticsRouter = router({
           count: count().as('count'),
         })
         .from(leads)
-        .where(
-          and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold))
-        )
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)))
         .groupBy(leads.status);
 
       // Build status map
@@ -283,10 +247,10 @@ export const analyticsRouter = router({
         statusMap[row.status] = row.count;
       }
 
-      const newCount = statusMap['new'] || 0;
-      const contactedCount = statusMap['contacted'] || 0;
-      const qualifiedCount = statusMap['qualified'] || 0;
-      const convertedCount = statusMap['converted'] || 0;
+      const newCount = statusMap.new || 0;
+      const contactedCount = statusMap.contacted || 0;
+      const qualifiedCount = statusMap.qualified || 0;
+      const convertedCount = statusMap.converted || 0;
 
       const totalLeads = newCount + contactedCount + qualifiedCount + convertedCount;
 
@@ -310,8 +274,7 @@ export const analyticsRouter = router({
           count: contactedCount,
           cumulativeCount: contactedTotal,
           percentage: totalLeads > 0 ? Math.round((contactedTotal / totalLeads) * 10000) / 100 : 0,
-          conversionRate:
-            newTotal > 0 ? Math.round((contactedTotal / newTotal) * 10000) / 100 : 0,
+          conversionRate: newTotal > 0 ? Math.round((contactedTotal / newTotal) * 10000) / 100 : 0,
         },
         {
           name: 'qualified',
@@ -357,6 +320,132 @@ export const analyticsRouter = router({
           totalLeads > 0 ? Math.round((convertedTotal / totalLeads) * 10000) / 100 : 0,
         averageConversionDays,
       };
+    }),
+
+  /**
+   * Get Score Distribution
+   * Returns distribution of leads by score ranges (0-25, 26-50, 51-75, 76-100)
+   */
+  getScoreDistribution: organizationProcedure
+    .input(getScoreDistributionSchema)
+    .query(async ({ ctx, input }): Promise<ScoreDistributionData[]> => {
+      const { organizationId, dateRange } = input;
+
+      const dateThreshold = getDateThreshold(dateRange);
+
+      // Get total count of leads with scores
+      const totalResult = await ctx.db
+        .select({ count: count() })
+        .from(leads)
+        .where(
+          and(
+            eq(leads.organizationId, organizationId),
+            gte(leads.createdAt, dateThreshold),
+            sql`${leads.score} IS NOT NULL`
+          )
+        );
+
+      const total = totalResult[0]?.count || 0;
+
+      // Get counts for each score range
+      const ranges = [
+        { min: 0, max: 25, label: '0-25' },
+        { min: 26, max: 50, label: '26-50' },
+        { min: 51, max: 75, label: '51-75' },
+        { min: 76, max: 100, label: '76-100' },
+      ];
+
+      const distribution: ScoreDistributionData[] = [];
+
+      for (const range of ranges) {
+        const countResult = await ctx.db
+          .select({ count: count() })
+          .from(leads)
+          .where(
+            and(
+              eq(leads.organizationId, organizationId),
+              gte(leads.createdAt, dateThreshold),
+              gte(leads.score, range.min),
+              lte(leads.score, range.max)
+            )
+          );
+
+        const rangeCount = countResult[0]?.count || 0;
+
+        distribution.push({
+          range: range.label,
+          count: rangeCount,
+          percentage: total > 0 ? Math.round((rangeCount / total) * 10000) / 100 : 0,
+        });
+      }
+
+      return distribution;
+    }),
+
+  /**
+   * Get Response Time Distribution
+   * Returns distribution of leads by response time categories
+   */
+  getResponseTime: organizationProcedure
+    .input(getResponseTimeSchema)
+    .query(async ({ ctx, input }): Promise<ResponseTimeData[]> => {
+      const { organizationId, dateRange } = input;
+
+      const dateThreshold = getDateThreshold(dateRange);
+
+      // Get leads with both createdAt and updatedAt for response time calculation
+      // Response time is calculated as time between creation and first status change (updatedAt)
+      const leadsData = await ctx.db
+        .select({
+          id: leads.id,
+          createdAt: leads.createdAt,
+          updatedAt: leads.updatedAt,
+          status: leads.status,
+        })
+        .from(leads)
+        .where(
+          and(
+            eq(leads.organizationId, organizationId),
+            gte(leads.createdAt, dateThreshold),
+            // Only count leads that have been updated (status changed)
+            sql`${leads.status} != 'new'`
+          )
+        );
+
+      // Calculate response times in hours
+      const responseTimes = leadsData.map((lead) => {
+        const created = new Date(lead.createdAt);
+        const updated = new Date(lead.updatedAt);
+        return (updated.getTime() - created.getTime()) / (1000 * 60 * 60); // hours
+      });
+
+      const total = responseTimes.length;
+
+      // Categorize by time periods
+      const periods = [
+        { min: 0, max: 1, label: '< 1 hour' },
+        { min: 1, max: 24, label: '1-24 hours' },
+        { min: 24, max: 72, label: '1-3 days' },
+        { min: 72, max: Number.POSITIVE_INFINITY, label: '3+ days' },
+      ];
+
+      const distribution: ResponseTimeData[] = [];
+
+      for (const period of periods) {
+        const periodTimes = responseTimes.filter((time) => time >= period.min && time < period.max);
+        const periodCount = periodTimes.length;
+        const avgHours =
+          periodTimes.length > 0 ? periodTimes.reduce((a, b) => a + b, 0) / periodTimes.length : 0;
+
+        distribution.push({
+          period: period.label,
+          count: periodCount,
+          percentage: total > 0 ? Math.round((periodCount / total) * 10000) / 100 : 0,
+          averageHours: Math.round(avgHours * 10) / 10,
+        });
+      }
+
+      return distribution;
     }),
 });
 

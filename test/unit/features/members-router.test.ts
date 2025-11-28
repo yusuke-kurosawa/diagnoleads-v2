@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
-import { appRouter } from '@/server/routers/_app';
 import type { Organization, OrganizationMember, User } from '@/lib/db/schema';
+import { appRouter } from '@/server/routers/_app';
+import { TRPCError } from '@trpc/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('@/lib/db/rls', () => ({
@@ -9,15 +9,14 @@ vi.mock('@/lib/db/rls', () => ({
 }));
 
 // Mock BetterAuth
+const mockInviteUser = vi.fn();
 vi.mock('@/lib/auth/config', () => ({
   auth: {
     api: {
-      inviteUser: vi.fn(),
+      inviteUser: mockInviteUser,
     },
   },
 }));
-
-import { auth } from '@/lib/auth/config';
 
 describe('Members Router', () => {
   // Use valid UUIDs for testing
@@ -65,6 +64,12 @@ describe('Members Router', () => {
     name: 'Test Organization',
     slug: 'test-org',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -170,7 +175,7 @@ describe('Members Router', () => {
       const mockMembers = [mockAdminMembership];
 
       // Mock count query (3 total members)
-      mockDb.where.mockResolvedValueOnce([{count: 3}, {count: 3}, {count: 3}]);
+      mockDb.where.mockResolvedValueOnce([{ count: 3 }, { count: 3 }, { count: 3 }]);
 
       // Mock findMany for paginated results
       mockDb.query.organizationMembers.findMany.mockResolvedValue(mockMembers);
@@ -215,7 +220,7 @@ describe('Members Router', () => {
         email: 'newuser@example.com',
         role: 'member',
       };
-      vi.mocked(auth.api.inviteUser).mockResolvedValue(mockInviteResponse);
+      mockInviteUser.mockResolvedValue(mockInviteResponse);
 
       const caller = appRouter.createCaller(mockContext);
       const result = await caller.members.invite({
@@ -226,7 +231,7 @@ describe('Members Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('招待');
-      expect(auth.api.inviteUser).toHaveBeenCalledWith({
+      expect(mockInviteUser).toHaveBeenCalledWith({
         body: {
           email: 'newuser@example.com',
           role: 'member',
@@ -248,7 +253,7 @@ describe('Members Router', () => {
         email: 'newuser@example.com',
         role: 'member',
       };
-      vi.mocked(auth.api.inviteUser).mockResolvedValue(mockInviteResponse);
+      mockInviteUser.mockResolvedValue(mockInviteResponse);
 
       // Context as admin
       const adminContext = {
@@ -264,7 +269,7 @@ describe('Members Router', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(auth.api.inviteUser).toHaveBeenCalled();
+      expect(mockInviteUser).toHaveBeenCalled();
     });
 
     it('should not allow regular member to invite', async () => {
@@ -294,7 +299,7 @@ describe('Members Router', () => {
 
       // Mock: user is already a member (called after middleware verification)
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockAdminMembership); // Existing membership check
 
       const caller = appRouter.createCaller(mockContext);
@@ -313,7 +318,7 @@ describe('Members Router', () => {
       mockDb.query.user.findFirst.mockResolvedValue(null);
 
       // Mock: invite API failure
-      vi.mocked(auth.api.inviteUser).mockRejectedValue(new Error('API Error'));
+      mockInviteUser.mockRejectedValue(new Error('API Error'));
 
       const caller = appRouter.createCaller(mockContext);
 
@@ -331,7 +336,7 @@ describe('Members Router', () => {
     it('should allow owner to update member role', async () => {
       // Mock: find the member to update (after middleware verification)
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)    // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockMemberMembership); // Target member lookup
 
       // Mock the update chain: update().set().where().returning()
@@ -355,7 +360,7 @@ describe('Members Router', () => {
     it('should allow admin to update member role', async () => {
       // Mock: admin middleware verification then member lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockAdminMembership)    // Middleware verification
+        .mockResolvedValueOnce(mockAdminMembership) // Middleware verification
         .mockResolvedValueOnce(mockMemberMembership); // Target member lookup
 
       // Mock the update chain: update().set().where().returning()
@@ -406,7 +411,7 @@ describe('Members Router', () => {
     it('should not allow changing owner role', async () => {
       // Mock: owner for both middleware and target lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockOwnerMembership); // Target member lookup
 
       const caller = appRouter.createCaller(mockContext);
@@ -423,8 +428,8 @@ describe('Members Router', () => {
     it('should throw error if member not found', async () => {
       // Mock: owner middleware verification, then null for target lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
-        .mockResolvedValueOnce(null);                // Target member not found
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
+        .mockResolvedValueOnce(null); // Target member not found
 
       const caller = appRouter.createCaller(mockContext);
 
@@ -442,7 +447,7 @@ describe('Members Router', () => {
     it('should allow owner to remove a member', async () => {
       // Mock: owner middleware verification then member lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)    // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockMemberMembership); // Target member lookup
 
       mockDb.returning.mockResolvedValue([mockMemberMembership]);
@@ -460,7 +465,7 @@ describe('Members Router', () => {
     it('should allow admin to remove a member', async () => {
       // Mock: admin middleware verification then member lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockAdminMembership)    // Middleware verification
+        .mockResolvedValueOnce(mockAdminMembership) // Middleware verification
         .mockResolvedValueOnce(mockMemberMembership); // Target member lookup
 
       mockDb.returning.mockResolvedValue([mockMemberMembership]);
@@ -502,7 +507,7 @@ describe('Members Router', () => {
 
     it('should not allow removing owner', async () => {
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockOwnerMembership); // Target member lookup
 
       const caller = appRouter.createCaller(mockContext);
@@ -518,7 +523,7 @@ describe('Members Router', () => {
     it('should not allow removing self', async () => {
       // Same membership ID for both middleware and target means removing self
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
         .mockResolvedValueOnce(mockOwnerMembership); // Target member lookup (same as caller)
 
       const caller = appRouter.createCaller(mockContext);
@@ -534,8 +539,8 @@ describe('Members Router', () => {
     it('should throw error if member not found', async () => {
       // Mock: owner middleware verification, then null for target lookup
       mockDb.query.organizationMembers.findFirst
-        .mockResolvedValueOnce(mockOwnerMembership)  // Middleware verification
-        .mockResolvedValueOnce(null);                // Target member not found
+        .mockResolvedValueOnce(mockOwnerMembership) // Middleware verification
+        .mockResolvedValueOnce(null); // Target member not found
 
       const caller = appRouter.createCaller(mockContext);
 

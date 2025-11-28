@@ -1,5 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
-import { locales, type Locale } from './config';
+import { type Locale, locales } from './config';
 
 /**
  * next-intl Request Configuration
@@ -51,9 +51,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
      */
     getMessageFallback: ({ key, namespace }) => {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(
-          `[next-intl] Missing message: ${namespace ? `${namespace}.` : ''}${key}`
-        );
+        console.warn(`[next-intl] Missing message: ${namespace ? `${namespace}.` : ''}${key}`);
       }
       return `[Missing: ${key}]`;
     },

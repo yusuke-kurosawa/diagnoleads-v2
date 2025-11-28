@@ -3,7 +3,7 @@ export { cn } from './cn';
 /**
  * Format a date to a localized string
  */
-export function formatDate(date: Date | string, locale: string = 'ja-JP'): string {
+export function formatDate(date: Date | string, locale = 'ja-JP'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
@@ -15,7 +15,7 @@ export function formatDate(date: Date | string, locale: string = 'ja-JP'): strin
 /**
  * Format a date to a relative time string
  */
-export function formatRelativeTime(date: Date | string, locale: string = 'ja-JP'): string {
+export function formatRelativeTime(date: Date | string, locale = 'ja-JP'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diff = now.getTime() - d.getTime();
@@ -44,7 +44,7 @@ export function formatRelativeTime(date: Date | string, locale: string = 'ja-JP'
  */
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
-  return str.slice(0, length) + '...';
+  return `${str.slice(0, length)}...`;
 }
 
 /**
@@ -57,7 +57,7 @@ export function sleep(ms: number): Promise<void> {
 /**
  * Generate a random string
  */
-export function randomString(length: number = 10): string {
+export function randomString(length = 10): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {

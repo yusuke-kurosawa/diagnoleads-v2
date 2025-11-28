@@ -6,20 +6,20 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc/client';
 import type { BlogPost } from '@/lib/cms/core/types';
+import { trpc } from '@/lib/trpc/client';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 interface BlogDialogProps {
   locale: string;
@@ -55,7 +55,9 @@ export function BlogDialog({
   const [contentEn, setContentEn] = useState(extractPlainText(post?.content.en) ?? '');
   const [excerptJa, setExcerptJa] = useState(post?.excerpt?.ja ?? '');
   const [excerptEn, setExcerptEn] = useState(post?.excerpt?.en ?? '');
-  const [status, setStatus] = useState<'draft' | 'published'>(post?.status ?? 'draft');
+  const [status, setStatus] = useState<'draft' | 'published'>(
+    (post?.status === 'archived' ? 'draft' : post?.status) ?? 'draft'
+  );
 
   // Reset form when post changes
   useEffect(() => {
@@ -67,7 +69,7 @@ export function BlogDialog({
       setContentEn(extractPlainText(post.content.en));
       setExcerptJa(post.excerpt?.ja ?? '');
       setExcerptEn(post.excerpt?.en ?? '');
-      setStatus(post.status);
+      setStatus(post.status === 'archived' ? 'draft' : post.status);
     }
   }, [post]);
 
@@ -129,8 +131,18 @@ export function BlogDialog({
         title: { ja: titleJa, en: titleEn },
         slug,
         content: {
-          ja: { type: 'doc' as const, content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text: contentJa }] }] },
-          en: { type: 'doc' as const, content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text: contentEn }] }] },
+          ja: {
+            type: 'doc' as const,
+            content: [
+              { type: 'paragraph' as const, content: [{ type: 'text' as const, text: contentJa }] },
+            ],
+          },
+          en: {
+            type: 'doc' as const,
+            content: [
+              { type: 'paragraph' as const, content: [{ type: 'text' as const, text: contentEn }] },
+            ],
+          },
         },
         excerpt: { ja: excerptJa, en: excerptEn },
         status,
@@ -154,7 +166,12 @@ export function BlogDialog({
         <DialogTrigger asChild>
           <Button>
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {t('createNew')}
           </Button>
@@ -162,12 +179,8 @@ export function BlogDialog({
       )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? t('createNew') : t('editPost')}
-          </DialogTitle>
-          <DialogDescription>
-            {t('description')}
-          </DialogDescription>
+          <DialogTitle>{mode === 'create' ? t('createNew') : t('editPost')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -193,9 +206,7 @@ export function BlogDialog({
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              {t('postTitle')}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">{t('postTitle')}</label>
             {activeTab === 'ja' ? (
               <input
                 type="text"
@@ -219,9 +230,7 @@ export function BlogDialog({
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              {t('slug')}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">{t('slug')}</label>
             <div className="mt-1 flex rounded-md shadow-sm">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                 /blog/
@@ -240,9 +249,7 @@ export function BlogDialog({
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              {t('content')}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">{t('content')}</label>
             {activeTab === 'ja' ? (
               <textarea
                 value={contentJa}
@@ -266,9 +273,7 @@ export function BlogDialog({
 
           {/* Excerpt */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              {t('excerpt')}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">{t('excerpt')}</label>
             {activeTab === 'ja' ? (
               <textarea
                 value={excerptJa}
@@ -290,9 +295,7 @@ export function BlogDialog({
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              {t('status')}
-            </label>
+            <label className="block text-sm font-medium text-gray-700">{t('status')}</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}

@@ -1,5 +1,14 @@
-import { pgTable, text, timestamp, uuid, jsonb, boolean, integer, customType } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import {
+  boolean,
+  customType,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * Custom PostgreSQL types for AI features
@@ -78,9 +87,12 @@ export const organizations = pgTable('organizations', {
 
   // 🏢 Hierarchy fields (Phase 2.7)
   /** Parent organization ID (null for root/independent organizations) */
-  parentOrganizationId: uuid('parent_organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+  parentOrganizationId: uuid('parent_organization_id'),
   /** Organization type in hierarchy */
-  organizationType: text('organization_type').$type<OrganizationType>().default('independent').notNull(),
+  organizationType: text('organization_type')
+    .$type<OrganizationType>()
+    .default('independent')
+    .notNull(),
   /** Hierarchy path for efficient tree queries (e.g., 'root.child.grandchild') */
   hierarchyPath: ltree('hierarchy_path'),
   /** Level in hierarchy (0 = root, 1 = child, etc.) */
@@ -118,12 +130,12 @@ export const users = pgTable('users', {
  * Extended roles supporting hierarchical organization access
  */
 export type OrganizationRole =
-  | 'owner'           // Full control of the organization
-  | 'admin'           // Admin access to the organization
-  | 'member'          // Standard member access
-  | 'group_owner'     // Full control of entire group (all descendant orgs)
-  | 'group_admin'     // Read access to entire group
-  | 'parent_viewer';  // Read-only access to child organizations
+  | 'owner' // Full control of the organization
+  | 'admin' // Admin access to the organization
+  | 'member' // Standard member access
+  | 'group_owner' // Full control of entire group (all descendant orgs)
+  | 'group_admin' // Read access to entire group
+  | 'parent_viewer'; // Read-only access to child organizations
 
 /**
  * Organization Members
@@ -139,8 +151,12 @@ export type OrganizationRole =
  */
 export const organizationMembers = pgTable('organization_members', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   role: text('role').$type<OrganizationRole>().notNull().default('member'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -153,7 +169,9 @@ export const organizationMembers = pgTable('organization_members', {
  */
 export const sessions = pgTable('sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   expiresAt: timestamp('expires_at').notNull(),
   token: text('token').notNull().unique(),
   ipAddress: text('ip_address'),
@@ -168,7 +186,9 @@ export const sessions = pgTable('sessions', {
  */
 export const leads = pgTable('leads', {
   id: uuid('id').defaultRandom().primaryKey(),
-  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
 
   // Contact information
   email: text('email').notNull(),
@@ -250,8 +270,7 @@ export type NewSession = typeof sessions.$inferInsert;
 export type Lead = typeof leads.$inferSelect;
 export type NewLead = typeof leads.$inferInsert;
 
-// Re-export hierarchy-related types
-export type { OrganizationType, DataSharingPolicy, OrganizationRole };
+// Note: OrganizationType and DataSharingPolicy are already exported above at definition
 
 /**
  * Organization with hierarchy info (for queries that include parent/children)

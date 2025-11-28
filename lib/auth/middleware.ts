@@ -1,8 +1,8 @@
-import { auth } from './config';
-import type { User } from './config';
 import { db } from '@/lib/db/client';
 import { organizationMembers } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { auth } from './config';
+import type { User } from './config';
 
 /**
  * Get user from request headers

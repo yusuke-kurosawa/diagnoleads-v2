@@ -5,8 +5,8 @@
  * Provides contextual assistance for lead management and insights.
  */
 
-import { streamText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { streamText } from 'ai';
 
 // Initialize Anthropic provider
 const anthropic = createAnthropic({
@@ -46,16 +46,20 @@ You can help users with:
 
 ${context?.organizationName ? `Organization: ${context.organizationName}` : ''}
 
-${context?.recentLeads && context.recentLeads.length > 0 ? `
+${
+  context?.recentLeads && context.recentLeads.length > 0
+    ? `
 Recent Leads:
 ${context.recentLeads.map((lead, i) => `${i + 1}. ${lead.name || 'Unknown'} from ${lead.company || 'Unknown Company'} (${lead.status || 'new'})`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
 Be concise, helpful, and professional. Focus on actionable insights.`;
 
   try {
     const result = await streamText({
-      model: anthropic('claude-sonnet-4-20250514'),
+      model: anthropic('claude-sonnet-4-20250514') as any,
       system: systemPrompt,
       messages: messages.map((msg) => ({
         role: msg.role,
@@ -98,7 +102,7 @@ Focus on key business value and next steps.`;
 
   try {
     const result = await streamText({
-      model: anthropic('claude-sonnet-4-20250514'),
+      model: anthropic('claude-sonnet-4-20250514') as any,
       prompt,
     });
 

@@ -5,7 +5,7 @@
  * Provides webhook endpoints and payload formatting for automation platforms
  */
 
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 /**
  * Automation platform types
@@ -133,10 +133,7 @@ export async function sendAutomationWebhook(
     // Add HMAC signature if secret provided
     if (secret) {
       const payloadString = JSON.stringify(payload);
-      const signature = crypto
-        .createHmac('sha256', secret)
-        .update(payloadString)
-        .digest('hex');
+      const signature = crypto.createHmac('sha256', secret).update(payloadString).digest('hex');
       headers['X-DiagnoLeads-Signature'] = `sha256=${signature}`;
     }
 
@@ -248,10 +245,12 @@ export function generateZapierSampleData(triggerType: string): Record<string, un
     },
   };
 
-  return samples[triggerType] || {
-    message: 'Sample data for ' + triggerType,
-    timestamp: new Date().toISOString(),
-  };
+  return (
+    samples[triggerType] || {
+      message: `Sample data for ${triggerType}`,
+      timestamp: new Date().toISOString(),
+    }
+  );
 }
 
 /**
@@ -261,7 +260,7 @@ export function validateZapierRequest(
   headers: Record<string, string>,
   expectedApiKey: string
 ): boolean {
-  const authHeader = headers['authorization'] || headers['Authorization'];
+  const authHeader = headers.authorization || headers.Authorization;
   if (!authHeader) return false;
 
   // Check Bearer token format

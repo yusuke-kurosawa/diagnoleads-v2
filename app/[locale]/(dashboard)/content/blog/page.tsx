@@ -4,9 +4,9 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { getTranslations } from 'next-intl/server';
-import { BlogList } from '@/components/content/blog-list';
 import { BlogDialog } from '@/components/content/blog-dialog';
+import { BlogList } from '@/components/content/blog-list';
+import { getTranslations } from 'next-intl/server';
 
 interface BlogPageProps {
   params: Promise<{ locale: string }>;

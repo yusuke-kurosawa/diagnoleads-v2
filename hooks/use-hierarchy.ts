@@ -8,8 +8,16 @@
 
 'use client';
 
-import { trpc } from '@/lib/trpc/client';
 import type { DataSharingPolicy, OrganizationType } from '@/lib/db/schema';
+import { trpc } from '@/lib/trpc/client';
+
+/**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
 
 // =============================================================================
 // Hook: useHierarchy
@@ -17,29 +25,31 @@ import type { DataSharingPolicy, OrganizationType } from '@/lib/db/schema';
 
 /**
  * Hook to get and manage organization hierarchy
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useHierarchy(organizationId: string) {
   const utils = trpc.useUtils();
+  const isValidOrg = isValidUUID(organizationId);
 
-  // Queries
+  // Queries - only enabled for valid UUIDs
   const hierarchyQuery = trpc.hierarchy.getHierarchy.useQuery(
     { organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isValidOrg }
   );
 
   const childrenQuery = trpc.hierarchy.getChildren.useQuery(
     { organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isValidOrg }
   );
 
   const ancestorsQuery = trpc.hierarchy.getAncestors.useQuery(
     { organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isValidOrg }
   );
 
   const groupStatsQuery = trpc.hierarchy.getGroupStats.useQuery(
     { organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isValidOrg }
   );
 
   // Mutations
@@ -85,10 +95,7 @@ export function useHierarchy(organizationId: string) {
 
     // Error states
     error:
-      hierarchyQuery.error ||
-      childrenQuery.error ||
-      ancestorsQuery.error ||
-      groupStatsQuery.error,
+      hierarchyQuery.error || childrenQuery.error || ancestorsQuery.error || groupStatsQuery.error,
 
     // Actions
     setParent: (parentOrganizationId: string | null) =>
@@ -145,11 +152,14 @@ export function useAccessibleOrganizations(options?: {
 
 /**
  * Hook to get all descendant organizations
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useDescendants(organizationId: string) {
+  const isValidOrg = isValidUUID(organizationId);
+
   const query = trpc.hierarchy.getDescendants.useQuery(
     { organizationId },
-    { enabled: !!organizationId }
+    { enabled: !!organizationId && isValidOrg }
   );
 
   return {

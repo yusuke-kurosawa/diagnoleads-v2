@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
 import type { ConversionFunnelData } from '@/lib/features/analytics/types/schemas';
+import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface ConversionFunnelProps {
   leadsByStatus?: {
@@ -27,7 +27,11 @@ interface FunnelStageDisplay {
 /**
  * ConversionFunnel - Visual representation of lead conversion stages
  */
-export function ConversionFunnel({ leadsByStatus, funnelData: apiFunnelData, isLoading = false }: ConversionFunnelProps) {
+export function ConversionFunnel({
+  leadsByStatus,
+  funnelData: apiFunnelData,
+  isLoading = false,
+}: ConversionFunnelProps) {
   const displayData = useMemo((): FunnelStageDisplay[] => {
     // Prefer API funnel data if available
     if (apiFunnelData && apiFunnelData.stages.length > 0) {
@@ -141,7 +145,9 @@ export function ConversionFunnel({ leadsByStatus, funnelData: apiFunnelData, isL
               <div className="absolute inset-0 flex items-center justify-between px-4">
                 <span className="font-medium text-gray-900">{stage.label}</span>
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="font-semibold text-gray-900">{stage.value.toLocaleString()}</span>
+                  <span className="font-semibold text-gray-900">
+                    {stage.value.toLocaleString()}
+                  </span>
                   <span className="text-gray-600">({stage.percentage.toFixed(1)}%)</span>
                 </div>
               </div>
@@ -222,9 +228,7 @@ export function ConversionFunnel({ leadsByStatus, funnelData: apiFunnelData, isL
           </p>
         )}
         {(!apiFunnelData || apiFunnelData.averageConversionDays === 0) && (
-          <p className="text-xs text-gray-500 mt-1">
-            From initial lead to converted customer
-          </p>
+          <p className="text-xs text-gray-500 mt-1">From initial lead to converted customer</p>
         )}
       </div>
     </div>

@@ -32,8 +32,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 };
 
 // Minimum log level based on environment
-const MIN_LOG_LEVEL: LogLevel =
-  process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+const MIN_LOG_LEVEL: LogLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 
 /**
  * Check if a log level should be output
@@ -55,8 +54,8 @@ function formatLogEntry(entry: LogEntry): string {
   const { timestamp, level, message, context, error } = entry;
   const levelColor = {
     debug: '\x1b[36m', // cyan
-    info: '\x1b[32m',  // green
-    warn: '\x1b[33m',  // yellow
+    info: '\x1b[32m', // green
+    warn: '\x1b[33m', // yellow
     error: '\x1b[31m', // red
   }[level];
   const reset = '\x1b[0m';
@@ -80,12 +79,7 @@ function formatLogEntry(entry: LogEntry): string {
 /**
  * Create a log entry and output it
  */
-function log(
-  level: LogLevel,
-  message: string,
-  context?: LogContext,
-  error?: Error
-): void {
+function log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
   if (!shouldLog(level)) return;
 
   const entry: LogEntry = {
@@ -142,11 +136,7 @@ export const logger = {
   /**
    * Log an API request
    */
-  apiRequest(
-    method: string,
-    path: string,
-    context?: LogContext
-  ): void {
+  apiRequest(method: string, path: string, context?: LogContext): void {
     log('info', `API ${method} ${path}`, {
       ...context,
       type: 'api_request',
@@ -175,11 +165,7 @@ export const logger = {
   /**
    * Log a database query
    */
-  dbQuery(
-    query: string,
-    durationMs: number,
-    context?: LogContext
-  ): void {
+  dbQuery(query: string, durationMs: number, context?: LogContext): void {
     log('debug', `DB Query (${durationMs}ms)`, {
       ...context,
       type: 'db_query',
@@ -191,11 +177,7 @@ export const logger = {
   /**
    * Log a webhook delivery
    */
-  webhookDelivery(
-    webhookId: string,
-    success: boolean,
-    context?: LogContext
-  ): void {
+  webhookDelivery(webhookId: string, success: boolean, context?: LogContext): void {
     const level: LogLevel = success ? 'info' : 'warn';
     log(level, `Webhook delivery ${success ? 'succeeded' : 'failed'}`, {
       ...context,

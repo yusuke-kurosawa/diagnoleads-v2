@@ -1,5 +1,5 @@
-import { AbilityBuilder, PureAbility, createMongoAbility } from '@casl/ability';
-import type { User, OrganizationMember, Organization, OrganizationRole } from '@/lib/db/schema';
+import type { Organization, OrganizationMember, OrganizationRole, User } from '@/lib/db/schema';
+import { AbilityBuilder, type PureAbility, createMongoAbility } from '@casl/ability';
 
 /**
  * Define actions that can be performed
@@ -16,7 +16,7 @@ export type Subject =
   | 'Assessment'
   | 'Analytics'
   | 'Settings'
-  | 'Hierarchy'  // 🆕 Hierarchy management
+  | 'Hierarchy' // 🆕 Hierarchy management
   | 'GroupReport' // 🆕 Group-wide reports
   | 'Webhook' // Phase 5.1: Webhook management
   | 'Integration' // Phase 5.2-5.4: External integrations
@@ -206,7 +206,9 @@ export function isGroupRole(role: OrganizationRole): boolean {
  * Check if a role can access child organizations
  */
 export function canAccessChildOrganizations(role: OrganizationRole): boolean {
-  return role === 'group_owner' || role === 'group_admin' || role === 'parent_viewer' || role === 'owner';
+  return (
+    role === 'group_owner' || role === 'group_admin' || role === 'parent_viewer' || role === 'owner'
+  );
 }
 
 /**

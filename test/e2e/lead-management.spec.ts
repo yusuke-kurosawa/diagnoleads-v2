@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { setupAuthenticatedTest, TEST_USERS } from './helpers/auth';
+import { expect, test } from '@playwright/test';
+import { TEST_USERS, setupAuthenticatedTest } from './helpers/auth';
 
 /**
  * E2E Test: Lead Management Flow
@@ -254,9 +254,12 @@ test.describe('Lead Management', () => {
     // Check if pagination controls exist
     const nextButton = page.locator('[data-testid="next-page-button"]');
 
-    if (await nextButton.isVisible() && await nextButton.isEnabled()) {
+    if ((await nextButton.isVisible()) && (await nextButton.isEnabled())) {
       // Get first lead's email before pagination
-      const firstLeadEmail = await page.locator('table tbody tr td:nth-child(2)').first().textContent();
+      const firstLeadEmail = await page
+        .locator('table tbody tr td:nth-child(2)')
+        .first()
+        .textContent();
 
       // Click next page
       await nextButton.click();
@@ -265,7 +268,10 @@ test.describe('Lead Management', () => {
       await page.waitForTimeout(500);
 
       // Get first lead's email after pagination
-      const newFirstLeadEmail = await page.locator('table tbody tr td:nth-child(2)').first().textContent();
+      const newFirstLeadEmail = await page
+        .locator('table tbody tr td:nth-child(2)')
+        .first()
+        .textContent();
 
       // Verify leads changed
       expect(firstLeadEmail).not.toBe(newFirstLeadEmail);
@@ -277,7 +283,10 @@ test.describe('Lead Management', () => {
       await page.waitForTimeout(500);
 
       // Verify we're back to the original lead
-      const backToFirstEmail = await page.locator('table tbody tr td:nth-child(2)').first().textContent();
+      const backToFirstEmail = await page
+        .locator('table tbody tr td:nth-child(2)')
+        .first()
+        .textContent();
       expect(backToFirstEmail).toBe(firstLeadEmail);
     }
   });

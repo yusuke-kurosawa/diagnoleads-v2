@@ -1,7 +1,7 @@
-import { getTranslations } from 'next-intl/server';
-import type { Metadata } from 'next';
-import { FAQRepository } from '@/lib/cms';
 import { FAQAccordion } from '@/components/features/faq/faq-accordion';
+import { FAQRepository } from '@/lib/cms';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 
 /**
  * FAQ Page Metadata
@@ -54,12 +54,8 @@ export default async function FAQPage({
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('title')}
-            </h1>
-            <p className="text-lg text-gray-600">
-              {t('subtitle')}
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t('title')}</h1>
+            <p className="text-lg text-gray-600">{t('subtitle')}</p>
           </div>
 
           {/* FAQ Categories */}
@@ -76,12 +72,8 @@ export default async function FAQPage({
 
           {/* Contact CTA */}
           <div className="mt-12 p-6 bg-blue-50 rounded-xl text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {t('contact.title')}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {t('contact.description')}
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('contact.title')}</h3>
+            <p className="text-gray-600 mb-4">{t('contact.description')}</p>
             <a
               href={`/${locale}/contact`}
               className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

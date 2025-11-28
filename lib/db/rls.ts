@@ -73,10 +73,10 @@ export async function withRLS<T>(
 ): Promise<T> {
   return db.transaction(async (tx) => {
     // ユーザーIDを設定
-    await setCurrentUser(tx, userId);
+    await setCurrentUser(tx as unknown as Database, userId);
 
     // コールバックを実行
-    return callback(tx);
+    return callback(tx as unknown as Database);
   });
 }
 
@@ -91,14 +91,14 @@ export async function withHierarchicalRLS<T>(
 ): Promise<T> {
   return db.transaction(async (tx) => {
     // 完全なRLSコンテキストを設定
-    await setRLSContext(tx, context);
+    await setRLSContext(tx as unknown as Database, context);
 
     try {
       // コールバックを実行
-      return await callback(tx);
+      return await callback(tx as unknown as Database);
     } finally {
       // コンテキストをクリア
-      await clearRLSContext(tx);
+      await clearRLSContext(tx as unknown as Database);
     }
   });
 }
@@ -116,7 +116,7 @@ export async function withoutRLS<T>(
     await tx.execute(sql`SET LOCAL row_security = off`);
 
     try {
-      return await callback(tx);
+      return await callback(tx as unknown as Database);
     } finally {
       // RLS を再度有効化
       await tx.execute(sql`SET LOCAL row_security = on`);

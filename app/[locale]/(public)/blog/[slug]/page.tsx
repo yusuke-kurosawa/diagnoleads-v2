@@ -5,24 +5,23 @@
  * ISR対応、SEO最適化されたブログ詳細ページ
  */
 
-import { Metadata } from 'next';
+import { getCMSAdapter } from '@/lib/cms/adapters/factory';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
-import { getCMSAdapter } from '@/lib/cms/adapters/factory';
 
 interface BlogPostPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: BlogPostPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   const adapter = getCMSAdapter();
 
   try {
-    const post = await adapter.findBySlug('blog', slug, { locale });
+    const result = await adapter.findBySlug({ collection: 'blog', slug, locale });
+    const post = result?.data;
 
     if (!post) {
       return {
@@ -30,8 +29,9 @@ export async function generateMetadata({
       };
     }
 
-    const title = post.title?.[locale] || post.title?.ja || '';
-    const description = post.excerpt?.[locale] || post.excerpt?.ja || '';
+    const postData = post as any;
+    const title = postData.title?.[locale] || postData.title?.ja || '';
+    const description = postData.excerpt?.[locale] || postData.excerpt?.ja || '';
 
     return {
       title,
@@ -40,13 +40,13 @@ export async function generateMetadata({
         title,
         description,
         type: 'article',
-        publishedTime: post.publishedAt,
-        authors: post.author?.name ? [post.author.name] : undefined,
-        images: post.coverImage?.url
+        publishedTime: postData.publishedAt,
+        authors: postData.author?.name ? [postData.author.name] : undefined,
+        images: postData.coverImage?.url
           ? [
               {
-                url: post.coverImage.url,
-                alt: post.coverImage.alt || title,
+                url: postData.coverImage.url,
+                alt: postData.coverImage.alt || title,
               },
             ]
           : undefined,
@@ -55,7 +55,7 @@ export async function generateMetadata({
         card: 'summary_large_image',
         title,
         description,
-        images: post.coverImage?.url ? [post.coverImage.url] : undefined,
+        images: postData.coverImage?.url ? [postData.coverImage.url] : undefined,
       },
     };
   } catch (error) {
@@ -74,17 +74,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   let post;
   try {
-    post = await adapter.findBySlug('blog', slug, { locale });
+    const result = await adapter.findBySlug({ collection: 'blog', slug, locale });
+    post = result?.data;
   } catch (error) {
     notFound();
   }
 
-  if (!post || post.status !== 'published') {
+  if (!post || (post as any).status !== 'published') {
     notFound();
   }
 
-  const title = post.title?.[locale] || post.title?.ja || '';
-  const content = post.content?.[locale] || post.content?.ja || '';
+  const postData = post as any;
+  const title = postData.title?.[locale] || postData.title?.ja || '';
+  const content = postData.content?.[locale] || postData.content?.ja || '';
 
   // Convert rich text content to HTML (simplified)
   const renderContent = (content: any): string => {
@@ -123,10 +125,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               >
                 {tNav('features')}
               </Link>
-              <Link
-                href={`/${locale}/blog`}
-                className="text-blue-600 font-medium"
-              >
+              <Link href={`/${locale}/blog`} className="text-blue-600 font-medium">
                 {t('title')}
               </Link>
               <Link
@@ -173,11 +172,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </nav>
 
           {/* Cover Image */}
-          {post.coverImage?.url && (
+          {postData.coverImage?.url && (
             <div className="aspect-video rounded-xl overflow-hidden mb-8">
               <img
-                src={post.coverImage.url}
-                alt={post.coverImage.alt || title}
+                src={postData.coverImage.url}
+                alt={postData.coverImage.alt || title}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -186,50 +185,43 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {/* Header */}
           <header className="mb-8">
             {/* Category */}
-            {post.category && (
+            {postData.category && (
               <span className="inline-block text-blue-600 text-sm font-medium mb-4">
-                {post.category}
+                {postData.category}
               </span>
             )}
 
             {/* Title */}
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {title}
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h1>
 
             {/* Meta */}
             <div className="flex items-center text-gray-500">
-              {post.author && (
+              {postData.author && (
                 <div className="flex items-center mr-6">
                   <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                    {post.author.avatar?.url ? (
+                    {postData.author.avatar?.url ? (
                       <img
-                        src={post.author.avatar.url}
-                        alt={post.author.name}
+                        src={postData.author.avatar.url}
+                        alt={postData.author.name}
                         className="h-10 w-10 rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-sm font-medium text-gray-500">
-                        {post.author.name?.charAt(0)}
+                        {postData.author.name?.charAt(0)}
                       </span>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {post.author.name}
-                    </p>
-                    {post.author.title && (
-                      <p className="text-xs text-gray-500">{post.author.title}</p>
+                    <p className="text-sm font-medium text-gray-900">{postData.author.name}</p>
+                    {postData.author.title && (
+                      <p className="text-xs text-gray-500">{postData.author.title}</p>
                     )}
                   </div>
                 </div>
               )}
 
-              <time
-                dateTime={post.publishedAt}
-                className="text-sm"
-              >
-                {new Date(post.publishedAt).toLocaleDateString(locale, {
+              <time dateTime={postData.publishedAt} className="text-sm">
+                {new Date(postData.publishedAt).toLocaleDateString(locale, {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
@@ -245,10 +237,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           />
 
           {/* Tags */}
-          {post.tags && post.tags.length > 0 && (
+          {postData.tags && postData.tags.length > 0 && (
             <div className="mt-8 pt-8 border-t border-gray-200">
               <div className="flex flex-wrap gap-2">
-                {post.tags.map((tag: string) => (
+                {postData.tags.map((tag: string) => (
                   <span
                     key={tag}
                     className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
@@ -266,12 +258,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               href={`/${locale}/blog`}
               className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors"
             >
-              <svg
-                className="mr-2 h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -288,12 +275,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {/* CTA Section */}
       <section className="bg-gradient-to-br from-blue-600 to-indigo-700 py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            {t('cta.title')}
-          </h2>
-          <p className="text-blue-100 mb-8">
-            {t('cta.description')}
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{t('cta.title')}</h2>
+          <p className="text-blue-100 mb-8">{t('cta.description')}</p>
           <Link
             href={`/${locale}/diagnostic`}
             className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"

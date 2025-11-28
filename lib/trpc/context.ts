@@ -1,8 +1,12 @@
-import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import { auth } from '@/lib/auth/config';
 import { db } from '@/lib/db/client';
-import type { User, Session } from '@/lib/db/schema';
 import type { OrganizationContext } from '@/lib/multi-tenant/types';
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+
+/**
+ * Session type from BetterAuth
+ */
+type BetterAuthSession = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 /**
  * Create tRPC context
@@ -10,9 +14,7 @@ import type { OrganizationContext } from '@/lib/multi-tenant/types';
  */
 export async function createContext(opts?: FetchCreateContextFnOptions) {
   // Get session from request headers
-  const session = opts?.req
-    ? await auth.api.getSession({ headers: opts.req.headers })
-    : null;
+  const session = opts?.req ? await auth.api.getSession({ headers: opts.req.headers }) : null;
 
   return {
     db,
@@ -24,11 +26,17 @@ export async function createContext(opts?: FetchCreateContextFnOptions) {
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
 /**
+ * User type from BetterAuth session
+ */
+export type AuthUser = NonNullable<NonNullable<BetterAuthSession>['user']>;
+
+/**
  * Protected context - available after protectedProcedure middleware
+ * session is the full BetterAuth session object { session: {...}, user: {...} }
  */
 export type ProtectedContext = Context & {
-  session: Session;
-  user: User;
+  session: NonNullable<BetterAuthSession>;
+  user: AuthUser;
 };
 
 /**

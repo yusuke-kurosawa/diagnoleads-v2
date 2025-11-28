@@ -1,6 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
-import { localeConfig, locales, defaultLocale, getLocaleFromPathname } from './config';
 import type { NextRequest } from 'next/server';
+import { defaultLocale, getLocaleFromPathname, localeConfig, locales } from './config';
 
 /**
  * next-intl Middleware Factory
@@ -60,7 +60,7 @@ export function getLocaleFromRequest(request: NextRequest): string {
 
   // 2. Cookieからロケールを取得
   const localeCookie = request.cookies.get(localeConfig.cookie.name);
-  if (localeCookie && locales.includes(localeCookie.value as typeof locales[number])) {
+  if (localeCookie && locales.includes(localeCookie.value as (typeof locales)[number])) {
     return localeCookie.value;
   }
 
@@ -75,7 +75,7 @@ export function getLocaleFromRequest(request: NextRequest): string {
     });
 
     for (const lang of languages) {
-      if (locales.includes(lang as typeof locales[number])) {
+      if (locales.includes(lang as (typeof locales)[number])) {
         return lang;
       }
     }

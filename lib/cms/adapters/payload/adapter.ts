@@ -4,37 +4,38 @@
  * Phase 4.3: PayloadCMS統合
  *
  * PayloadCMS Local APIを使用してCMSAdapterインターフェースを実装
+ * NOTE: Temporarily disabled due to Next.js build issues with PayloadCMS
  *
  * @see https://payloadcms.com/docs/local-api/overview
  */
 
-import type { Payload, Where } from 'payload';
-import type {
-  CMSAdapter,
-  FindParams,
-  FindByIdParams,
-  FindBySlugParams,
-  CreateParams,
-  UpdateParams,
-  DeleteParams,
-  SearchParams,
-  BulkCreateParams,
-  BulkUpdateParams,
-  BulkDeleteParams,
-  RevalidateParams,
-  ExportParams,
-  ImportParams,
-  CMSResponse,
-  ExportData,
-  ImportResult,
-  WhereCondition,
-} from '../../core/interfaces';
+import { revalidatePath } from 'next/cache';
 import {
+  CMSConnectionError,
   CMSNotFoundError,
   CMSOrganizationMismatchError,
-  CMSConnectionError,
 } from '../../core/errors';
-import { revalidatePath } from 'next/cache';
+import type {
+  BulkCreateParams,
+  BulkDeleteParams,
+  BulkUpdateParams,
+  CMSAdapter,
+  CMSResponse,
+  CreateParams,
+  DeleteParams,
+  ExportData,
+  ExportParams,
+  FindByIdParams,
+  FindBySlugParams,
+  FindParams,
+  ImportParams,
+  ImportResult,
+  RevalidateParams,
+  SearchParams,
+  UpdateParams,
+  WhereCondition,
+} from '../../core/interfaces';
+import type { Payload, Where } from '../../types/payload-stubs';
 
 export class PayloadCMSAdapter implements CMSAdapter {
   readonly name = 'PayloadCMS';
@@ -56,18 +57,13 @@ export class PayloadCMSAdapter implements CMSAdapter {
   }
 
   private async doInitialize(): Promise<void> {
-    try {
-      // PayloadCMSのgetPayloadをダイナミックインポート
-      // これにより、PayloadCMSがインストールされていない環境でもエラーにならない
-      const { getPayload } = await import('payload');
-      const config = await import('@/payload.config').then((m) => m.default);
-
-      this.payload = await getPayload({ config });
-    } catch (error) {
-      throw new CMSConnectionError(
-        `Failed to initialize PayloadCMS: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
+    // PayloadCMS is currently disabled due to incompatibility with Next.js 15.
+    // The PayloadCMS package uses Pages Router components internally which conflict
+    // with Next.js 15's static page generation.
+    // TODO: Re-enable when PayloadCMS releases a compatible version.
+    throw new CMSConnectionError(
+      'PayloadCMS is currently disabled. Please use an alternative CMS adapter or wait for PayloadCMS to support Next.js 15.'
+    );
   }
 
   async healthCheck(): Promise<boolean> {
@@ -96,7 +92,7 @@ export class PayloadCMSAdapter implements CMSAdapter {
 
     const where = this.buildWhereQuery(params.where, params.organizationId, params.status);
 
-    const result = await this.payload!.find({
+    const result = await this.payload?.find({
       collection: params.collection,
       where,
       limit: params.limit || 10,
@@ -105,6 +101,19 @@ export class PayloadCMSAdapter implements CMSAdapter {
       locale: params.locale as 'ja' | 'en' | undefined,
       draft: params.status === 'draft',
     });
+
+    if (!result) {
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          pageSize: params.limit || 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    }
 
     return {
       data: result.docs as T[],
@@ -122,14 +131,15 @@ export class PayloadCMSAdapter implements CMSAdapter {
     await this.ensureInitialized();
 
     try {
-      const result = await this.payload!.findByID({
+      const result = await this.payload?.findByID({
         collection: params.collection,
         id: params.id,
         locale: params.locale as 'ja' | 'en' | undefined,
       });
 
       // organizationIdチェック
-      if (params.organizationId && result.organizationId !== params.organizationId) {
+      const doc = result as Record<string, unknown>;
+      if (params.organizationId && doc.organizationId !== params.organizationId) {
         throw new CMSOrganizationMismatchError();
       }
 
@@ -156,14 +166,14 @@ export class PayloadCMSAdapter implements CMSAdapter {
       };
     }
 
-    const result = await this.payload!.find({
+    const result = await this.payload?.find({
       collection: params.collection,
       where,
       limit: 1,
       locale: params.locale as 'ja' | 'en' | undefined,
     });
 
-    if (result.docs.length === 0) {
+    if (!result || result.docs.length === 0) {
       return { data: null };
     }
 
@@ -178,7 +188,7 @@ export class PayloadCMSAdapter implements CMSAdapter {
       organizationId: params.organizationId,
     };
 
-    const result = await this.payload!.create({
+    const result = await this.payload?.create({
       collection: params.collection,
       data,
     });
@@ -202,7 +212,7 @@ export class PayloadCMSAdapter implements CMSAdapter {
       }
     }
 
-    const result = await this.payload!.update({
+    const result = await this.payload?.update({
       collection: params.collection,
       id: params.id,
       data: params.data,
@@ -227,7 +237,7 @@ export class PayloadCMSAdapter implements CMSAdapter {
       }
     }
 
-    await this.payload!.delete({
+    await this.payload?.delete({
       collection: params.collection,
       id: params.id,
     });
@@ -265,11 +275,15 @@ export class PayloadCMSAdapter implements CMSAdapter {
       };
     }
 
-    const result = await this.payload!.find({
+    const result = await this.payload?.find({
       collection: params.collection,
       where,
       limit: params.limit || 10,
     });
+
+    if (!result) {
+      return { data: [], meta: { total: 0 } };
+    }
 
     return {
       data: result.docs as T[],
@@ -334,7 +348,7 @@ export class PayloadCMSAdapter implements CMSAdapter {
       };
     }
 
-    await this.payload!.delete({
+    await this.payload?.delete({
       collection: params.collection,
       where,
     });
@@ -369,13 +383,13 @@ export class PayloadCMSAdapter implements CMSAdapter {
         };
       }
 
-      const result = await this.payload!.find({
+      const result = await this.payload?.find({
         collection: collectionName,
         where,
         limit: 1000, // 大量エクスポート用
       });
 
-      data[collectionName] = result.docs;
+      data[collectionName] = result?.docs ?? [];
     }
 
     return {
@@ -461,7 +475,8 @@ export class PayloadCMSAdapter implements CMSAdapter {
           else if ('in' in op) query[key] = { in: op.in };
           else if ('not_in' in op) query[key] = { not_in: op.not_in };
           else if ('greater_than' in op) query[key] = { greater_than: op.greater_than };
-          else if ('greater_than_equal' in op) query[key] = { greater_than_equal: op.greater_than_equal };
+          else if ('greater_than_equal' in op)
+            query[key] = { greater_than_equal: op.greater_than_equal };
           else if ('less_than' in op) query[key] = { less_than: op.less_than };
           else if ('less_than_equal' in op) query[key] = { less_than_equal: op.less_than_equal };
           else if ('exists' in op) query[key] = { exists: op.exists };
@@ -476,8 +491,6 @@ export class PayloadCMSAdapter implements CMSAdapter {
   }
 
   private buildSortString(sort: Array<{ field: string; order: 'asc' | 'desc' }>): string {
-    return sort
-      .map((s) => (s.order === 'desc' ? `-${s.field}` : s.field))
-      .join(',');
+    return sort.map((s) => (s.order === 'desc' ? `-${s.field}` : s.field)).join(',');
   }
 }

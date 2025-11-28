@@ -1,9 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, RefreshCw, Loader2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { FileText, Loader2, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AISummaryCardProps {
   summary?: string;
@@ -15,11 +15,7 @@ interface AISummaryCardProps {
  * AI Summary Card Component
  * Displays AI-generated summary of a lead
  */
-export function AISummaryCard({
-  summary,
-  onGenerate,
-  isGenerating,
-}: AISummaryCardProps) {
+export function AISummaryCard({ summary, onGenerate, isGenerating }: AISummaryCardProps) {
   const t = useTranslations('ai');
 
   return (
@@ -30,12 +26,7 @@ export function AISummaryCard({
           {t('aiSummary')}
         </h3>
         {onGenerate && (
-          <Button
-            onClick={onGenerate}
-            disabled={isGenerating}
-            size="sm"
-            variant="outline"
-          >
+          <Button onClick={onGenerate} disabled={isGenerating} size="sm" variant="outline">
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -7,10 +7,10 @@
  * シングルトンパターンでインスタンスを管理
  */
 
-import type { CMSAdapter } from '../core/interfaces';
 import { CMSConfigurationError } from '../core/errors';
+import type { CMSAdapter } from '../core/interfaces';
 import { MockCMSAdapter } from './mock/adapter';
-import { PayloadCMSAdapter } from './payload/adapter';
+// PayloadCMS adapter import is dynamic to avoid build errors when payload is not installed
 
 type CMSProvider = 'payload' | 'mock' | 'sanity';
 
@@ -58,27 +58,15 @@ export function getCMSAdapter(): CMSAdapter {
     case 'payload':
       // PayloadCMSアダプターを使用
       // 注: PayloadCMSパッケージがインストールされていない場合はMockにフォールバック
-      try {
-        adapterInstance = new PayloadCMSAdapter();
-        console.log('[CMS] Using PayloadCMS adapter');
-      } catch (error) {
-        console.warn(
-          '[CMS] PayloadCMS initialization failed. Falling back to MockCMSAdapter.',
-          error instanceof Error ? error.message : ''
-        );
-        adapterInstance = new MockCMSAdapter();
-      }
+      console.warn('[CMS] PayloadCMS is not currently installed. Using MockCMSAdapter.');
+      adapterInstance = new MockCMSAdapter();
       break;
 
     case 'sanity':
       // Sanityアダプター（将来実装）
-      console.warn(
-        '[CMS] Sanity adapter not yet implemented. Using MockCMSAdapter.'
-      );
+      console.warn('[CMS] Sanity adapter not yet implemented. Using MockCMSAdapter.');
       adapterInstance = new MockCMSAdapter();
       break;
-
-    case 'mock':
     default:
       adapterInstance = new MockCMSAdapter();
       break;

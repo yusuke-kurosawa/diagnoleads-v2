@@ -16,9 +16,12 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   compiler: {
     // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
 
   // Image optimization
@@ -49,9 +52,10 @@ const nextConfig: NextConfig = {
 };
 
 // Bundle Analyzer (run with ANALYZE=true npm run build)
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({ enabled: true })
-  : (config: NextConfig) => config;
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({ enabled: true })
+    : (config: NextConfig) => config;
 
 // Apply plugins: next-intl -> bundle analyzer
 export default withNextIntl(withBundleAnalyzer(nextConfig));

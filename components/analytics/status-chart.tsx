@@ -1,31 +1,32 @@
 'use client';
 
-import { BarChart } from '@tremor/react';
+import { BarChart } from '@/components/charts/bar-chart';
 import type { StatusBreakdown } from '@/lib/features/analytics/types/schemas';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface StatusChartProps {
   data: StatusBreakdown[];
   isLoading?: boolean;
 }
 
-const statusColors: Record<string, string> = {
-  new: 'blue',
-  contacted: 'yellow',
-  qualified: 'green',
-  converted: 'purple',
-};
-
-const statusLabels: Record<string, string> = {
-  new: 'New',
-  contacted: 'Contacted',
-  qualified: 'Qualified',
-  converted: 'Converted',
-};
-
 /**
  * StatusChart - Bar chart showing lead status distribution
+ * Fully i18n supported
  */
 export function StatusChart({ data, isLoading = false }: StatusChartProps) {
+  const tStatus = useTranslations('status');
+  const tAnalytics = useTranslations('settings.analytics');
+  const locale = useLocale();
+
+  // Get localized status label
+  const getStatusLabel = (status: string): string => {
+    try {
+      return tStatus(status);
+    } catch {
+      return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-64 space-y-4">
@@ -42,21 +43,29 @@ export function StatusChart({ data, isLoading = false }: StatusChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center">
-        <p className="text-gray-500">No data available</p>
+        <p className="text-gray-500">{tAnalytics('noData')}</p>
       </div>
     );
   }
 
-  // Ensure all statuses are present in the correct order
+  // Ensure all statuses are present in the correct order with localized labels
   const statusOrder = ['new', 'contacted', 'qualified', 'converted'];
   const chartData = statusOrder.map((status) => {
     const found = data.find((d) => d.status === status);
     return {
-      status: statusLabels[status] || status,
+      status: getStatusLabel(status),
       count: found?.count || 0,
       percentage: found?.percentage || 0,
     };
   });
+
+  // Locale-aware value formatter
+  const valueFormatter = (value: number) => {
+    if (locale === 'ja') {
+      return `${value.toLocaleString('ja-JP')}件`;
+    }
+    return value.toLocaleString('en-US');
+  };
 
   return (
     <div className="h-64">
@@ -66,7 +75,7 @@ export function StatusChart({ data, isLoading = false }: StatusChartProps) {
         index="status"
         categories={['count']}
         colors={['blue']}
-        valueFormatter={(value) => `${value.toLocaleString()}`}
+        valueFormatter={valueFormatter}
         showLegend={false}
         showAnimation={true}
         layout="vertical"

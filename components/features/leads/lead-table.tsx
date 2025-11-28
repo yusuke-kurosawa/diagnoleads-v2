@@ -1,22 +1,25 @@
 'use client';
 
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
-} from '@tanstack/react-table';
-import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
-import type { Lead } from '@/lib/db/schema';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,34 +28,71 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import type { Lead } from '@/lib/db/schema';
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { formatDistance } from 'date-fns';
-import { ja, enUS } from 'date-fns/locale';
+import { enUS, ja } from 'date-fns/locale';
+import {
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Search,
+  Settings2,
+  Trash2,
+  UserPlus,
+  Users,
+} from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 interface LeadTableProps {
   leads: Lead[];
   isLoading?: boolean;
   onLeadClick?: (lead: Lead) => void;
+  onEdit?: (lead: Lead) => void;
+  onDelete?: (lead: Lead) => void;
 }
 
-const statusColors = {
-  new: 'bg-blue-100 text-blue-800',
-  contacted: 'bg-yellow-100 text-yellow-800',
-  qualified: 'bg-green-100 text-green-800',
-  converted: 'bg-purple-100 text-purple-800',
+type StatusKey = 'new' | 'contacted' | 'qualified' | 'converted';
+
+const statusConfig: Record<
+  StatusKey,
+  { color: 'blue' | 'yellow' | 'emerald' | 'violet'; icon: string }
+> = {
+  new: { color: 'blue', icon: '●' },
+  contacted: { color: 'yellow', icon: '●' },
+  qualified: { color: 'emerald', icon: '●' },
+  converted: { color: 'violet', icon: '●' },
 };
 
 /**
- * Lead table component with TanStack Table
- * Features: sorting, filtering, pagination
+ * Lead table component with TanStack Table + modern UI
+ * Features: sorting, filtering, pagination, responsive columns, actions
  */
-export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
+export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: LeadTableProps) {
   const t = useTranslations('leads');
   const tStatus = useTranslations('status');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const dateLocale = locale === 'ja' ? ja : enUS;
 
-  const statusLabels = {
+  const statusLabels: Record<StatusKey, string> = {
     new: tStatus('new'),
     contacted: tStatus('contacted'),
     qualified: tStatus('qualified'),
@@ -61,79 +101,105 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    phone: false,
+    source: false,
+  });
   const [globalFilter, setGlobalFilter] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Responsive column visibility based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setColumnVisibility({
+          company: false,
+          phone: false,
+          source: false,
+          createdAt: false,
+        });
+      } else if (width < 1024) {
+        setColumnVisibility({
+          phone: false,
+          source: false,
+        });
+      } else {
+        setColumnVisibility({
+          phone: false,
+        });
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Apply status filter
+  useEffect(() => {
+    if (statusFilter === 'all') {
+      table.getColumn('status')?.setFilterValue(undefined);
+    } else {
+      table.getColumn('status')?.setFilterValue([statusFilter]);
+    }
+  }, [statusFilter]);
 
   const columns: ColumnDef<Lead>[] = [
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-gray-100"
-          >
-            {t('name')}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="flex items-center gap-1 hover:text-gray-900 font-semibold"
+        >
+          {t('name')}
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      ),
       cell: ({ row }) => (
-        <div className="font-medium">{row.getValue('name') || t('nameNotSet')}</div>
+        <div className="font-semibold text-gray-900">{row.getValue('name') || t('nameNotSet')}</div>
       ),
     },
     {
       accessorKey: 'email',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-gray-100"
-          >
-            {t('email')}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue('email')}</div>,
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="flex items-center gap-1 hover:text-gray-900 font-semibold"
+        >
+          {t('email')}
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      ),
+      cell: ({ row }) => <span className="text-gray-600">{row.getValue('email')}</span>,
     },
     {
       accessorKey: 'company',
       header: t('company'),
-      cell: ({ row }) => (
-        <div>{row.getValue('company') || '-'}</div>
-      ),
+      cell: ({ row }) => <span className="text-gray-600">{row.getValue('company') || '-'}</span>,
     },
     {
       accessorKey: 'phone',
       header: t('phone'),
-      cell: ({ row }) => <div>{row.getValue('phone') || '-'}</div>,
+      cell: ({ row }) => <span className="text-gray-600">{row.getValue('phone') || '-'}</span>,
     },
     {
       accessorKey: 'status',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-gray-100"
-          >
-            {t('status')}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="flex items-center gap-1 hover:text-gray-900 font-semibold"
+        >
+          {t('status')}
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      ),
       cell: ({ row }) => {
-        const status = row.getValue('status') as keyof typeof statusLabels;
-        return (
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}
-          >
-            {statusLabels[status]}
-          </span>
-        );
+        const status = row.getValue('status') as StatusKey;
+        const config = statusConfig[status];
+        return <Badge color={config.color}>{statusLabels[status]}</Badge>;
       },
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id));
@@ -141,23 +207,32 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
     },
     {
       accessorKey: 'score',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-gray-100"
-          >
-            {t('score')}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="flex items-center gap-1 hover:text-gray-900 font-semibold"
+        >
+          {t('score')}
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      ),
       cell: ({ row }) => {
         const score = row.getValue('score') as number | null;
+        if (score === null || score === undefined) {
+          return <span className="text-gray-400">-</span>;
+        }
+        const getScoreColor = (s: number): 'red' | 'yellow' | 'emerald' => {
+          if (s >= 70) return 'emerald';
+          if (s >= 40) return 'yellow';
+          return 'red';
+        };
         return (
-          <div className="text-center font-semibold">
-            {score !== null && score !== undefined ? score : '-'}
+          <div className="w-24">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-semibold text-gray-900">{score}</span>
+              <span className="text-xs text-gray-500">/100</span>
+            </div>
+            <ProgressBar value={score} color={getScoreColor(score)} className="h-1.5" />
           </div>
         );
       },
@@ -167,34 +242,81 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
       header: t('source'),
       cell: ({ row }) => {
         const source = row.getValue('source') as string | null;
-        return <div className="capitalize">{source || '-'}</div>;
+        return <Badge color="gray">{source || '-'}</Badge>;
       },
     },
     {
       accessorKey: 'createdAt',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-gray-100"
-          >
-            {t('createdAt')}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="flex items-center gap-1 hover:text-gray-900 font-semibold"
+        >
+          {t('createdAt')}
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      ),
       cell: ({ row }) => {
         const date = row.getValue('createdAt') as Date;
         return (
-          <div className="text-sm text-gray-600">
+          <span className="text-sm text-gray-500">
             {formatDistance(new Date(date), new Date(), {
               addSuffix: true,
               locale: dateLocale,
             })}
-          </div>
+          </span>
         );
       },
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">{tCommon('actions')}</span>,
+      cell: ({ row }) => {
+        const lead = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                <span className="sr-only">{tCommon('openMenu')}</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLeadClick?.(lead);
+                }}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                {tCommon('view')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(lead);
+                }}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                {tCommon('edit')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(lead);
+                }}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {tCommon('delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
     },
   ];
 
@@ -215,76 +337,133 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
       columnFilters,
       columnVisibility,
       globalFilter,
-    },
-    initialState: {
       pagination: {
-        pageSize: 10,
+        pageIndex: 0,
+        pageSize,
       },
     },
   });
 
+  const columnLabels: Record<string, string> = {
+    name: t('name'),
+    email: t('email'),
+    company: t('company'),
+    phone: t('phone'),
+    status: t('status'),
+    score: t('score'),
+    source: t('source'),
+    createdAt: t('createdAt'),
+  };
+
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-200 animate-pulse rounded-lg" />
-        ))}
-      </div>
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div className="h-12 bg-gray-200 animate-pulse rounded-lg" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <Card className="overflow-hidden">
       {/* Search and filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      <div className="p-4 bg-gray-50 border-b border-gray-200">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder={t('searchPlaceholder')}
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        {/* Status filter */}
-        <select
-          value={
-            (table.getColumn('status')?.getFilterValue() as string[])?.join(',') ?? ''
-          }
-          onChange={(e) =>
-            table.getColumn('status')?.setFilterValue(
-              e.target.value ? e.target.value.split(',') : undefined
-            )
-          }
-          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">{t('allStatuses')}</option>
-          <option value="new">{tStatus('new')}</option>
-          <option value="contacted">{tStatus('contacted')}</option>
-          <option value="qualified">{tStatus('qualified')}</option>
-          <option value="converted">{tStatus('converted')}</option>
-        </select>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Status filter */}
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('allStatuses')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="new">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    {tStatus('new')}
+                  </span>
+                </SelectItem>
+                <SelectItem value="contacted">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                    {tStatus('contacted')}
+                  </span>
+                </SelectItem>
+                <SelectItem value="qualified">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    {tStatus('qualified')}
+                  </span>
+                </SelectItem>
+                <SelectItem value="converted">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-violet-500" />
+                    {tStatus('converted')}
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Column visibility toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10">
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  {tCommon('columns')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[180px]">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) => typeof column.accessorFn !== 'undefined' && column.getCanHide()
+                  )
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {columnLabels[column.id] || column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-gray-50">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -293,31 +472,29 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onLeadClick?.(row.original)}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-blue-50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <div className="text-gray-500">
-                    <p className="text-lg">{t('noLeads')}</p>
-                    <p className="text-sm mt-2 text-gray-400">
-                      {t('noLeadsDescription')}
-                    </p>
+                <TableCell colSpan={columns.length} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center text-gray-500 py-8">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center mb-4">
+                      <Users className="h-10 w-10 text-blue-400" />
+                    </div>
+                    <p className="text-xl font-semibold text-gray-900 mb-2">{t('noLeads')}</p>
+                    <p className="text-sm text-gray-500 max-w-sm mb-6">{t('noLeadsDescription')}</p>
+                    <Button size="lg">
+                      <UserPlus className="h-5 w-5 mr-2" />
+                      {t('addFirstLead')}
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -327,55 +504,101 @@ export function LeadTable({ leads, isLoading, onLeadClick }: LeadTableProps) {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-gray-700">
-          {table.getFilteredRowModel().rows.length > 0 ? (
-            <>
-              <span className="font-medium">
-                {table.getState().pagination.pageIndex *
-                  table.getState().pagination.pageSize +
-                  1}
-              </span>
-              {' - '}
-              <span className="font-medium">
-                {Math.min(
-                  (table.getState().pagination.pageIndex + 1) *
-                    table.getState().pagination.pageSize,
-                  table.getFilteredRowModel().rows.length
-                )}
-              </span>
-              {t('of')}
-              <span className="font-medium">
-                {table.getFilteredRowModel().rows.length}
-              </span>
-              {t('count')}
-            </>
-          ) : (
-            `0${t('count')}`
-          )}
-        </div>
+      <div className="p-4 bg-gray-50 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{t('rowsPerPage')}</span>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  table.setPageSize(Number(value));
+                }}
+              >
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            {t('previous')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            {t('next')}
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            <div className="hidden sm:flex items-center gap-1">
+              {table.getFilteredRowModel().rows.length > 0 ? (
+                <>
+                  <span className="font-semibold text-gray-900">
+                    {table.getState().pagination.pageIndex * pageSize + 1}
+                  </span>
+                  <span>-</span>
+                  <span className="font-semibold text-gray-900">
+                    {Math.min(
+                      (table.getState().pagination.pageIndex + 1) * pageSize,
+                      table.getFilteredRowModel().rows.length
+                    )}
+                  </span>
+                  <span>{t('of')}</span>
+                  <span className="font-semibold text-gray-900">
+                    {table.getFilteredRowModel().rows.length}
+                  </span>
+                  <span>{t('count')}</span>
+                </>
+              ) : (
+                <span>0{t('count')}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.firstPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="hidden sm:flex"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">{t('previous')}</span>
+            </Button>
+
+            <div className="px-3 py-1 rounded-md bg-white border border-gray-200 text-sm font-medium">
+              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <span className="hidden sm:inline mr-1">{t('next')}</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.lastPage()}
+              disabled={!table.getCanNextPage()}
+              className="hidden sm:flex"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

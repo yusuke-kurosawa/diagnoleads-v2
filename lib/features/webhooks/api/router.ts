@@ -4,63 +4,58 @@
  * Phase 5.1: Webhook基盤
  */
 
-import { z } from 'zod';
-import { TRPCError } from '@trpc/server';
-import { router, organizationProcedure } from '@/lib/trpc/init';
 import { db } from '@/lib/db/client';
-import { webhooks, webhookDeliveries } from '@/lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { webhookDeliveries, webhooks } from '@/lib/db/schema';
+import { organizationProcedure, router } from '@/lib/trpc/init';
+import { TRPCError } from '@trpc/server';
+import { and, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { generateWebhookSecret, triggerWebhooks } from '../services/webhook-service';
 import {
   createWebhookSchema,
-  updateWebhookSchema,
-  listWebhooksSchema,
   listDeliveriesSchema,
+  listWebhooksSchema,
   testWebhookSchema,
+  updateWebhookSchema,
   webhookEventTypes,
 } from '../types/schemas';
-import {
-  generateWebhookSecret,
-  triggerWebhooks,
-} from '../services/webhook-service';
 
 export const webhooksRouter = router({
   /**
    * List webhooks for the organization
    */
-  list: organizationProcedure
-    .input(listWebhooksSchema)
-    .query(async ({ ctx, input }) => {
-      const { status, limit, offset } = input;
+  list: organizationProcedure.input(listWebhooksSchema).query(async ({ ctx, input }) => {
+    const { status, limit, offset } = input;
 
-      const conditions = [eq(webhooks.organizationId, ctx.organization.id)];
-      if (status) {
-        conditions.push(eq(webhooks.status, status));
-      }
+    const conditions = [eq(webhooks.organizationId, ctx.organization.id)];
+    if (status) {
+      conditions.push(eq(webhooks.status, status));
+    }
 
-      const results = await db
-        .select()
-        .from(webhooks)
-        .where(and(...conditions))
-        .orderBy(desc(webhooks.createdAt))
-        .limit(limit)
-        .offset(offset);
+    const results = await db
+      .select()
+      .from(webhooks)
+      .where(and(...conditions))
+      .orderBy(desc(webhooks.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-      // Count total
-      const countResult = await db
-        .select()
-        .from(webhooks)
-        .where(and(...conditions));
+    // Count total
+    const countResult = await db
+      .select()
+      .from(webhooks)
+      .where(and(...conditions));
 
-      return {
-        webhooks: results.map((w) => ({
-          ...w,
-          secret: maskSecret(w.secret), // Don't expose full secret
-        })),
-        total: countResult.length,
-        limit,
-        offset,
-      };
-    }),
+    return {
+      webhooks: results.map((w) => ({
+        ...w,
+        secret: maskSecret(w.secret), // Don't expose full secret
+      })),
+      total: countResult.length,
+      limit,
+      offset,
+    };
+  }),
 
   /**
    * Get a single webhook by ID
@@ -71,12 +66,7 @@ export const webhooksRouter = router({
       const webhook = await db
         .select()
         .from(webhooks)
-        .where(
-          and(
-            eq(webhooks.id, input.id),
-            eq(webhooks.organizationId, ctx.organization.id)
-          )
-        )
+        .where(and(eq(webhooks.id, input.id), eq(webhooks.organizationId, ctx.organization.id)))
         .limit(1);
 
       if (!webhook[0]) {
@@ -95,94 +85,85 @@ export const webhooksRouter = router({
   /**
    * Create a new webhook
    */
-  create: organizationProcedure
-    .input(createWebhookSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Check permission
-      if (!ctx.ability.can('create', 'Webhook')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to create webhooks',
-        });
-      }
+  create: organizationProcedure.input(createWebhookSchema).mutation(async ({ ctx, input }) => {
+    // Check permission
+    if (!ctx.ability.can('create', 'Webhook')) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to create webhooks',
+      });
+    }
 
-      const secret = generateWebhookSecret();
+    const secret = generateWebhookSecret();
 
-      const [webhook] = await db
-        .insert(webhooks)
-        .values({
-          organizationId: ctx.organization.id,
-          name: input.name,
-          url: input.url,
-          secret,
-          events: input.events,
-          headers: input.headers || {},
-          retryConfig: input.retryConfig || { maxRetries: 3, retryDelayMs: 5000 },
-        })
-        .returning();
+    const [webhook] = await db
+      .insert(webhooks)
+      .values({
+        organizationId: ctx.organization.id,
+        name: input.name,
+        url: input.url,
+        secret,
+        events: input.events,
+        headers: input.headers || {},
+        retryConfig: input.retryConfig || { maxRetries: 3, retryDelayMs: 5000 },
+      })
+      .returning();
 
-      return {
-        ...webhook,
-        // Return the full secret only on creation
-        secret: webhook.secret,
-      };
-    }),
+    return {
+      ...webhook,
+      // Return the full secret only on creation
+      secret: webhook.secret,
+    };
+  }),
 
   /**
    * Update a webhook
    */
-  update: organizationProcedure
-    .input(updateWebhookSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Check permission
-      if (!ctx.ability.can('update', 'Webhook')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You do not have permission to update webhooks',
-        });
-      }
+  update: organizationProcedure.input(updateWebhookSchema).mutation(async ({ ctx, input }) => {
+    // Check permission
+    if (!ctx.ability.can('update', 'Webhook')) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'You do not have permission to update webhooks',
+      });
+    }
 
-      // Verify ownership
-      const existing = await db
-        .select()
-        .from(webhooks)
-        .where(
-          and(
-            eq(webhooks.id, input.id),
-            eq(webhooks.organizationId, ctx.organization.id)
-          )
-        )
-        .limit(1);
+    // Verify ownership
+    const existing = await db
+      .select()
+      .from(webhooks)
+      .where(and(eq(webhooks.id, input.id), eq(webhooks.organizationId, ctx.organization.id)))
+      .limit(1);
 
-      if (!existing[0]) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Webhook not found',
-        });
-      }
+    if (!existing[0]) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Webhook not found',
+      });
+    }
 
-      const updateData: Partial<typeof webhooks.$inferInsert> = {
-        updatedAt: new Date(),
-      };
+    const updateData: Partial<typeof webhooks.$inferInsert> = {
+      updatedAt: new Date(),
+    };
 
-      if (input.name) updateData.name = input.name;
-      if (input.url) updateData.url = input.url;
-      if (input.events) updateData.events = input.events;
-      if (input.status) updateData.status = input.status;
-      if (input.headers) updateData.headers = input.headers;
-      if (input.retryConfig) updateData.retryConfig = input.retryConfig;
+    if (input.name) updateData.name = input.name;
+    if (input.url) updateData.url = input.url;
+    if (input.events) updateData.events = input.events;
+    if (input.status) updateData.status = input.status;
+    if (input.headers) updateData.headers = input.headers;
+    if (input.retryConfig) updateData.retryConfig = input.retryConfig;
 
-      const [updated] = await db
-        .update(webhooks)
-        .set(updateData)
-        .where(eq(webhooks.id, input.id))
-        .returning();
+    const [updated] = await db
+      .update(webhooks)
+      .set(updateData)
+      .where(eq(webhooks.id, input.id))
+      .returning();
 
-      return {
-        ...updated,
-        secret: maskSecret(updated.secret),
-      };
-    }),
+    return {
+      ...updated,
+      secret: maskSecret(updated.secret),
+    };
+  }),
 
   /**
    * Delete a webhook
@@ -202,12 +183,7 @@ export const webhooksRouter = router({
       const existing = await db
         .select()
         .from(webhooks)
-        .where(
-          and(
-            eq(webhooks.id, input.id),
-            eq(webhooks.organizationId, ctx.organization.id)
-          )
-        )
+        .where(and(eq(webhooks.id, input.id), eq(webhooks.organizationId, ctx.organization.id)))
         .limit(1);
 
       if (!existing[0]) {
@@ -240,12 +216,7 @@ export const webhooksRouter = router({
       const existing = await db
         .select()
         .from(webhooks)
-        .where(
-          and(
-            eq(webhooks.id, input.id),
-            eq(webhooks.organizationId, ctx.organization.id)
-          )
-        )
+        .where(and(eq(webhooks.id, input.id), eq(webhooks.organizationId, ctx.organization.id)))
         .limit(1);
 
       if (!existing[0]) {
@@ -275,92 +246,79 @@ export const webhooksRouter = router({
   /**
    * Test a webhook by sending a test event
    */
-  test: organizationProcedure
-    .input(testWebhookSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Verify ownership
-      const existing = await db
-        .select()
-        .from(webhooks)
-        .where(
-          and(
-            eq(webhooks.id, input.id),
-            eq(webhooks.organizationId, ctx.organization.id)
-          )
-        )
-        .limit(1);
+  test: organizationProcedure.input(testWebhookSchema).mutation(async ({ ctx, input }) => {
+    // Verify ownership
+    const existing = await db
+      .select()
+      .from(webhooks)
+      .where(and(eq(webhooks.id, input.id), eq(webhooks.organizationId, ctx.organization.id)))
+      .limit(1);
 
-      if (!existing[0]) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Webhook not found',
-        });
-      }
+    if (!existing[0]) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Webhook not found',
+      });
+    }
 
-      // Trigger a test event
-      const testData = {
-        test: true,
-        message: 'This is a test webhook from DiagnoLeads',
-        timestamp: new Date().toISOString(),
-      };
+    // Trigger a test event
+    const testData = {
+      test: true,
+      message: 'This is a test webhook from DiagnoLeads',
+      timestamp: new Date().toISOString(),
+    };
 
-      // Use the first subscribed event type for testing
-      const eventType = existing[0].events[0] || 'lead.created';
+    // Use the first subscribed event type for testing
+    const eventType = existing[0].events[0] || 'lead.created';
 
-      const result = await triggerWebhooks(
-        ctx.organization.id,
-        eventType,
-        testData
-      );
+    const result = await triggerWebhooks(ctx.organization.id, eventType, testData);
 
-      return {
-        success: result.triggered > 0,
-        triggered: result.triggered,
-        failed: result.failed,
-      };
-    }),
+    return {
+      success: result.triggered > 0,
+      triggered: result.triggered,
+      failed: result.failed,
+    };
+  }),
 
   /**
    * List webhook deliveries
    */
-  deliveries: organizationProcedure
-    .input(listDeliveriesSchema)
-    .query(async ({ ctx, input }) => {
-      const { webhookId, status, limit, offset } = input;
+  deliveries: organizationProcedure.input(listDeliveriesSchema).query(async ({ ctx, input }) => {
+    const { webhookId, status, limit, offset } = input;
 
-      // Build query to get deliveries for webhooks owned by this organization
-      let query = db
-        .select({
-          delivery: webhookDeliveries,
-          webhookName: webhooks.name,
-        })
-        .from(webhookDeliveries)
-        .innerJoin(webhooks, eq(webhookDeliveries.webhookId, webhooks.id))
-        .where(eq(webhooks.organizationId, ctx.organization.id))
-        .$dynamic();
+    // Build query to get deliveries for webhooks owned by this organization
+    let query = db
+      .select({
+        delivery: webhookDeliveries,
+        webhookName: webhooks.name,
+      })
+      .from(webhookDeliveries)
+      .innerJoin(webhooks, eq(webhookDeliveries.webhookId, webhooks.id))
+      .where(eq(webhooks.organizationId, ctx.organization.id))
+      .$dynamic();
 
-      if (webhookId) {
-        query = query.where(eq(webhookDeliveries.webhookId, webhookId));
-      }
+    if (webhookId) {
+      query = query.where(eq(webhookDeliveries.webhookId, webhookId));
+    }
 
-      if (status) {
-        query = query.where(eq(webhookDeliveries.status, status));
-      }
+    if (status) {
+      query = query.where(eq(webhookDeliveries.status, status));
+    }
 
-      const results = await query
-        .orderBy(desc(webhookDeliveries.createdAt))
-        .limit(limit)
-        .offset(offset);
+    const results = await query
+      .orderBy(desc(webhookDeliveries.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-      return {
-        deliveries: results.map((r) => ({
-          ...r.delivery,
-          webhookName: r.webhookName,
-        })),
-        limit,
-        offset,
-      };
-    }),
+    return {
+      deliveries: results.map((r) => ({
+        ...r.delivery,
+        webhookName: r.webhookName,
+      })),
+      limit,
+      offset,
+    };
+  }),
 
   /**
    * Get available webhook event types

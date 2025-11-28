@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useEffect } from 'react';
 
 /**
  * Global Error Boundary
@@ -26,9 +26,7 @@ export default function Error({
     <div className="flex min-h-screen flex-col items-center justify-center">
       <div className="max-w-md text-center">
         <h2 className="mb-4 text-2xl font-bold">{t('title')}</h2>
-        <p className="mb-6 text-gray-600">
-          {t('message')}
-        </p>
+        <p className="mb-6 text-gray-600">{t('message')}</p>
         {error.digest && (
           <p className="mb-4 text-sm text-gray-500">{t('errorId', { digest: error.digest })}</p>
         )}

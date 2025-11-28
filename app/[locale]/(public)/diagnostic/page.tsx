@@ -1,6 +1,6 @@
-import { getTranslations } from 'next-intl/server';
-import type { Metadata } from 'next';
 import { DiagnosticForm } from '@/components/features/diagnostic/diagnostic-form';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 
 /**
  * Diagnostic Page Metadata
@@ -41,12 +41,8 @@ export default async function DiagnosticPage({
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('title')}
-            </h1>
-            <p className="text-lg text-gray-600">
-              {t('subtitle')}
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t('title')}</h1>
+            <p className="text-lg text-gray-600">{t('subtitle')}</p>
           </div>
 
           {/* Diagnostic Form */}

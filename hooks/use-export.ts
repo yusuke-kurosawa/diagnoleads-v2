@@ -4,22 +4,22 @@
  * React hook for downloading analytics reports and lead exports
  */
 
-import { useState, useCallback } from 'react';
-import {
-  leadsToCSV,
-  generateFullReportCSV,
-  generateExportFilename,
-  createDownloadBlob,
-  triggerDownload,
-  type ExportLead,
-} from '@/lib/features/reports/export-service';
 import type {
+  ConversionFunnelData,
   OverviewStats,
-  TrendDataPoint,
   SourceBreakdown,
   StatusBreakdown,
-  ConversionFunnelData,
+  TrendDataPoint,
 } from '@/lib/features/analytics/types/schemas';
+import {
+  type ExportLead,
+  createDownloadBlob,
+  generateExportFilename,
+  generateFullReportCSV,
+  leadsToCSV,
+  triggerDownload,
+} from '@/lib/features/reports/export-service';
+import { useCallback, useState } from 'react';
 
 interface UseExportOptions {
   organizationName?: string;
@@ -35,38 +35,32 @@ export function useExport(options: UseExportOptions = {}) {
   /**
    * Export leads to CSV
    */
-  const exportLeadsCSV = useCallback(
-    (leads: ExportLead[]) => {
-      setIsExporting(true);
-      try {
-        const csv = leadsToCSV(leads);
-        const blob = createDownloadBlob(csv, 'csv');
-        const filename = generateExportFilename('leads', 'csv');
-        triggerDownload(blob, filename);
-      } finally {
-        setIsExporting(false);
-      }
-    },
-    []
-  );
+  const exportLeadsCSV = useCallback((leads: ExportLead[]) => {
+    setIsExporting(true);
+    try {
+      const csv = leadsToCSV(leads);
+      const blob = createDownloadBlob(csv, 'csv');
+      const filename = generateExportFilename('leads', 'csv');
+      triggerDownload(blob, filename);
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
 
   /**
    * Export leads to JSON
    */
-  const exportLeadsJSON = useCallback(
-    (leads: ExportLead[]) => {
-      setIsExporting(true);
-      try {
-        const json = JSON.stringify(leads, null, 2);
-        const blob = createDownloadBlob(json, 'json');
-        const filename = generateExportFilename('leads', 'json');
-        triggerDownload(blob, filename);
-      } finally {
-        setIsExporting(false);
-      }
-    },
-    []
-  );
+  const exportLeadsJSON = useCallback((leads: ExportLead[]) => {
+    setIsExporting(true);
+    try {
+      const json = JSON.stringify(leads, null, 2);
+      const blob = createDownloadBlob(json, 'json');
+      const filename = generateExportFilename('leads', 'json');
+      triggerDownload(blob, filename);
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
 
   /**
    * Export full analytics report

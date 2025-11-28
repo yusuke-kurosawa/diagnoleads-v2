@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Search, Sparkles, Loader2, ExternalLink } from 'lucide-react';
 import { useSemanticSearch } from '@/hooks/use-ai';
+import { ExternalLink, Loader2, Search, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useState } from 'react';
 
 interface SemanticSearchProps {
   organizationId: string;
@@ -112,17 +112,11 @@ export function SemanticSearch({ organizationId }: SemanticSearchProps) {
                         {lead.name || lead.email}
                       </div>
                       {lead.company && (
-                        <div className="text-sm text-gray-600 truncate mt-1">
-                          {lead.company}
-                        </div>
+                        <div className="text-sm text-gray-600 truncate mt-1">{lead.company}</div>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        {lead.industry && (
-                          <Badge variant="secondary">{lead.industry}</Badge>
-                        )}
-                        <span className="text-xs text-gray-500">
-                          {lead.email}
-                        </span>
+                        {lead.industry && <Badge variant="secondary">{lead.industry}</Badge>}
+                        <span className="text-xs text-gray-500">{lead.email}</span>
                       </div>
                     </div>
 
@@ -132,9 +126,7 @@ export function SemanticSearch({ organizationId }: SemanticSearchProps) {
                         <div className="text-sm font-medium text-purple-600">
                           {Math.round(lead.similarity * 100)}%
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {t('match')}
-                        </div>
+                        <div className="text-xs text-gray-500">{t('match')}</div>
                       </div>
                       <ExternalLink className="h-4 w-4 text-gray-400" />
                     </div>
@@ -145,9 +137,7 @@ export function SemanticSearch({ organizationId }: SemanticSearchProps) {
           ) : (
             <div className="text-center py-8">
               <p className="text-sm text-gray-500">{t('noSearchResults')}</p>
-              <p className="text-xs text-gray-400 mt-2">
-                {t('noSearchResultsHint')}
-              </p>
+              <p className="text-xs text-gray-400 mt-2">{t('noSearchResultsHint')}</p>
             </div>
           )}
         </div>
@@ -158,11 +148,7 @@ export function SemanticSearch({ organizationId }: SemanticSearchProps) {
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-2">{t('exampleQueries')}:</p>
           <div className="flex flex-wrap gap-2">
-            {[
-              t('exampleQuery1'),
-              t('exampleQuery2'),
-              t('exampleQuery3'),
-            ].map((example) => (
+            {[t('exampleQuery1'), t('exampleQuery2'), t('exampleQuery3')].map((example) => (
               <button
                 key={example}
                 type="button"

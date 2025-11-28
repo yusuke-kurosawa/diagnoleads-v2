@@ -1,10 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
-import type { Lead } from '@/lib/db/schema';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,9 +10,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Mail, Phone, Building2, Calendar, Pencil, Trash2 } from 'lucide-react';
-import { formatDistance, format } from 'date-fns';
-import { ja, enUS } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import type { Lead } from '@/lib/db/schema';
+import { format, formatDistance } from 'date-fns';
+import { enUS, ja } from 'date-fns/locale';
+import { Building2, Calendar, Mail, Pencil, Phone, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 interface LeadDetailsProps {
   lead: Lead;
@@ -37,12 +37,7 @@ const statusColors = {
  * Lead details component
  * Displays detailed lead information with edit/delete actions
  */
-export function LeadDetails({
-  lead,
-  onEdit,
-  onDelete,
-  isDeleting,
-}: LeadDetailsProps) {
+export function LeadDetails({ lead, onEdit, onDelete, isDeleting }: LeadDetailsProps) {
   const t = useTranslations('leads');
   const tStatus = useTranslations('status');
   const tCommon = useTranslations('common');
@@ -70,9 +65,7 @@ export function LeadDetails({
         {/* Header with actions */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {lead.name || t('nameNotSet')}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900">{lead.name || t('nameNotSet')}</h2>
             <div className="mt-2">
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -113,10 +106,7 @@ export function LeadDetails({
               <Mail className="h-5 w-5 text-gray-400" />
               <div>
                 <div className="text-sm text-gray-500">{t('email')}</div>
-                <a
-                  href={`mailto:${lead.email}`}
-                  className="text-blue-600 hover:underline"
-                >
+                <a href={`mailto:${lead.email}`} className="text-blue-600 hover:underline">
                   {lead.email}
                 </a>
               </div>
@@ -127,10 +117,7 @@ export function LeadDetails({
                 <Phone className="h-5 w-5 text-gray-400" />
                 <div>
                   <div className="text-sm text-gray-500">{t('phone')}</div>
-                  <a
-                    href={`tel:${lead.phone}`}
-                    className="text-blue-600 hover:underline"
-                  >
+                  <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline">
                     {lead.phone}
                   </a>
                 </div>
@@ -154,9 +141,7 @@ export function LeadDetails({
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">{t('leadScore')}</h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-blue-600">
-                {lead.score}
-              </span>
+              <span className="text-4xl font-bold text-blue-600">{lead.score}</span>
               <span className="text-xl text-gray-500">{t('scoreMax')}</span>
             </div>
             <div className="mt-4">
@@ -186,18 +171,14 @@ export function LeadDetails({
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">{t('diagnosticResults')}</h3>
             <div className="space-y-3">
-              {Object.entries(lead.responses as Record<string, unknown>).map(
-                ([key, value]) => (
-                  <div key={key}>
-                    <div className="text-sm text-gray-500">{key}</div>
-                    <div className="font-medium mt-1">
-                      {typeof value === 'object'
-                        ? JSON.stringify(value)
-                        : String(value)}
-                    </div>
+              {Object.entries(lead.responses as Record<string, unknown>).map(([key, value]) => (
+                <div key={key}>
+                  <div className="text-sm text-gray-500">{key}</div>
+                  <div className="font-medium mt-1">
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           </Card>
         )}
@@ -215,10 +196,12 @@ export function LeadDetails({
                     locale: dateLocale,
                   })}
                   <span className="text-sm text-gray-500 ml-2">
-                    ({formatDistance(new Date(lead.createdAt), new Date(), {
+                    (
+                    {formatDistance(new Date(lead.createdAt), new Date(), {
                       addSuffix: true,
                       locale: dateLocale,
-                    })})
+                    })}
+                    )
                   </span>
                 </div>
               </div>
@@ -233,10 +216,12 @@ export function LeadDetails({
                     locale: dateLocale,
                   })}
                   <span className="text-sm text-gray-500 ml-2">
-                    ({formatDistance(new Date(lead.updatedAt), new Date(), {
+                    (
+                    {formatDistance(new Date(lead.updatedAt), new Date(), {
                       addSuffix: true,
                       locale: dateLocale,
-                    })})
+                    })}
+                    )
                   </span>
                 </div>
               </div>
@@ -255,9 +240,7 @@ export function LeadDetails({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              {tCommon('cancel')}
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}

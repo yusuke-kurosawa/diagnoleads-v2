@@ -1,8 +1,8 @@
+import { db } from '@/lib/db/client';
+import { env } from '@/lib/env';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization } from 'better-auth/plugins';
-import { db } from '@/lib/db/client';
-import { env } from '@/lib/env';
 
 /**
  * BetterAuth Configuration

@@ -4,7 +4,7 @@
  * Usage: npm run db:seed
  */
 import { db } from '@/lib/db/client';
-import { organizations, users, organizationMembers } from '@/lib/db/schema';
+import { organizationMembers, organizations, users } from '@/lib/db/schema';
 
 async function seed() {
   console.log('🌱 Seeding database...');

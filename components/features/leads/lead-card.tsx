@@ -30,16 +30,11 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
   };
 
   return (
-    <Card
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-      onClick={onClick}
-    >
+    <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={onClick}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-lg">
-              {lead.name || '名前未設定'}
-            </h3>
+            <h3 className="font-semibold text-lg">{lead.name || '名前未設定'}</h3>
             <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${
                 statusColors[lead.status as keyof typeof statusColors]
@@ -81,9 +76,7 @@ export function LeadCard({ lead, onClick }: LeadCardProps) {
         <div className="text-right">
           {lead.score !== null && lead.score !== undefined && (
             <div className="mb-2">
-              <span className="text-2xl font-bold text-blue-600">
-                {lead.score}
-              </span>
+              <span className="text-2xl font-bold text-blue-600">{lead.score}</span>
               <span className="text-sm text-gray-500 ml-1">点</span>
             </div>
           )}

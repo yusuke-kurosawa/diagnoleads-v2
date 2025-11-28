@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Send, Loader2, X, Minimize2, Maximize2, Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Bot, Loader2, Maximize2, MessageCircle, Minimize2, Send, User, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -92,10 +92,7 @@ export function ChatAssistant({ organizationName, recentLeads }: ChatAssistantPr
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: t('errorMessage') },
-      ]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: t('errorMessage') }]);
     } finally {
       setIsLoading(false);
     }
@@ -133,11 +130,7 @@ export function ChatAssistant({ organizationName, recentLeads }: ChatAssistantPr
             className="h-8 w-8 text-white hover:bg-blue-700"
             onClick={() => setIsMinimized(!isMinimized)}
           >
-            {isMinimized ? (
-              <Maximize2 className="h-4 w-4" />
-            ) : (
-              <Minimize2 className="h-4 w-4" />
-            )}
+            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
           </Button>
           <Button
             variant="ghost"
@@ -182,9 +175,7 @@ export function ChatAssistant({ organizationName, recentLeads }: ChatAssistantPr
                         : 'bg-gray-100 text-gray-800'
                     )}
                   >
-                    {message.content || (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
+                    {message.content || <Loader2 className="h-4 w-4 animate-spin" />}
                   </div>
                   {message.role === 'user' && (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">

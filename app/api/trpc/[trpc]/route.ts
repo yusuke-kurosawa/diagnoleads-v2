@@ -1,6 +1,6 @@
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-import { appRouter } from '@/server/routers/_app';
 import { createContext } from '@/lib/trpc/context';
+import { appRouter } from '@/server/routers/_app';
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 
 /**
  * tRPC API Route Handler

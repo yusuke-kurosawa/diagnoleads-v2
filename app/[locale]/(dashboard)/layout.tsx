@@ -1,7 +1,7 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 /**
  * Generate metadata for dashboard pages

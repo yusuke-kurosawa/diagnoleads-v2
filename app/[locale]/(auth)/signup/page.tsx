@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { SignupForm } from '@/components/auth/SignupForm';
+import Link from 'next/link';
 
 /**
  * サインアップページ
@@ -7,9 +7,7 @@ import { SignupForm } from '@/components/auth/SignupForm';
 export default function SignupPage() {
   return (
     <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-      <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
-        新規登録
-      </h2>
+      <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">新規登録</h2>
 
       <SignupForm />
 
@@ -19,9 +17,7 @@ export default function SignupPage() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
-              すでにアカウントをお持ちの方
-            </span>
+            <span className="px-2 bg-white text-gray-500">すでにアカウントをお持ちの方</span>
           </div>
         </div>
 

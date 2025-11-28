@@ -5,9 +5,9 @@
  * CMS実装に依存しないインターフェースを提供
  */
 
-import type { BlogPost, ContentStatus } from '../core/types';
-import type { CMSAdapter, SortParams } from '../core/interfaces';
 import { getCMSAdapter } from '../adapters/factory';
+import type { CMSAdapter, SortParams, WhereCondition, WhereOperator } from '../core/interfaces';
+import type { BlogPost, ContentStatus } from '../core/types';
 
 export interface FindBlogPostsOptions {
   organizationId?: string;
@@ -46,14 +46,14 @@ export class BlogRepository {
       sort = [{ field: 'publishedAt', order: 'desc' }],
     } = options;
 
-    const where: Record<string, unknown> = {};
+    const where: WhereCondition = {};
 
     if (category) {
-      where.category = { equals: category };
+      where.category = { equals: category } as WhereOperator;
     }
 
     if (tag) {
-      where.tags = { contains: tag };
+      where.tags = { contains: tag } as WhereOperator;
     }
 
     const { data, meta } = await this.adapter.find<BlogPost>({
@@ -63,7 +63,7 @@ export class BlogRepository {
       offset,
       sort,
       organizationId,
-      status: status === 'all' ? 'all' : status,
+      status: status === 'all' ? 'all' : status === 'archived' ? 'draft' : status,
     });
 
     return {

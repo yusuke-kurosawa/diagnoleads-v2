@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
-import { TRPCError } from '@trpc/server';
 import type { Database } from '@/lib/db/client';
 import { organizationMembers } from '@/lib/db/schema';
+import { TRPCError } from '@trpc/server';
+import { and, eq } from 'drizzle-orm';
 import type { MembershipWithOrganization } from '../types';
 
 /**

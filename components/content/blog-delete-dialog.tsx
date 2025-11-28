@@ -6,19 +6,19 @@
  * Phase 4.4: コンテンツ管理UI
  */
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc/client';
 import type { BlogPost } from '@/lib/cms/core/types';
+import { trpc } from '@/lib/trpc/client';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 interface BlogDeleteDialogProps {
   post: BlogPost;
@@ -67,15 +67,11 @@ export function BlogDeleteDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('deletePost')}</DialogTitle>
-          <DialogDescription>
-            {t('deleteConfirmation')}
-          </DialogDescription>
+          <DialogDescription>{t('deleteConfirmation')}</DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
-          <p className="text-sm text-gray-600">
-            {t('deleteWarning')}
-          </p>
+          <p className="text-sm text-gray-600">{t('deleteWarning')}</p>
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <p className="font-medium text-gray-900">{postTitle}</p>
             <p className="text-sm text-gray-500 mt-1">/{post.slug}</p>
@@ -91,12 +87,7 @@ export function BlogDeleteDialog({
           >
             {tCommon('cancel')}
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
+          <Button type="button" variant="destructive" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? t('deleting') : tCommon('delete')}
           </Button>
         </DialogFooter>

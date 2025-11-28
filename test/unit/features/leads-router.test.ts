@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
+import type { Lead, Organization, OrganizationMember, User } from '@/lib/db/schema';
 import { appRouter } from '@/server/routers/_app';
-import type { Organization, OrganizationMember, User, Lead } from '@/lib/db/schema';
+import { TRPCError } from '@trpc/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('@/lib/db/rls', () => ({
@@ -43,6 +43,12 @@ describe('Leads Router', () => {
     name: 'Test Organization',
     slug: 'test-org',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -68,6 +74,8 @@ describe('Leads Router', () => {
     score: 75,
     source: 'website',
     responses: {},
+    embedding: null,
+    searchVector: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

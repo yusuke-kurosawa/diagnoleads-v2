@@ -99,7 +99,10 @@ export { FAQRepository } from './repositories/faq.repository';
 export type { FindFAQsOptions, FAQsResult, FAQsByCategory } from './repositories/faq.repository';
 
 export { AssessmentRepository } from './repositories/assessment.repository';
-export type { FindAssessmentsOptions, AssessmentsResult } from './repositories/assessment.repository';
+export type {
+  FindAssessmentsOptions,
+  AssessmentsResult,
+} from './repositories/assessment.repository';
 
 // =============================================================================
 // Adapter Factory (Advanced Usage)
@@ -118,7 +121,8 @@ export {
 // =============================================================================
 
 export { MockCMSAdapter } from './adapters/mock/adapter';
-export { PayloadCMSAdapter } from './adapters/payload/adapter';
+// PayloadCMS adapter is disabled until payload package is installed
+// export { PayloadCMSAdapter } from './adapters/payload/adapter';
 
 // =============================================================================
 // Helpers (Multi-tenant & Utilities)

@@ -1,17 +1,17 @@
-import { getTranslations } from 'next-intl/server';
-import type { Metadata } from 'next';
-import Link from 'next/link';
 import {
-  Brain,
-  Search,
-  BarChart3,
-  Users,
-  CheckCircle,
   ArrowRight,
-  Zap,
+  BarChart3,
+  Brain,
+  CheckCircle,
+  Globe,
+  Search,
   Shield,
-  Globe
+  Users,
+  Zap,
 } from 'lucide-react';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 /**
  * Landing Page Metadata
@@ -93,7 +93,10 @@ export default async function LandingPage({
             <Link href="#benefits" className="text-gray-600 hover:text-blue-600 transition-colors">
               {t('nav.benefits')}
             </Link>
-            <Link href={`/${locale}/diagnostic`} className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link
+              href={`/${locale}/diagnostic`}
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
               {t('nav.diagnostic')}
             </Link>
           </nav>
@@ -126,9 +129,7 @@ export default async function LandingPage({
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               {t('hero.title')}
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              {t('hero.subtitle')}
-            </p>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">{t('hero.subtitle')}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href={`/${locale}/diagnostic`}
@@ -155,9 +156,7 @@ export default async function LandingPage({
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               {t('features.title')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('features.subtitle')}
-            </p>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('features.subtitle')}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
@@ -168,9 +167,7 @@ export default async function LandingPage({
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {feature.title}
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
               </div>
             ))}
@@ -186,9 +183,7 @@ export default async function LandingPage({
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 {t('benefits.title')}
               </h2>
-              <p className="text-xl text-gray-600">
-                {t('benefits.subtitle')}
-              </p>
+              <p className="text-xl text-gray-600">{t('benefits.subtitle')}</p>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               {benefits.map((benefit, index) => (
@@ -209,9 +204,7 @@ export default async function LandingPage({
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-12">
-              {t('trust.title')}
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-12">{t('trust.title')}</h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="p-6">
                 <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4" />
@@ -236,12 +229,8 @@ export default async function LandingPage({
       {/* CTA Section */}
       <section className="py-20 bg-blue-600">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            {t('cta.title')}
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            {t('cta.subtitle')}
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t('cta.title')}</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">{t('cta.subtitle')}</p>
           <Link
             href={`/${locale}/diagnostic`}
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors font-medium text-lg"

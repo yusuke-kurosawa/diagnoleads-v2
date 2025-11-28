@@ -1,8 +1,8 @@
+import { locales } from '@/lib/i18n/config';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import { locales } from '@/lib/i18n/config';
+import { notFound } from 'next/navigation';
 import { Providers } from '../providers';
 import '../globals.css';
 

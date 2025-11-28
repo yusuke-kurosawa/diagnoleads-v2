@@ -86,8 +86,8 @@ Consider factors like:
     }
 
     // Parse JSON response (Claude might wrap it in markdown code blocks)
-    const jsonMatch = content.text.match(/```json\n([\s\S]*?)\n```/) ||
-                      content.text.match(/\{[\s\S]*\}/);
+    const jsonMatch =
+      content.text.match(/```json\n([\s\S]*?)\n```/) || content.text.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
       throw new Error('Could not extract JSON from Claude response');

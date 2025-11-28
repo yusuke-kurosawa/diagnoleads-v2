@@ -5,10 +5,10 @@
  * ISR対応、SEO最適化されたブログ一覧ページ
  */
 
-import { Metadata } from 'next';
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
 import { getCMSAdapter } from '@/lib/cms/adapters/factory';
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 interface BlogPageProps {
   params: Promise<{ locale: string }>;
@@ -35,24 +35,25 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
   const t = await getTranslations('public.blog');
   const tNav = await getTranslations('public.landing.nav');
 
-  const currentPage = parseInt(page, 10);
+  const currentPage = Number.parseInt(page, 10);
   const postsPerPage = 9;
 
   // Get blog posts from CMS
   const adapter = getCMSAdapter();
-  const result = await adapter.find('blog', {
+  const result = await adapter.find({
+    collection: 'blog',
     where: {
       status: 'published',
       ...(category && { category }),
     },
     limit: postsPerPage,
     offset: (currentPage - 1) * postsPerPage,
-    orderBy: { field: 'publishedAt', direction: 'desc' },
+    sort: [{ field: 'publishedAt', order: 'desc' }],
     locale,
   });
 
-  const posts = result.docs;
-  const totalPages = Math.ceil(result.totalDocs / postsPerPage);
+  const posts = result.data || [];
+  const totalPages = Math.ceil((result.meta?.total || 0) / postsPerPage);
 
   return (
     <div className="min-h-screen">
@@ -70,10 +71,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
               >
                 {tNav('features')}
               </Link>
-              <Link
-                href={`/${locale}/blog`}
-                className="text-blue-600 font-medium"
-              >
+              <Link href={`/${locale}/blog`} className="text-blue-600 font-medium">
                 {t('title')}
               </Link>
               <Link
@@ -96,12 +94,8 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            {t('title')}
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {t('subtitle')}
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t('title')}</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t('subtitle')}</p>
         </div>
       </section>
 
@@ -212,9 +206,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
                                 </span>
                               )}
                             </div>
-                            <span className="ml-2 text-sm text-gray-700">
-                              {post.author.name}
-                            </span>
+                            <span className="ml-2 text-sm text-gray-700">{post.author.name}</span>
                           </div>
                         )}
                       </div>
