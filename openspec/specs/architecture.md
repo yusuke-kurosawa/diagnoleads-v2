@@ -2,8 +2,8 @@
 
 > **Source of Truth**: DiagnoLeads v2 のアーキテクチャ全体を定義する仕様書
 >
-> **最終更新**: 2025-11-24
-> **ステータス**: Phase 1完了、Phase 2準備完了（実装完了率: 45%）
+> **最終更新**: 2025-11-28
+> **ステータス**: Phase 1-2.6完了、Phase 3進行中（実装完了率: 79%）
 
 ---
 
@@ -304,19 +304,32 @@ Trigger.dev             # バックグラウンドジョブ
 - セキュリティ（CSP、レート制限）
 - テストインフラ
 
-### Phase 2: コア機能実装 🚧 進行中
+### Phase 2: コア機能実装 ✅ 完了
 
-- 組織スコープミドルウェア
-- リード管理CRUD
-- ダッシュボード統計
-- 組織管理・メンバー招待
+- 組織スコープミドルウェア（[詳細](/openspec/specs/features/multi-tenant.md)）
+- リード管理CRUD（[API仕様](/openspec/specs/api/leads.md)）
+- ダッシュボード統計（[API仕様](/openspec/specs/api/analytics.md)）
+- 組織管理・メンバー招待（[API仕様](/openspec/specs/api/organizations.md)）
 
-### Phase 3-7: 拡張機能
+### Phase 2.5-2.6: i18n基盤 ✅ 完了
 
-- AI機能（スコアリング、分析）
+- next-intl 3.27+ 統合
+- 306翻訳キー（日英100%一致）
+- 全ページi18n対応
+
+### Phase 3: AI機能 🚧 進行中 (90%)
+
+- AIリードスコアリング ✅（[詳細](/openspec/specs/features/ai-scoring.md)）
+- セマンティック検索 ✅（[API仕様](/openspec/specs/api/ai.md)）
+- 類似リード検索 ✅
+- AI要約生成 ✅
+- チャットボット ⏸️（オプション）
+
+### Phase 4-7: 拡張機能
+
 - 公開ページ・SEO
 - 外部統合・Webhook
-- アナリティクス
+- アナリティクス高度化
 - 本番カットオーバー
 
 ---
@@ -372,8 +385,24 @@ interface OrganizationTheme {
 
 ## 参考資料
 
+### 詳細仕様書
+
+**API仕様**:
+- [Leads API](/openspec/specs/api/leads.md) - リード管理CRUD
+- [Organizations API](/openspec/specs/api/organizations.md) - 組織・メンバー管理
+- [Analytics API](/openspec/specs/api/analytics.md) - 統計・分析
+- [AI API](/openspec/specs/api/ai.md) - AI機能
+
+**機能仕様**:
+- [マルチテナント](/openspec/specs/features/multi-tenant.md) - RLS、CASL、組織スコープ
+- [AI機能](/openspec/specs/features/ai-scoring.md) - スコアリング、検索、要約
+
+### 外部ドキュメント
+
 - [tRPC Documentation](https://trpc.io/docs)
 - [Drizzle ORM](https://orm.drizzle.team)
 - [BetterAuth](https://www.better-auth.com)
 - [shadcn/ui](https://ui.shadcn.com)
 - [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+- [Vercel AI SDK](https://sdk.vercel.ai/docs)
+- [pgvector](https://github.com/pgvector/pgvector)
