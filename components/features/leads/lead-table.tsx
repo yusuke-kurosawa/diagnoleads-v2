@@ -49,7 +49,10 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Download,
   Eye,
+  FileJson,
+  FileSpreadsheet,
   MoreHorizontal,
   Pencil,
   Search,
@@ -59,7 +62,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -108,6 +111,64 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
   const [globalFilter, setGlobalFilter] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Export functions
+  const exportToCSV = useCallback(() => {
+    const filteredData = table.getFilteredRowModel().rows.map((row) => row.original);
+    const headers = [
+      'Name',
+      'Email',
+      'Company',
+      'Phone',
+      'Status',
+      'Score',
+      'Source',
+      'Created At',
+    ];
+    const csvContent = [
+      headers.join(','),
+      ...filteredData.map((lead) =>
+        [
+          `"${lead.name || ''}"`,
+          `"${lead.email}"`,
+          `"${lead.company || ''}"`,
+          `"${lead.phone || ''}"`,
+          `"${lead.status}"`,
+          lead.score ?? '',
+          `"${lead.source || ''}"`,
+          `"${lead.createdAt ? new Date(lead.createdAt).toISOString() : ''}"`,
+        ].join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }, []);
+
+  const exportToJSON = useCallback(() => {
+    const filteredData = table.getFilteredRowModel().rows.map((row) => ({
+      id: row.original.id,
+      name: row.original.name,
+      email: row.original.email,
+      company: row.original.company,
+      phone: row.original.phone,
+      status: row.original.status,
+      score: row.original.score,
+      source: row.original.source,
+      createdAt: row.original.createdAt,
+    }));
+
+    const blob = new Blob([JSON.stringify(filteredData, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  }, []);
 
   // Responsive column visibility based on screen size
   useEffect(() => {
@@ -455,6 +516,26 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
                       </DropdownMenuCheckboxItem>
                     );
                   })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Export dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10">
+                  <Download className="mr-2 h-4 w-4" />
+                  {tCommon('export')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToJSON}>
+                  <FileJson className="mr-2 h-4 w-4" />
+                  JSON
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

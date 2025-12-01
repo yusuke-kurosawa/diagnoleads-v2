@@ -232,6 +232,8 @@
     }
   },
   "navigation": {
+    "menu": "Menu",
+    "management": "Management",
     "dashboard": "Dashboard",
     "leads": "Lead Management",
     "content": "Content",
@@ -239,6 +241,7 @@
     "blog": "Blog",
     "analytics": "Analytics",
     "settings": "Settings",
+    "organization": "Organization",
     "organizations": "Organizations",
     "members": "Members",
     "profile": "Profile",

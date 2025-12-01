@@ -6,9 +6,8 @@ import { useOrganization } from '@/hooks/use-organization';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { AreaChart, ChartLegend, DonutChart, SparkAreaChart } from '@/components/charts';
-import { Badge } from '@/components/ui/badge';
-import { BadgeDelta } from '@/components/ui/badge-delta';
+import { ChartLegend, DonutChart, InteractiveAreaChart, RadialChart } from '@/components/charts';
+import { KPICard, KPICardGroup } from '@/components/dashboard/kpi-card';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 
@@ -123,131 +122,66 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Leads Card */}
-        <Card className="p-6" decoration="top" decorationColor="blue">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">{t('totalLeads')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {overviewLoading ? (
-                  <span className="inline-block h-9 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                ) : (
-                  (overview?.totalLeads || 0).toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US')
-                )}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-50 rounded-xl">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <BadgeDelta deltaType={totalLeadsChange >= 0 ? 'increase' : 'decrease'} size="sm">
-              {totalLeadsChange >= 0 ? '+' : ''}
-              {totalLeadsChange}%
-            </BadgeDelta>
-            <SparkAreaChart
-              data={sparkData}
-              categories={['value']}
-              colors={['blue']}
-              className="h-10 w-24"
-              curveType="smooth"
-            />
-          </div>
-        </Card>
+      {/* KPI Cards Grid - Enhanced with animations */}
+      <KPICardGroup>
+        <KPICard
+          title={t('totalLeads')}
+          value={overview?.totalLeads || 0}
+          icon={Users}
+          valueType="number"
+          locale={locale === 'ja' ? 'ja-JP' : 'en-US'}
+          change={totalLeadsChange}
+          changeLabel={t('vsLastPeriod')}
+          sparkData={sparkData}
+          sparkColor="blue"
+          color="blue"
+          variant="elevated"
+          isLoading={overviewLoading}
+        />
 
-        {/* New Leads This Month */}
-        <Card className="p-6" decoration="top" decorationColor="emerald">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">{t('newLeadsThisMonth')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {overviewLoading ? (
-                  <span className="inline-block h-9 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                ) : (
-                  (overview?.newLeadsThisMonth || 0).toLocaleString(
-                    locale === 'ja' ? 'ja-JP' : 'en-US'
-                  )
-                )}
-              </p>
-            </div>
-            <div className="p-3 bg-emerald-50 rounded-xl">
-              <TrendingUp className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <BadgeDelta deltaType={newLeadsChange >= 0 ? 'increase' : 'decrease'} size="sm">
-              {newLeadsChange >= 0 ? '+' : ''}
-              {newLeadsChange}%
-            </BadgeDelta>
-            <span className="text-xs text-gray-500">{t('vsLastPeriod')}</span>
-          </div>
-        </Card>
+        <KPICard
+          title={t('newLeadsThisMonth')}
+          value={overview?.newLeadsThisMonth || 0}
+          icon={TrendingUp}
+          valueType="number"
+          locale={locale === 'ja' ? 'ja-JP' : 'en-US'}
+          change={newLeadsChange}
+          changeLabel={t('vsLastPeriod')}
+          color="emerald"
+          variant="elevated"
+          isLoading={overviewLoading}
+        />
 
-        {/* Conversion Rate */}
-        <Card className="p-6" decoration="top" decorationColor="violet">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">{t('conversionRate')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {overviewLoading ? (
-                  <span className="inline-block h-9 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                ) : (
-                  `${(overview?.conversionRate || 0).toFixed(1)}%`
-                )}
-              </p>
-            </div>
-            <div className="p-3 bg-violet-50 rounded-xl">
-              <Target className="h-6 w-6 text-violet-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <BadgeDelta deltaType={conversionChange >= 0 ? 'increase' : 'decrease'} size="sm">
-                {conversionChange >= 0 ? '+' : ''}
-                {conversionChange}%
-              </BadgeDelta>
-              <span className="text-xs text-gray-500">{t('vsLastPeriod')}</span>
-            </div>
-            <ProgressBar value={overview?.conversionRate || 0} color="violet" className="mt-2" />
-          </div>
-        </Card>
+        <KPICard
+          title={t('conversionRate')}
+          value={overview?.conversionRate || 0}
+          icon={Target}
+          valueType="percentage"
+          decimals={1}
+          change={conversionChange}
+          changeLabel={t('vsLastPeriod')}
+          color="violet"
+          variant="elevated"
+          isLoading={overviewLoading}
+        >
+          <ProgressBar value={overview?.conversionRate || 0} color="violet" className="mt-3" />
+        </KPICard>
 
-        {/* Average Score */}
-        <Card className="p-6" decoration="top" decorationColor="amber">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500">{t('averageScore')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {overviewLoading ? (
-                  <span className="inline-block h-9 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-                ) : (
-                  <>
-                    {overview?.averageScore || 0}
-                    <span className="text-lg font-normal text-gray-500 dark:text-gray-400">
-                      /100
-                    </span>
-                  </>
-                )}
-              </p>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-xl">
-              <Award className="h-6 w-6 text-amber-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <BadgeDelta deltaType={scoreChange >= 0 ? 'increase' : 'decrease'} size="sm">
-                {scoreChange >= 0 ? '+' : ''}
-                {scoreChange}%
-              </BadgeDelta>
-              <span className="text-xs text-gray-500">{t('vsLastPeriod')}</span>
-            </div>
-            <ProgressBar value={overview?.averageScore || 0} color="amber" className="mt-2" />
-          </div>
-        </Card>
-      </div>
+        <KPICard
+          title={t('averageScore')}
+          value={overview?.averageScore || 0}
+          icon={Award}
+          valueType="score"
+          maxValue={100}
+          change={scoreChange}
+          changeLabel={t('vsLastPeriod')}
+          color="amber"
+          variant="elevated"
+          isLoading={overviewLoading}
+        >
+          <ProgressBar value={overview?.averageScore || 0} color="amber" className="mt-3" />
+        </KPICard>
+      </KPICardGroup>
 
       {/* Lead Status Breakdown */}
       {overview && !overviewLoading && (
@@ -313,9 +247,9 @@ export default function DashboardPage() {
 
       {/* Charts and Activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Lead Trend Chart */}
+        {/* Lead Trend Chart - Interactive with zoom/download */}
         <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {t('leadTrend')}
@@ -331,10 +265,9 @@ export default function DashboardPage() {
             </Link>
           </div>
           {trendLoading ? (
-            <div className="h-80 bg-gray-100 animate-pulse rounded-lg" />
+            <div className="h-80 bg-gray-100 dark:bg-gray-700 animate-pulse rounded-lg" />
           ) : (
-            <AreaChart
-              className="h-80"
+            <InteractiveAreaChart
               data={chartData}
               index="date"
               categories={[t('totalLeads'), t('convertedLeads')]}
@@ -343,37 +276,78 @@ export default function DashboardPage() {
               showLegend={true}
               showGridLines={true}
               showAnimation={true}
+              showToolbar={true}
+              enableZoom={true}
+              enableDownload={true}
               curveType="smooth"
+              height={320}
             />
           )}
         </Card>
 
-        {/* Status Donut Chart */}
+        {/* Status Donut Chart with Radial Progress */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {t('leadStatusBreakdown')}
           </h3>
           {statusLoading ? (
-            <div className="h-64 bg-gray-100 animate-pulse rounded-full mx-auto w-48" />
+            <div className="h-64 bg-gray-100 dark:bg-gray-700 animate-pulse rounded-full mx-auto w-48" />
           ) : (
-            <>
+            <div className="space-y-4">
               <DonutChart
-                className="h-48"
+                className="mx-auto"
                 data={statusData}
                 colors={statusColors}
                 valueFormatter={valueFormatter}
                 showLabel={true}
                 showAnimation={true}
+                height={220}
               />
               <ChartLegend
-                className="mt-6"
+                className="mt-4"
                 categories={statusData.map((d) => d.name)}
                 colors={statusColors}
               />
-            </>
+            </div>
           )}
         </Card>
       </div>
+
+      {/* Conversion & Score Radial Charts */}
+      {overview && !overviewLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {t('conversionRate')}
+            </h3>
+            <div className="flex items-center justify-center">
+              <RadialChart
+                value={overview.conversionRate}
+                maxValue={100}
+                label={t('converted')}
+                color="violet"
+                size="md"
+                valueFormatter={(v) => `${v.toFixed(1)}%`}
+              />
+            </div>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {t('averageScore')}
+            </h3>
+            <div className="flex items-center justify-center">
+              <RadialChart
+                value={overview.averageScore}
+                maxValue={100}
+                label={locale === 'ja' ? 'スコア' : 'Score'}
+                color="amber"
+                size="md"
+                valueFormatter={(v) => `${Math.round(v)}`}
+              />
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <Card className="p-6">

@@ -1,69 +1,33 @@
 'use client';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useSidebar } from '@/context/SidebarContext';
 import {
   RiDashboardLine,
   RiUserLine,
   RiBarChartLine,
   RiSettings4Line,
-  RiTeamLine,
-  RiBuilding2Line,
   RiQuestionLine,
   RiArticleLine,
-  RiMenuLine,
 } from '@remixicon/react';
 import SidebarWidget from './SidebarWidget';
 import { Logo, LogoMark } from '@/components/common/Logo';
 
 type NavItem = {
   name: string;
+  nameKey: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string }[];
+  subItems?: { name: string; nameKey: string; path: string }[];
 };
-
-const navItems: NavItem[] = [
-  {
-    icon: <RiDashboardLine className="w-5 h-5" />,
-    name: 'ダッシュボード',
-    path: '/ja/dashboard',
-  },
-  {
-    icon: <RiUserLine className="w-5 h-5" />,
-    name: 'リード管理',
-    path: '/ja/leads',
-  },
-  {
-    icon: <RiBarChartLine className="w-5 h-5" />,
-    name: 'アナリティクス',
-    path: '/ja/analytics',
-  },
-];
-
-const settingsItems: NavItem[] = [
-  {
-    icon: <RiSettings4Line className="w-5 h-5" />,
-    name: '設定',
-    subItems: [
-      { name: '組織', path: '/ja/settings/organization' },
-      { name: 'メンバー', path: '/ja/settings/members' },
-    ],
-  },
-  {
-    icon: <RiQuestionLine className="w-5 h-5" />,
-    name: 'コンテンツ',
-    subItems: [
-      { name: 'FAQ', path: '/ja/content/faq' },
-      { name: 'ブログ', path: '/ja/content/blog' },
-    ],
-  },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations('navigation');
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: 'main' | 'settings';
@@ -71,6 +35,59 @@ const AppSidebar: React.FC = () => {
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Locale-aware nav items
+  const navItems: NavItem[] = useMemo(
+    () => [
+      {
+        icon: <RiDashboardLine className="w-5 h-5" />,
+        name: t('dashboard'),
+        nameKey: 'dashboard',
+        path: `/${locale}/dashboard`,
+      },
+      {
+        icon: <RiUserLine className="w-5 h-5" />,
+        name: t('leads'),
+        nameKey: 'leads',
+        path: `/${locale}/leads`,
+      },
+      {
+        icon: <RiBarChartLine className="w-5 h-5" />,
+        name: t('analytics'),
+        nameKey: 'analytics',
+        path: `/${locale}/analytics`,
+      },
+    ],
+    [locale, t]
+  );
+
+  const settingsItems: NavItem[] = useMemo(
+    () => [
+      {
+        icon: <RiSettings4Line className="w-5 h-5" />,
+        name: t('settings'),
+        nameKey: 'settings',
+        subItems: [
+          {
+            name: t('organization'),
+            nameKey: 'organization',
+            path: `/${locale}/settings/organization`,
+          },
+          { name: t('members'), nameKey: 'members', path: `/${locale}/settings/members` },
+        ],
+      },
+      {
+        icon: <RiArticleLine className="w-5 h-5" />,
+        name: t('content'),
+        nameKey: 'content',
+        subItems: [
+          { name: t('faqs'), nameKey: 'faqs', path: `/${locale}/content/faqs` },
+          { name: t('blog'), nameKey: 'blog', path: `/${locale}/content/blog` },
+        ],
+      },
+    ],
+    [locale, t]
+  );
 
   const isActive = useCallback(
     (path: string) => pathname === path || pathname?.startsWith(path + '/'),
@@ -249,7 +266,7 @@ const AppSidebar: React.FC = () => {
                   !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? 'メニュー' : <HorizontalDots />}
+                {isExpanded || isHovered || isMobileOpen ? t('menu') : <HorizontalDots />}
               </h2>
               {renderMenuItems(navItems, 'main')}
             </div>
@@ -260,7 +277,7 @@ const AppSidebar: React.FC = () => {
                   !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? '管理' : <HorizontalDots />}
+                {isExpanded || isHovered || isMobileOpen ? t('management') : <HorizontalDots />}
               </h2>
               {renderMenuItems(settingsItems, 'settings')}
             </div>

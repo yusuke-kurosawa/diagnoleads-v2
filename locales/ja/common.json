@@ -232,6 +232,8 @@
     }
   },
   "navigation": {
+    "menu": "メニュー",
+    "management": "管理",
     "dashboard": "ダッシュボード",
     "leads": "リード管理",
     "content": "コンテンツ",
@@ -239,6 +241,7 @@
     "blog": "ブログ",
     "analytics": "分析",
     "settings": "設定",
+    "organization": "組織",
     "organizations": "組織管理",
     "members": "メンバー",
     "profile": "プロフィール",
