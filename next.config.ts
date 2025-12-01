@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
       };
     }
 
+    // SVG handling with @svgr/webpack
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
     return config;
   },
 

@@ -1,17 +1,12 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  Bar,
-  CartesianGrid,
-  Cell,
-  Legend,
-  BarChart as RechartsBarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { ApexOptions } from 'apexcharts';
+import dynamic from 'next/dynamic';
+
+const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+  ssr: false,
+});
 
 const COLORS = {
   blue: '#3b82f6',
@@ -25,6 +20,7 @@ const COLORS = {
   cyan: '#06b6d4',
   pink: '#ec4899',
   rose: '#f43f5e',
+  brand: '#465fff',
 };
 
 interface BarChartProps {
@@ -38,6 +34,7 @@ interface BarChartProps {
   showAnimation?: boolean;
   layout?: 'horizontal' | 'vertical';
   className?: string;
+  height?: number;
 }
 
 export function BarChart({
@@ -51,93 +48,101 @@ export function BarChart({
   showAnimation = true,
   layout = 'horizontal',
   className,
+  height = 350,
 }: BarChartProps) {
   const isVertical = layout === 'vertical';
+  const xAxisCategories = data.map((item) => String(item[index]));
+  const series = categories.map((category) => ({
+    name: category,
+    data: data.map((item) => Number(item[category]) || 0),
+  }));
+
+  const options: ApexOptions = {
+    colors: colors.map((c) => COLORS[c] || COLORS.blue),
+    chart: {
+      fontFamily: 'Outfit, sans-serif',
+      type: 'bar',
+      height: height,
+      toolbar: {
+        show: false,
+      },
+      animations: {
+        enabled: showAnimation,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: isVertical,
+        columnWidth: '50%',
+        borderRadius: 4,
+        borderRadiusApplication: 'end',
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent'],
+    },
+    grid: {
+      show: showGridLines,
+      borderColor: '#e5e7eb',
+      xaxis: {
+        lines: {
+          show: isVertical,
+        },
+      },
+      yaxis: {
+        lines: {
+          show: !isVertical && showGridLines,
+        },
+      },
+    },
+    xaxis: {
+      categories: xAxisCategories,
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      },
+      labels: {
+        style: {
+          fontSize: '12px',
+          colors: '#6b7280',
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontSize: '12px',
+          colors: ['#6b7280'],
+        },
+        formatter: (val: number) => valueFormatter(val),
+      },
+    },
+    legend: {
+      show: showLegend,
+      position: 'top',
+      horizontalAlign: 'left',
+      fontFamily: 'Outfit',
+    },
+    fill: {
+      opacity: 1,
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => valueFormatter(val),
+      },
+    },
+  };
 
   return (
     <div className={cn('w-full', className)}>
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsBarChart
-          data={data}
-          layout={isVertical ? 'vertical' : 'horizontal'}
-          margin={{ top: 10, right: 10, left: isVertical ? 80 : 0, bottom: 0 }}
-        >
-          {showGridLines && <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />}
-          {isVertical ? (
-            <>
-              <XAxis
-                type="number"
-                tick={{ fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => valueFormatter(value)}
-              />
-              <YAxis
-                type="category"
-                dataKey={index}
-                tick={{ fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-                width={70}
-              />
-            </>
-          ) : (
-            <>
-              <XAxis dataKey={index} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => valueFormatter(value)}
-              />
-            </>
-          )}
-          <Tooltip
-            content={({ active, payload, label }) => {
-              if (!active || !payload?.length) return null;
-              return (
-                <div className="rounded-lg border bg-white p-3 shadow-lg">
-                  <p className="text-sm font-medium text-gray-900">{label}</p>
-                  {payload.map((entry, i) => (
-                    <p key={i} className="text-sm" style={{ color: entry.color }}>
-                      {entry.name}: {valueFormatter(entry.value as number)}
-                    </p>
-                  ))}
-                </div>
-              );
-            }}
-          />
-          {showLegend && (
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              content={({ payload }) => (
-                <div className="flex justify-center gap-4 pt-2">
-                  {payload?.map((entry, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-sm text-gray-600">{entry.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            />
-          )}
-          {categories.map((category, i) => (
-            <Bar
-              key={category}
-              dataKey={category}
-              fill={COLORS[colors[i] || 'blue']}
-              isAnimationActive={showAnimation}
-              animationDuration={1000}
-              radius={[4, 4, 0, 0]}
-            />
-          ))}
-        </RechartsBarChart>
-      </ResponsiveContainer>
+      <ReactApexChart options={options} series={series} type="bar" height={height} />
     </div>
   );
 }

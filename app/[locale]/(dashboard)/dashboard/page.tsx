@@ -2,7 +2,7 @@
 
 import { useLeadTrend, useOverview, useStatusBreakdown } from '@/hooks/use-analytics';
 import { useListLeads } from '@/hooks/use-leads';
-import { useOrganizationId } from '@/hooks/use-organization';
+import { useOrganization } from '@/hooks/use-organization';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -18,6 +18,14 @@ import { ArrowUpRight, Award, ChevronRight, Target, TrendingUp, Users } from 'lu
 import Link from 'next/link';
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * ダッシュボードメインページ
  * Tailwind v4互換のモダンなUI
  */
@@ -26,8 +34,11 @@ export default function DashboardPage() {
   const tStatus = useTranslations('status');
   const locale = useLocale();
 
-  const urlOrganizationId = useOrganizationId();
-  const organizationId = urlOrganizationId || 'demo-organization';
+  const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
+
+  // Only use organization ID if it's a valid UUID
+  const hasValidOrgId = Boolean(contextOrgId && isValidUUID(contextOrgId));
+  const organizationId = hasValidOrgId && contextOrgId ? contextOrgId : '';
   const [dateRange] = useState<DateRange>('30d');
 
   // Fetch analytics data
@@ -119,9 +130,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{t('totalLeads')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {overviewLoading ? (
-                  <span className="inline-block h-9 w-24 bg-gray-200 animate-pulse rounded" />
+                  <span className="inline-block h-9 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
                 ) : (
                   (overview?.totalLeads || 0).toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US')
                 )}
@@ -141,7 +152,7 @@ export default function DashboardPage() {
               categories={['value']}
               colors={['blue']}
               className="h-10 w-24"
-              curveType="monotone"
+              curveType="smooth"
             />
           </div>
         </Card>
@@ -151,9 +162,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{t('newLeadsThisMonth')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {overviewLoading ? (
-                  <span className="inline-block h-9 w-20 bg-gray-200 animate-pulse rounded" />
+                  <span className="inline-block h-9 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
                 ) : (
                   (overview?.newLeadsThisMonth || 0).toLocaleString(
                     locale === 'ja' ? 'ja-JP' : 'en-US'
@@ -179,9 +190,9 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{t('conversionRate')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {overviewLoading ? (
-                  <span className="inline-block h-9 w-20 bg-gray-200 animate-pulse rounded" />
+                  <span className="inline-block h-9 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
                 ) : (
                   `${(overview?.conversionRate || 0).toFixed(1)}%`
                 )}
@@ -208,13 +219,15 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">{t('averageScore')}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {overviewLoading ? (
-                  <span className="inline-block h-9 w-16 bg-gray-200 animate-pulse rounded" />
+                  <span className="inline-block h-9 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
                 ) : (
                   <>
                     {overview?.averageScore || 0}
-                    <span className="text-lg font-normal text-gray-500">/100</span>
+                    <span className="text-lg font-normal text-gray-500 dark:text-gray-400">
+                      /100
+                    </span>
                   </>
                 )}
               </p>
@@ -239,7 +252,9 @@ export default function DashboardPage() {
       {/* Lead Status Breakdown */}
       {overview && !overviewLoading && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('leadStatusBreakdown')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
+            {t('leadStatusBreakdown')}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { key: 'new', color: 'blue' as const, value: overview.leadsByStatus.new },
@@ -278,11 +293,11 @@ export default function DashboardPage() {
                                   : '#8b5cf6',
                         }}
                       />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {tStatus(status.key)}
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {status.value}
                       {locale === 'ja' ? '件' : ''}
                     </span>
@@ -302,7 +317,9 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{t('leadTrend')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {t('leadTrend')}
+              </h3>
               <p className="text-sm text-gray-500">{t('description')}</p>
             </div>
             <Link
@@ -326,14 +343,16 @@ export default function DashboardPage() {
               showLegend={true}
               showGridLines={true}
               showAnimation={true}
-              curveType="monotone"
+              curveType="smooth"
             />
           )}
         </Card>
 
         {/* Status Donut Chart */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('leadStatusBreakdown')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
+            {t('leadStatusBreakdown')}
+          </h3>
           {statusLoading ? (
             <div className="h-64 bg-gray-100 animate-pulse rounded-full mx-auto w-48" />
           ) : (
@@ -359,7 +378,9 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">{t('recentActivity')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t('recentActivity')}
+          </h3>
           <Link
             href={`/${locale}/leads`}
             className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"

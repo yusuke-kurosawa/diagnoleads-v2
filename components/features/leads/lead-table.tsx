@@ -159,7 +159,9 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
         </button>
       ),
       cell: ({ row }) => (
-        <div className="font-semibold text-gray-900">{row.getValue('name') || t('nameNotSet')}</div>
+        <div className="font-semibold text-gray-900 dark:text-gray-100">
+          {row.getValue('name') || t('nameNotSet')}
+        </div>
       ),
     },
     {
@@ -173,17 +175,23 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
           <ArrowUpDown className="h-4 w-4" />
         </button>
       ),
-      cell: ({ row }) => <span className="text-gray-600">{row.getValue('email')}</span>,
+      cell: ({ row }) => (
+        <span className="text-gray-600 dark:text-gray-300">{row.getValue('email')}</span>
+      ),
     },
     {
       accessorKey: 'company',
       header: t('company'),
-      cell: ({ row }) => <span className="text-gray-600">{row.getValue('company') || '-'}</span>,
+      cell: ({ row }) => (
+        <span className="text-gray-600 dark:text-gray-300">{row.getValue('company') || '-'}</span>
+      ),
     },
     {
       accessorKey: 'phone',
       header: t('phone'),
-      cell: ({ row }) => <span className="text-gray-600">{row.getValue('phone') || '-'}</span>,
+      cell: ({ row }) => (
+        <span className="text-gray-600 dark:text-gray-300">{row.getValue('phone') || '-'}</span>
+      ),
     },
     {
       accessorKey: 'status',
@@ -229,8 +237,10 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
         return (
           <div className="w-24">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-semibold text-gray-900">{score}</span>
-              <span className="text-xs text-gray-500">/100</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {score}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">/100</span>
             </div>
             <ProgressBar value={score} color={getScoreColor(score)} className="h-1.5" />
           </div>
@@ -359,9 +369,9 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
     return (
       <Card className="p-6">
         <div className="space-y-4">
-          <div className="h-12 bg-gray-200 animate-pulse rounded-lg" />
+          <div className="h-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
+            <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           ))}
         </div>
       </Card>
@@ -371,7 +381,7 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
   return (
     <Card className="overflow-hidden">
       {/* Search and filters */}
-      <div className="p-4 bg-gray-50 border-b border-gray-200">
+      <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
           {/* Search Input */}
           <div className="flex-1 relative">
@@ -458,7 +468,7 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-gray-50">
+                  <TableHead key={header.id} className="bg-gray-50 dark:bg-gray-800">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -473,7 +483,7 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
                 <TableRow
                   key={row.id}
                   onClick={() => onLeadClick?.(row.original)}
-                  className="cursor-pointer hover:bg-blue-50 transition-colors"
+                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -485,12 +495,16 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center text-gray-500 py-8">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center mb-4">
-                      <Users className="h-10 w-10 text-blue-400" />
+                  <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-900/30 dark:to-violet-900/30 flex items-center justify-center mb-4">
+                      <Users className="h-10 w-10 text-blue-400 dark:text-blue-300" />
                     </div>
-                    <p className="text-xl font-semibold text-gray-900 mb-2">{t('noLeads')}</p>
-                    <p className="text-sm text-gray-500 max-w-sm mb-6">{t('noLeadsDescription')}</p>
+                    <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      {t('noLeads')}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+                      {t('noLeadsDescription')}
+                    </p>
                     <Button size="lg">
                       <UserPlus className="h-5 w-5 mr-2" />
                       {t('addFirstLead')}
@@ -504,9 +518,9 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
       </div>
 
       {/* Pagination */}
-      <div className="p-4 bg-gray-50 border-t border-gray-200">
+      <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center gap-2">
               <span className="font-medium">{t('rowsPerPage')}</span>
               <Select
@@ -532,18 +546,18 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
             <div className="hidden sm:flex items-center gap-1">
               {table.getFilteredRowModel().rows.length > 0 ? (
                 <>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {table.getState().pagination.pageIndex * pageSize + 1}
                   </span>
                   <span>-</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {Math.min(
                       (table.getState().pagination.pageIndex + 1) * pageSize,
                       table.getFilteredRowModel().rows.length
                     )}
                   </span>
                   <span>{t('of')}</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {table.getFilteredRowModel().rows.length}
                   </span>
                   <span>{t('count')}</span>
@@ -574,7 +588,7 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
               <span className="hidden sm:inline ml-1">{t('previous')}</span>
             </Button>
 
-            <div className="px-3 py-1 rounded-md bg-white border border-gray-200 text-sm font-medium">
+            <div className="px-3 py-1 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-900 dark:text-gray-100">
               {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
             </div>
 

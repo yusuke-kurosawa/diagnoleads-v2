@@ -60,12 +60,25 @@ export function SignupForm() {
   async function onSubmit(data: SignupFormValues) {
     setIsLoading(true);
     try {
-      await authClient.signUp.email({
+      const result = await authClient.signUp.email({
         email: data.email,
         password: data.password,
         name: data.name,
         callbackURL: '/dashboard',
       });
+
+      if (result.error) {
+        // Handle specific error codes/messages from BetterAuth
+        const errorCode = result.error.code;
+        const errorMessage = result.error.message?.toLowerCase() || '';
+
+        if (errorCode === 'USER_ALREADY_EXISTS' || errorMessage.includes('user already exists')) {
+          toast.error(t('emailAlreadyExists'));
+        } else {
+          toast.error(t('errorToast'));
+        }
+        return;
+      }
 
       toast.success(t('successToast'));
       router.push('/dashboard');

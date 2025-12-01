@@ -1,6 +1,6 @@
 'use client';
 
-import { useOrganizationId } from '@/hooks/use-organization';
+import { useOrganization } from '@/hooks/use-organization';
 import { trpc } from '@/lib/trpc/client';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,14 @@ import { Divider, Metric, Text, Title } from '@/components/ui/metric';
 import { AlertCircle, Building2, CheckCircle, Clock, Hash, RefreshCw, Save } from 'lucide-react';
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Organization Settings Page
  * Modern UI enhanced organization settings
  */
@@ -24,13 +32,20 @@ export default function OrganizationSettingsPage() {
   const router = useRouter();
   const t = useTranslations('settings.organization');
   const locale = useLocale();
-  const urlOrganizationId = useOrganizationId();
-  const organizationId = urlOrganizationId || 'demo-organization';
+  const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
 
-  const { data: currentOrg, isLoading } = trpc.organizations.getById.useQuery(
-    { id: organizationId },
-    { staleTime: 5 * 60 * 1000 }
+  // Only query if we have a valid UUID organization ID
+  const hasValidOrgId = Boolean(contextOrgId && isValidUUID(contextOrgId));
+
+  const { data: currentOrg, isLoading: queryLoading } = trpc.organizations.getById.useQuery(
+    { id: contextOrgId! },
+    {
+      enabled: hasValidOrgId,
+      staleTime: 5 * 60 * 1000,
+    }
   );
+
+  const isLoading = contextLoading || (hasValidOrgId && queryLoading);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -70,10 +85,10 @@ export default function OrganizationSettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentOrg) return;
+    if (!currentOrg || !contextOrgId) return;
 
     await updateOrganization.mutateAsync({
-      id: organizationId,
+      id: contextOrgId,
       name: name.trim(),
       slug: slug.trim(),
     });
@@ -102,11 +117,11 @@ export default function OrganizationSettingsPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="h-8 w-48 bg-gray-200 animate-pulse rounded" />
+          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
           <Card className="p-6">
             <div className="space-y-6">
-              <div className="h-20 bg-gray-200 animate-pulse rounded" />
-              <div className="h-20 bg-gray-200 animate-pulse rounded" />
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
             </div>
           </Card>
         </div>
@@ -119,7 +134,7 @@ export default function OrganizationSettingsPage() {
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="h-8 w-8 text-gray-400" />
             </div>
             <Title>{t('notFound')}</Title>
@@ -138,7 +153,7 @@ export default function OrganizationSettingsPage() {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
           <Text className="mt-1">{t('description')}</Text>
         </div>
 
@@ -221,7 +236,7 @@ export default function OrganizationSettingsPage() {
                 </Label>
                 <Input
                   id="id"
-                  value={currentOrgData?.id || organizationId}
+                  value={currentOrgData?.id || contextOrgId || ''}
                   disabled
                   className="bg-gray-50"
                 />

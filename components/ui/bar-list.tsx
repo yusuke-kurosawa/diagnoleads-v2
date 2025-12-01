@@ -35,14 +35,16 @@ export function BarList({
           <div key={item.name} className="space-y-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {Icon && <Icon className="h-4 w-4 text-gray-500" />}
-                <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                {Icon && <Icon className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {item.name}
+                </span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {valueFormatter(item.value)}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
               <div
                 className={cn(
                   'h-full rounded-full bg-blue-500',

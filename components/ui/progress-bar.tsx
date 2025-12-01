@@ -24,7 +24,12 @@ export function ProgressBar({ value, color = 'blue', className }: ProgressBarPro
   const clampedValue = Math.min(Math.max(value, 0), 100);
 
   return (
-    <div className={cn('h-2 w-full overflow-hidden rounded-full bg-gray-200', className)}>
+    <div
+      className={cn(
+        'h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700',
+        className
+      )}
+    >
       <div
         className={cn('h-full rounded-full transition-all duration-500', COLORS[color])}
         style={{ width: `${clampedValue}%` }}
@@ -62,7 +67,7 @@ export function CategoryBar({
       </div>
       {markerValue !== undefined && (
         <div
-          className="absolute top-0 h-4 w-0.5 -translate-x-1/2 -translate-y-1 bg-gray-900"
+          className="absolute top-0 h-4 w-0.5 -translate-x-1/2 -translate-y-1 bg-gray-900 dark:bg-gray-100"
           style={{ left: `${markerValue}%` }}
         />
       )}
@@ -80,7 +85,12 @@ export function DeltaBar({ value, className }: DeltaBarProps) {
   const absValue = Math.min(Math.abs(value), 100);
 
   return (
-    <div className={cn('relative h-2 w-full overflow-hidden rounded-full bg-gray-200', className)}>
+    <div
+      className={cn(
+        'relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700',
+        className
+      )}
+    >
       <div
         className={cn(
           'absolute h-full transition-all duration-500',
@@ -88,7 +98,7 @@ export function DeltaBar({ value, className }: DeltaBarProps) {
         )}
         style={{ width: `${absValue / 2}%` }}
       />
-      <div className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-gray-400" />
+      <div className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-gray-400 dark:bg-gray-500" />
     </div>
   );
 }

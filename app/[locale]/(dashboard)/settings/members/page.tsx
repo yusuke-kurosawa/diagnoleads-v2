@@ -1,7 +1,7 @@
 'use client';
 
 import { useListMembers } from '@/hooks/use-members';
-import { useOrganizationId } from '@/hooks/use-organization';
+import { useOrganization } from '@/hooks/use-organization';
 import { trpc } from '@/lib/trpc/client';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -70,6 +70,14 @@ type MemberToChangeRole = {
 } | null;
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Members Management Page
  * Modern UI enhanced member management
  */
@@ -77,12 +85,18 @@ export default function MembersPage() {
   const router = useRouter();
   const t = useTranslations('settings.members');
   const locale = useLocale();
-  const urlOrganizationId = useOrganizationId();
-  const organizationId = urlOrganizationId || 'demo-organization';
+  const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
+
+  // Only use organization ID if it's a valid UUID
+  const hasValidOrgId = Boolean(contextOrgId && isValidUUID(contextOrgId));
+  const organizationId = hasValidOrgId && contextOrgId ? contextOrgId : '';
 
   const { data: currentOrg, isLoading: orgLoading } = trpc.organizations.getById.useQuery(
-    { id: organizationId },
-    { staleTime: 5 * 60 * 1000 }
+    { id: contextOrgId! },
+    {
+      enabled: hasValidOrgId,
+      staleTime: 5 * 60 * 1000,
+    }
   );
 
   const list = useListMembers({
@@ -223,7 +237,9 @@ export default function MembersPage() {
     }
   };
 
-  if (list.isLoading || orgLoading) {
+  const isLoading = contextLoading || (hasValidOrgId && (list.isLoading || orgLoading));
+
+  if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-5xl mx-auto space-y-6">

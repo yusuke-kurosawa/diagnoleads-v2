@@ -46,11 +46,34 @@ export function LoginForm() {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
-      await authClient.signIn.email({
+      const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
         callbackURL: '/dashboard',
       });
+
+      if (result.error) {
+        // Handle specific error codes/messages from BetterAuth
+        const errorCode = result.error.code;
+        const errorMessage = result.error.message?.toLowerCase() || '';
+
+        if (
+          errorCode === 'INVALID_EMAIL_OR_PASSWORD' ||
+          errorMessage.includes('invalid email or password') ||
+          errorMessage.includes('invalid password')
+        ) {
+          toast.error(t('invalidCredentials'));
+        } else if (
+          errorCode === 'USER_NOT_FOUND' ||
+          errorMessage.includes('user not found') ||
+          errorMessage.includes('no user found')
+        ) {
+          toast.error(t('userNotFound'));
+        } else {
+          toast.error(t('errorToast'));
+        }
+        return;
+      }
 
       toast.success(t('successToast'));
       router.push('/dashboard');

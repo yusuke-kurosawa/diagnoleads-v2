@@ -10,7 +10,7 @@ import {
   useStatusBreakdown,
 } from '@/hooks/use-analytics';
 import { useExport } from '@/hooks/use-export';
-import { useOrganizationId } from '@/hooks/use-organization';
+import { useOrganization } from '@/hooks/use-organization';
 import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
@@ -99,6 +99,14 @@ function ChartSkeleton() {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Analytics Dashboard Page
  * Tailwind v4 compatible UI
  */
@@ -107,8 +115,11 @@ export default function AnalyticsPage() {
   const tStatus = useTranslations('status');
   const tCommon = useTranslations('common');
   const locale = useLocale();
-  const urlOrganizationId = useOrganizationId();
-  const organizationId = urlOrganizationId || 'demo-organization';
+  const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
+
+  // Only use organization ID if it's a valid UUID
+  const hasValidOrgId = Boolean(contextOrgId && isValidUUID(contextOrgId));
+  const organizationId = hasValidOrgId && contextOrgId ? contextOrgId : '';
   const [dateRange, setDateRange] = useState<DateRange>('30d');
   const [granularity, setGranularity] = useState<TrendGranularity>('daily');
 
@@ -447,7 +458,7 @@ export default function AnalyticsPage() {
                   showLegend={true}
                   showGridLines={true}
                   showAnimation={true}
-                  curveType="monotone"
+                  curveType="smooth"
                 />
               )}
             </Card>

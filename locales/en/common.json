@@ -5,7 +5,7 @@
       "description": "Maximize lead generation with AI-powered diagnostic forms. Smart lead scoring, semantic search, and advanced analytics at your fingertips.",
       "keywords": "B2B, diagnostic, AI, lead generation, lead scoring, marketing, sales",
       "ogTitle": "DiagnoLeads - AI-Powered B2B Diagnostic Platform",
-      "ogDescription": "Streamline lead generation with AI-powered diagnostic forms. Boost conversion rates with smart lead scoring and analytics."
+      "ogDescription": "Engage with diagnostic content, qualify with AI scoring. Zero cold outreach lead generation."
     },
     "landing": {
       "meta": {
@@ -21,8 +21,8 @@
       },
       "hero": {
         "badge": "Next-Gen AI-Powered Platform",
-        "title": "Transform B2B Lead Generation with AI",
-        "subtitle": "Capture quality leads efficiently with diagnostic forms and AI scoring. Improve conversion rates and maximize sales productivity.",
+        "title": "Deliver Insights, Build Trust",
+        "subtitle": "Engage with diagnostic content, qualify with AI scoring. Zero cold outreach lead generation.",
         "cta": {
           "primary": "Try Free Diagnostic",
           "secondary": "Create Account"
@@ -389,6 +389,10 @@
   "leads": {
     "title": "Lead Management",
     "description": "Manage leads captured from diagnostic forms",
+    "totalLeads": "Total Leads",
+    "activeLeads": "Active Leads",
+    "conversionRate": "Conversion Rate",
+    "averageScore": "Average Score",
     "createLead": "Add New Lead",
     "createLeadTitle": "Create New Lead",
     "createLeadDescription": "Enter information for the new lead.",
@@ -472,11 +476,28 @@
       "emailPlaceholder": "your@email.com",
       "emailHelp": "Email address cannot be changed",
       "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Profile updated successfully",
+      "saveError": "Failed to update profile",
+      "nameRequired": "Please enter your name",
+      "accountInfo": "Account Information",
+      "emailVerified": "Email Verification",
+      "verified": "Verified",
+      "notVerified": "Not Verified",
+      "createdAt": "Created At",
       "passwordSection": "Change Password",
       "currentPasswordLabel": "Current Password",
       "newPasswordLabel": "New Password",
       "confirmPasswordLabel": "Confirm New Password",
       "changePassword": "Change Password",
+      "changingPassword": "Changing...",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordRequired": "Please enter a new password",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordMismatch": "New passwords do not match",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "passwordChangeSuccess": "Password changed successfully",
+      "passwordChangeError": "Failed to change password",
       "deleteAccountSection": "Delete Account",
       "deleteAccountWarning": "Deleting your account will remove all your data. This action cannot be undone.",
       "deleteAccount": "Delete Account"
@@ -539,7 +560,7 @@
       },
       "branding": {
         "title": "DiagnoLeads",
-        "subtitle": "AI-powered B2B diagnostic platform"
+        "subtitle": "Deliver Insights, Build Trust"
       },
       "login": {
         "title": "Log In",
@@ -553,7 +574,9 @@
         "divider": "or",
         "signupLink": "Sign Up",
         "successToast": "Successfully logged in",
-        "errorToast": "Login failed. Please check your email and password."
+        "errorToast": "Login failed.",
+        "invalidCredentials": "Invalid email or password.",
+        "userNotFound": "No account found with this email."
       },
       "signup": {
         "title": "Create Account",
@@ -567,7 +590,8 @@
         "submitButton": "Create Account",
         "submittingButton": "Creating account...",
         "successToast": "Account created successfully",
-        "errorToast": "Failed to create account. This email may already be in use."
+        "errorToast": "Failed to create account.",
+        "emailAlreadyExists": "This email is already registered. Please log in instead."
       },
       "resetPassword": {
         "emailLabel": "Email Address",
@@ -878,6 +902,14 @@
       "deleting": "Deleting...",
       "deleteSuccess": "Post deleted successfully",
       "deleteError": "Failed to delete post"
+    }
+  },
+  "header": {
+    "userDropdown": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "logoutError": "Failed to log out."
     }
   }
 }

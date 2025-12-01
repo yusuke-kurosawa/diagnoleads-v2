@@ -1,7 +1,32 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { ApexOptions } from 'apexcharts';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
+
+const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+  ssr: false,
+});
+
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
 
 const COLORS = {
   blue: '#3b82f6',
@@ -15,6 +40,7 @@ const COLORS = {
   cyan: '#06b6d4',
   pink: '#ec4899',
   rose: '#f43f5e',
+  brand: '#465fff',
 };
 
 interface DonutChartProps {
@@ -26,6 +52,7 @@ interface DonutChartProps {
   showLabel?: boolean;
   showAnimation?: boolean;
   className?: string;
+  height?: number;
 }
 
 export function DonutChart({
@@ -35,56 +62,97 @@ export function DonutChart({
   showLabel = true,
   showAnimation = true,
   className,
+  height = 350,
 }: DonutChartProps) {
+  const isDark = useIsDarkMode();
   const total = data.reduce((sum, item) => sum + item.value, 0);
+  const series = data.map((item) => item.value);
+  const labels = data.map((item) => item.name);
+
+  const labelColor = isDark ? '#d1d5db' : '#6b7280';
+  const valueColor = isDark ? '#f3f4f6' : '#111827';
+  const legendColor = isDark ? '#e5e7eb' : '#374151';
+  const strokeColor = isDark ? '#1f2937' : '#fff';
+
+  const options: ApexOptions = {
+    colors: colors.slice(0, data.length).map((c) => COLORS[c] || COLORS.blue),
+    chart: {
+      fontFamily: 'Outfit, sans-serif',
+      type: 'donut',
+      height: height,
+      animations: {
+        enabled: showAnimation,
+      },
+      foreColor: labelColor,
+    },
+    labels: labels,
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'center',
+      fontFamily: 'Outfit',
+      labels: {
+        colors: legendColor,
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '65%',
+          labels: {
+            show: showLabel,
+            total: {
+              show: showLabel,
+              label: '合計',
+              fontSize: '14px',
+              color: labelColor,
+              formatter: () => valueFormatter(total),
+            },
+            value: {
+              fontSize: '24px',
+              fontWeight: 600,
+              color: valueColor,
+              formatter: (val) => valueFormatter(Number(val)),
+            },
+          },
+        },
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: 2,
+      colors: [strokeColor],
+    },
+    tooltip: {
+      enabled: true,
+      theme: isDark ? 'dark' : 'light',
+      y: {
+        formatter: (val: number) => {
+          const percentage = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
+          return `${valueFormatter(val)} (${percentage}%)`;
+        },
+      },
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            height: 300,
+          },
+          legend: {
+            position: 'bottom',
+          },
+        },
+      },
+    ],
+  };
 
   return (
     <div className={cn('w-full', className)}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius="60%"
-            outerRadius="80%"
-            paddingAngle={2}
-            dataKey="value"
-            isAnimationActive={showAnimation}
-            animationDuration={1000}
-          >
-            {data.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[colors[index % colors.length] || 'blue']} />
-            ))}
-          </Pie>
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null;
-              const item = payload[0];
-              return (
-                <div className="rounded-lg border bg-white p-3 shadow-lg">
-                  <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                  <p className="text-sm text-gray-600">{valueFormatter(item.value as number)}</p>
-                  <p className="text-xs text-gray-400">
-                    {total > 0 ? (((item.value as number) / total) * 100).toFixed(1) : 0}%
-                  </p>
-                </div>
-              );
-            }}
-          />
-          {showLabel && (
-            <text
-              x="50%"
-              y="50%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-gray-900 text-2xl font-bold"
-            >
-              {valueFormatter(total)}
-            </text>
-          )}
-        </PieChart>
-      </ResponsiveContainer>
+      <ReactApexChart options={options} series={series} type="donut" height={height} />
     </div>
   );
 }
@@ -108,7 +176,7 @@ export function ChartLegend({
             className="h-3 w-3 rounded-full"
             style={{ backgroundColor: COLORS[colors[i % colors.length] || 'blue'] }}
           />
-          <span className="text-sm text-gray-600">{category}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-300">{category}</span>
         </div>
       ))}
     </div>

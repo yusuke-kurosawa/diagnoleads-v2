@@ -3,7 +3,7 @@
 import { LeadDetails } from '@/components/features/leads/lead-details';
 import { LeadDialog } from '@/components/features/leads/lead-dialog';
 import { useCreateLead, useDeleteLead, useListLeads, useUpdateLead } from '@/hooks/use-leads';
-import { useOrganizationId } from '@/hooks/use-organization';
+import { useOrganization } from '@/hooks/use-organization';
 import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
@@ -45,15 +45,27 @@ const LeadTable = dynamic(
 );
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * リード管理ページ
  * Tailwind v4互換のモダンなリード一覧表示
  */
+
 export default function LeadsPage() {
   const t = useTranslations('leads');
   const tStatus = useTranslations('status');
   const locale = useLocale();
-  const urlOrganizationId = useOrganizationId();
-  const organizationId = urlOrganizationId || 'demo-organization';
+  const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
+
+  // Only use organization ID if it's a valid UUID
+  const hasValidOrgId = Boolean(contextOrgId && isValidUUID(contextOrgId));
+  const organizationId = hasValidOrgId && contextOrgId ? contextOrgId : '';
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);

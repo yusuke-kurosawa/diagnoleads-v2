@@ -5,7 +5,7 @@
       "description": "AIを活用した診断フォームでリード獲得を最大化。見込み客のスコアリング、セマンティック検索、高度な分析機能を提供します。",
       "keywords": "B2B, 診断, AI, リード獲得, リードスコアリング, マーケティング, セールス",
       "ogTitle": "DiagnoLeads - AI搭載B2B診断プラットフォーム",
-      "ogDescription": "AIを活用した診断フォームでリード獲得を効率化。スマートなリードスコアリングと分析で成約率を向上させましょう。"
+      "ogDescription": "診断コンテンツで惹きつけ、AIスコアリングで見極める。追客ゼロの新しいリード獲得を。"
     },
     "landing": {
       "meta": {
@@ -21,8 +21,8 @@
       },
       "hero": {
         "badge": "AI搭載の次世代プラットフォーム",
-        "title": "AIが変える、B2Bリード獲得の未来",
-        "subtitle": "診断フォームとAIスコアリングで、質の高いリードを効率的に獲得。成約率の向上と営業効率の最大化を実現します。",
+        "title": "気づきを届け、信頼をつくる",
+        "subtitle": "診断コンテンツで惹きつけ、AIスコアリングで見極める。追客ゼロの新しいリード獲得を。",
         "cta": {
           "primary": "無料で診断を試す",
           "secondary": "アカウント作成"
@@ -389,6 +389,10 @@
   "leads": {
     "title": "リード管理",
     "description": "診断フォームから取得したリードを管理します",
+    "totalLeads": "総リード数",
+    "activeLeads": "アクティブリード",
+    "conversionRate": "コンバージョン率",
+    "averageScore": "平均スコア",
     "createLead": "新規リード追加",
     "createLeadTitle": "新しいリードを作成",
     "createLeadDescription": "新しいリードの情報を入力してください。",
@@ -472,11 +476,28 @@
       "emailPlaceholder": "your@email.com",
       "emailHelp": "メールアドレスは変更できません",
       "save": "保存",
+      "saving": "保存中...",
+      "saveSuccess": "プロフィールを更新しました",
+      "saveError": "プロフィールの更新に失敗しました",
+      "nameRequired": "氏名を入力してください",
+      "accountInfo": "アカウント情報",
+      "emailVerified": "メール認証",
+      "verified": "認証済み",
+      "notVerified": "未認証",
+      "createdAt": "作成日",
       "passwordSection": "パスワード変更",
       "currentPasswordLabel": "現在のパスワード",
       "newPasswordLabel": "新しいパスワード",
       "confirmPasswordLabel": "新しいパスワード（確認）",
       "changePassword": "パスワードを変更",
+      "changingPassword": "変更中...",
+      "currentPasswordRequired": "現在のパスワードを入力してください",
+      "newPasswordRequired": "新しいパスワードを入力してください",
+      "passwordMinLength": "パスワードは8文字以上で入力してください",
+      "passwordMismatch": "新しいパスワードが一致しません",
+      "currentPasswordIncorrect": "現在のパスワードが正しくありません",
+      "passwordChangeSuccess": "パスワードを変更しました",
+      "passwordChangeError": "パスワードの変更に失敗しました",
       "deleteAccountSection": "アカウント削除",
       "deleteAccountWarning": "アカウントを削除すると、すべてのデータが削除されます。この操作は取り消せません。",
       "deleteAccount": "アカウントを削除"
@@ -539,7 +560,7 @@
       },
       "branding": {
         "title": "DiagnoLeads",
-        "subtitle": "AI を活用した B2B 診断プラットフォーム"
+        "subtitle": "気づきを届け、信頼をつくる"
       },
       "login": {
         "title": "ログイン",
@@ -553,7 +574,9 @@
         "divider": "または",
         "signupLink": "新規登録",
         "successToast": "ログインに成功しました",
-        "errorToast": "ログインに失敗しました。メールアドレスとパスワードを確認してください。"
+        "errorToast": "ログインに失敗しました。",
+        "invalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
+        "userNotFound": "このメールアドレスは登録されていません。"
       },
       "signup": {
         "title": "アカウントを作成",
@@ -567,7 +590,8 @@
         "submitButton": "アカウントを作成",
         "submittingButton": "アカウント作成中...",
         "successToast": "アカウントを作成しました",
-        "errorToast": "アカウント作成に失敗しました。既にこのメールアドレスが使用されている可能性があります。"
+        "errorToast": "アカウント作成に失敗しました。",
+        "emailAlreadyExists": "このメールアドレスは既に登録されています。ログインページからログインしてください。"
       },
       "resetPassword": {
         "emailLabel": "メールアドレス",
@@ -878,6 +902,14 @@
       "deleting": "削除中...",
       "deleteSuccess": "記事を削除しました",
       "deleteError": "記事の削除に失敗しました"
+    }
+  },
+  "header": {
+    "userDropdown": {
+      "profile": "プロフィール",
+      "settings": "設定",
+      "logout": "ログアウト",
+      "logoutError": "ログアウトに失敗しました。"
     }
   }
 }

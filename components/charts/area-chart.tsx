@@ -1,16 +1,32 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  Area,
-  CartesianGrid,
-  Legend,
-  AreaChart as RechartsAreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { ApexOptions } from 'apexcharts';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
+
+const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+  ssr: false,
+});
+
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
 
 const COLORS = {
   blue: '#3b82f6',
@@ -24,6 +40,7 @@ const COLORS = {
   cyan: '#06b6d4',
   pink: '#ec4899',
   rose: '#f43f5e',
+  brand: '#465fff',
 };
 
 interface AreaChartProps {
@@ -36,7 +53,8 @@ interface AreaChartProps {
   showGridLines?: boolean;
   showAnimation?: boolean;
   className?: string;
-  curveType?: 'monotone' | 'linear';
+  curveType?: 'smooth' | 'straight' | 'stepline';
+  height?: number;
 }
 
 export function AreaChart({
@@ -49,76 +67,116 @@ export function AreaChart({
   showGridLines = true,
   showAnimation = true,
   className,
-  curveType = 'monotone',
+  curveType = 'smooth',
+  height = 350,
 }: AreaChartProps) {
+  const isDark = useIsDarkMode();
+  const xAxisCategories = data.map((item) => String(item[index]));
+  const series = categories.map((category, i) => ({
+    name: category,
+    data: data.map((item) => Number(item[category]) || 0),
+  }));
+
+  const textColor = isDark ? '#d1d5db' : '#6b7280';
+  const gridColor = isDark ? '#374151' : '#e5e7eb';
+  const legendColor = isDark ? '#e5e7eb' : '#374151';
+
+  const options: ApexOptions = {
+    colors: colors.map((c) => COLORS[c] || COLORS.blue),
+    chart: {
+      fontFamily: 'Outfit, sans-serif',
+      type: 'area',
+      height: height,
+      toolbar: {
+        show: false,
+      },
+      animations: {
+        enabled: showAnimation,
+      },
+      foreColor: textColor,
+    },
+    stroke: {
+      curve: curveType,
+      width: 2,
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        opacityFrom: 0.4,
+        opacityTo: 0.1,
+      },
+    },
+    markers: {
+      size: 0,
+      strokeColors: isDark ? '#1f2937' : '#fff',
+      strokeWidth: 2,
+      hover: {
+        size: 6,
+      },
+    },
+    grid: {
+      show: showGridLines,
+      borderColor: gridColor,
+      xaxis: {
+        lines: {
+          show: false,
+        },
+      },
+      yaxis: {
+        lines: {
+          show: showGridLines,
+        },
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    tooltip: {
+      enabled: true,
+      theme: isDark ? 'dark' : 'light',
+      y: {
+        formatter: (val: number) => valueFormatter(val),
+      },
+    },
+    legend: {
+      show: showLegend,
+      position: 'bottom',
+      horizontalAlign: 'center',
+      fontFamily: 'Outfit',
+      labels: {
+        colors: legendColor,
+      },
+    },
+    xaxis: {
+      type: 'category',
+      categories: xAxisCategories,
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      },
+      labels: {
+        style: {
+          fontSize: '12px',
+          colors: textColor,
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontSize: '12px',
+          colors: [textColor],
+        },
+        formatter: (val: number) => valueFormatter(val),
+      },
+    },
+  };
+
   return (
     <div className={cn('w-full', className)}>
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsAreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-          {showGridLines && <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />}
-          <XAxis
-            dataKey={index}
-            tick={{ fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-            className="text-gray-500"
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => valueFormatter(value)}
-            className="text-gray-500"
-          />
-          <Tooltip
-            content={({ active, payload, label }) => {
-              if (!active || !payload?.length) return null;
-              return (
-                <div className="rounded-lg border bg-white p-3 shadow-lg">
-                  <p className="text-sm font-medium text-gray-900">{label}</p>
-                  {payload.map((entry, i) => (
-                    <p key={i} className="text-sm" style={{ color: entry.color }}>
-                      {entry.name}: {valueFormatter(entry.value as number)}
-                    </p>
-                  ))}
-                </div>
-              );
-            }}
-          />
-          {showLegend && (
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              content={({ payload }) => (
-                <div className="flex justify-center gap-4 pt-2">
-                  {payload?.map((entry, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-sm text-gray-600">{entry.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            />
-          )}
-          {categories.map((category, i) => (
-            <Area
-              key={category}
-              type={curveType}
-              dataKey={category}
-              stroke={COLORS[colors[i] || 'blue']}
-              fill={COLORS[colors[i] || 'blue']}
-              fillOpacity={0.2}
-              strokeWidth={2}
-              isAnimationActive={showAnimation}
-              animationDuration={1000}
-            />
-          ))}
-        </RechartsAreaChart>
-      </ResponsiveContainer>
+      <ReactApexChart options={options} series={series} type="area" height={height} />
     </div>
   );
 }

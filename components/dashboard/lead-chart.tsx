@@ -110,7 +110,7 @@ export function LeadChart({
         showLegend={true}
         showGridLines={true}
         showAnimation={true}
-        curveType="monotone"
+        curveType="smooth"
       />
     </Card>
   );

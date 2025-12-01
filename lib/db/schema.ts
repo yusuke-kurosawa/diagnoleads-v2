@@ -164,6 +164,43 @@ export const organizationMembers = pgTable('organization_members', {
 });
 
 /**
+ * Accounts
+ * OAuth and credential accounts for BetterAuth
+ * Required for email/password authentication
+ */
+export const accounts = pgTable('accounts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(), // 'credential', 'google', 'github', etc.
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at'),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+  scope: text('scope'),
+  password: text('password'), // Hashed password for credential provider
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Verification
+ * Email verification and password reset tokens
+ */
+export const verification = pgTable('verification', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  identifier: text('identifier').notNull(), // email address
+  value: text('value').notNull(), // verification token
+  expiresAt: timestamp('expires_at').notNull(),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
  * Sessions
  * User authentication sessions managed by BetterAuth
  */
@@ -178,6 +215,7 @@ export const sessions = pgTable('sessions', {
   userAgent: text('user_agent'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 /**
@@ -232,6 +270,14 @@ export const organizationsRelations = relations(organizations, ({ one, many }) =
 export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(organizationMembers),
   sessions: many(sessions),
+  accounts: many(accounts),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
 }));
 
 export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
@@ -266,6 +312,12 @@ export type NewOrganizationMember = typeof organizationMembers.$inferInsert;
 
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
+
+export type Account = typeof accounts.$inferSelect;
+export type NewAccount = typeof accounts.$inferInsert;
+
+export type Verification = typeof verification.$inferSelect;
+export type NewVerification = typeof verification.$inferInsert;
 
 export type Lead = typeof leads.$inferSelect;
 export type NewLead = typeof leads.$inferInsert;
