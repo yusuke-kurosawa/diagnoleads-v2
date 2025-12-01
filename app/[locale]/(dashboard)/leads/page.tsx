@@ -148,10 +148,15 @@ export default function LeadsPage() {
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-          <Text className="mt-1">{t('description')}</Text>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="h-14 w-14 bg-gradient-to-br from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-xl flex items-center justify-center">
+            <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+            <Text className="mt-1">{t('description')}</Text>
+          </div>
         </div>
         <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-5 w-5 mr-2" />

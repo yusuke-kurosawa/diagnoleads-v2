@@ -243,9 +243,14 @@ export default function AnalyticsPage() {
     <div className="container mx-auto py-8 px-4 space-y-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="text-gray-500 mt-1">{t('description')}</p>
+        <div className="flex items-start gap-4">
+          <div className="h-14 w-14 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 rounded-xl flex items-center justify-center">
+            <BarChart3 className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">{t('description')}</p>
+          </div>
         </div>
 
         {/* Controls */}

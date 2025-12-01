@@ -1,12 +1,32 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Callout } from '@/components/ui/callout';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Divider, Text, Title } from '@/components/ui/metric';
 import { authClient } from '@/lib/auth/client';
-import { useState, useEffect } from 'react';
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Key,
+  Lock,
+  Mail,
+  RefreshCw,
+  Save,
+  Shield,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 /**
- * 個人設定ページ
+ * 個人設定ページ - TailAdmin Style
  */
 export default function SettingsPage() {
   const t = useTranslations('settings.profile');
@@ -15,6 +35,7 @@ export default function SettingsPage() {
 
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -28,6 +49,18 @@ export default function SettingsPage() {
       setName(user.name);
     }
   }, [user?.name]);
+
+  const handleNameChange = (value: string) => {
+    setName(value);
+    setHasChanges(value !== user?.name);
+  };
+
+  const handleReset = () => {
+    if (user?.name) {
+      setName(user.name);
+      setHasChanges(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!name.trim()) {
@@ -47,6 +80,7 @@ export default function SettingsPage() {
       }
 
       toast.success(t('saveSuccess'));
+      setHasChanges(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast.error(t('saveError'));
@@ -76,7 +110,6 @@ export default function SettingsPage() {
 
     setIsChangingPassword(true);
     try {
-      // Use $fetch to call the change-password API endpoint
       const result = await authClient.$fetch<{ user?: unknown; error?: { message?: string } }>(
         '/change-password',
         {
@@ -104,7 +137,6 @@ export default function SettingsPage() {
       }
 
       toast.success(t('passwordChangeSuccess'));
-      // Clear form
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -118,153 +150,244 @@ export default function SettingsPage() {
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
+      <div className="container mx-auto py-8 px-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+          <Card className="p-6">
+            <div className="space-y-6">
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('title')}</h1>
+    <div className="container mx-auto py-8 px-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+          <Text className="mt-1">
+            {t('description') || 'Manage your personal account settings'}
+          </Text>
+        </div>
 
-      <div className="space-y-6">
-        {/* プロフィール設定 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t('profileSection')}
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('nameLabel')}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder={t('namePlaceholder')}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('emailLabel')}
-              </label>
-              <input
-                type="email"
-                value={user?.email || ''}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
-                disabled
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('emailHelp')}</p>
-            </div>
-
-            {/* Account Info */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('accountInfo')}
-              </h3>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
+        {/* Profile Card */}
+        <Card decoration="top" decorationColor="blue">
+          <div className="p-6">
+            {/* Profile Header */}
+            <div className="flex items-start justify-between pb-6">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 rounded-xl flex items-center justify-center">
+                  <User className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div>
-                  <dt className="text-gray-500 dark:text-gray-400">{t('emailVerified')}</dt>
-                  <dd className="text-gray-900 dark:text-white">
+                  <Title>{user?.name || 'User'}</Title>
+                  <div className="flex gap-2 mt-1">
+                    <Badge color="blue">{user?.email}</Badge>
                     {user?.emailVerified ? (
-                      <span className="text-green-600 dark:text-green-400">{t('verified')}</span>
+                      <Badge color="emerald">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        {t('verified')}
+                      </Badge>
                     ) : (
-                      <span className="text-yellow-600 dark:text-yellow-400">
-                        {t('notVerified')}
-                      </span>
+                      <Badge color="yellow">{t('notVerified')}</Badge>
                     )}
-                  </dd>
+                  </div>
                 </div>
-                <div>
-                  <dt className="text-gray-500 dark:text-gray-400">{t('createdAt')}</dt>
-                  <dd className="text-gray-900 dark:text-white">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
-                  </dd>
+              </div>
+            </div>
+
+            <Divider />
+
+            <div className="space-y-6 pt-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                {t('profileSection')}
+              </h2>
+
+              {/* Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="name" className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  {t('nameLabel')}
+                </Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder={t('namePlaceholder')}
+                  disabled={isSaving}
+                />
+              </div>
+
+              {/* Email Field (Read-only) */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                  {t('emailLabel')}
+                </Label>
+                <Input
+                  id="email"
+                  value={user?.email || ''}
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800"
+                />
+                <Text className="text-xs">{t('emailHelp')}</Text>
+              </div>
+
+              {/* Account Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                    <Shield className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <Text className="text-xs">{t('emailVerified')}</Text>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                      {user?.emailVerified ? (
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          {t('verified')}
+                        </span>
+                      ) : (
+                        <span className="text-yellow-600 dark:text-yellow-400">
+                          {t('notVerified')}
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </dl>
-            </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <Text className="text-xs">{t('createdAt')}</Text>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                      {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
-            >
-              {isSaving ? t('saving') : t('save')}
-            </button>
+              {/* Action Buttons */}
+              <Divider />
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={!hasChanges || isSaving}
+                  className="flex-1"
+                  size="lg"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? t('saving') : t('save')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  disabled={!hasChanges || isSaving}
+                  size="lg"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t('reset') || 'Reset'}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* パスワード変更 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {t('passwordSection')}
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('currentPasswordLabel')}
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                disabled={isChangingPassword}
-              />
+        {/* Password Card */}
+        <Card decoration="top" decorationColor="violet">
+          <div className="p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Key className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+              {t('passwordSection')}
+            </h2>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-gray-500" />
+                  {t('currentPasswordLabel')}
+                </Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={isChangingPassword}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className="flex items-center gap-2">
+                  <Key className="h-4 w-4 text-gray-500" />
+                  {t('newPasswordLabel')}
+                </Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={isChangingPassword}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="flex items-center gap-2">
+                  <Key className="h-4 w-4 text-gray-500" />
+                  {t('confirmPasswordLabel')}
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isChangingPassword}
+                />
+              </div>
+
+              <Button
+                onClick={handleChangePassword}
+                disabled={
+                  isChangingPassword || !currentPassword || !newPassword || !confirmPassword
+                }
+                className="w-full"
+                size="lg"
+              >
+                <Key className="h-4 w-4 mr-2" />
+                {isChangingPassword ? t('changingPassword') : t('changePassword')}
+              </Button>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('newPasswordLabel')}
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                disabled={isChangingPassword}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('confirmPasswordLabel')}
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                disabled={isChangingPassword}
-              />
-            </div>
-
-            <button
-              onClick={handleChangePassword}
-              disabled={isChangingPassword}
-              className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
-            >
-              {isChangingPassword ? t('changingPassword') : t('changePassword')}
-            </button>
           </div>
-        </div>
+        </Card>
 
-        {/* アカウント削除 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-red-200 dark:border-red-900/50">
-          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">
-            {t('deleteAccountSection')}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {t('deleteAccountWarning')}
-          </p>
-          <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
-            {t('deleteAccount')}
-          </button>
-        </div>
+        {/* Danger Zone */}
+        <Card className="border-red-200 dark:border-red-900/50">
+          <div className="p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              {t('deleteAccountSection')}
+            </h2>
+            <Text>{t('deleteAccountWarning')}</Text>
+            <Button variant="destructive" size="lg">
+              <Trash2 className="h-4 w-4 mr-2" />
+              {t('deleteAccount')}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Info Callout */}
+        <Callout title={t('hintsTitle') || 'Tips'} icon={CheckCircle} color="blue">
+          <ul className="space-y-1 list-disc list-inside mt-2">
+            <li>{t('hintProfile') || 'Your name will be displayed to other members'}</li>
+            <li>{t('hintPassword') || 'Use a strong password with at least 8 characters'}</li>
+            <li>{t('hintDelete') || 'Deleting your account is permanent and cannot be undone'}</li>
+          </ul>
+        </Callout>
       </div>
     </div>
   );
