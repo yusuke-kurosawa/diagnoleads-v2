@@ -1,5 +1,6 @@
 import { aiRouter } from '@/lib/features/ai/api/router';
 import { analyticsRouter } from '@/lib/features/analytics/api/router';
+import { commentsRouter } from '@/lib/features/comments/api/router';
 import { contentRouter } from '@/lib/features/content/api/router';
 import { hierarchyRouter } from '@/lib/features/hierarchy/api/router';
 import { leadsRouter } from '@/lib/features/leads/api/router';
@@ -27,6 +28,7 @@ export const appRouter = router({
   webhooks: webhooksRouter, // Phase 5.1: Webhook基盤
   notifications: notificationsRouter, // Phase 9: 通知機能
   tags: tagsRouter, // Phase 9: リードタグ機能
+  comments: commentsRouter, // Phase 9: コメント・メモ機能
 });
 
 export type AppRouter = typeof appRouter;

@@ -297,6 +297,7 @@ export const leadsRelations = relations(leads, ({ one, many }) => ({
     references: [organizations.id],
   }),
   leadTags: many(leadTags),
+  comments: many(leadComments),
 }));
 
 /**
@@ -599,3 +600,69 @@ export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type LeadTag = typeof leadTags.$inferSelect;
 export type NewLeadTag = typeof leadTags.$inferInsert;
+
+// ============================================================================
+// Lead Comments / Notes Feature
+// ============================================================================
+
+/**
+ * Comment Type
+ * Distinguishes between different types of comments
+ */
+export type CommentType = 'comment' | 'note' | 'activity';
+
+/**
+ * Lead Comments Table
+ * Stores comments, notes, and activity logs for leads
+ */
+export const leadComments = pgTable('lead_comments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  leadId: uuid('lead_id')
+    .notNull()
+    .references(() => leads.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  type: text('type').$type<CommentType>().default('comment').notNull(),
+  /** For activity logs - stores metadata about the activity */
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  /** Parent comment ID for threaded replies */
+  parentId: uuid('parent_id'),
+  /** Whether this comment is pinned */
+  isPinned: boolean('is_pinned').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Lead Comments Relations
+ */
+export const leadCommentsRelations = relations(leadComments, ({ one, many }) => ({
+  lead: one(leads, {
+    fields: [leadComments.leadId],
+    references: [leads.id],
+  }),
+  user: one(users, {
+    fields: [leadComments.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [leadComments.organizationId],
+    references: [organizations.id],
+  }),
+  parent: one(leadComments, {
+    fields: [leadComments.parentId],
+    references: [leadComments.id],
+    relationName: 'replies',
+  }),
+  replies: many(leadComments, {
+    relationName: 'replies',
+  }),
+}));
+
+export type LeadComment = typeof leadComments.$inferSelect;
+export type NewLeadComment = typeof leadComments.$inferInsert;
