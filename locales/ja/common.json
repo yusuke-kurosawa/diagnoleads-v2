@@ -975,5 +975,30 @@
       "logout": "ログアウト",
       "logoutError": "ログアウトに失敗しました。"
     }
+  },
+  "tags": {
+    "manageTags": "タグを管理",
+    "manageTitle": "タグ管理",
+    "manageDescription": "リードを整理するためのタグを作成、編集、削除します",
+    "tagName": "タグ名",
+    "tagNamePlaceholder": "例: ホットリード、VIP",
+    "tagColor": "タグの色",
+    "tagDescription": "説明",
+    "tagDescriptionPlaceholder": "タグの説明（任意）",
+    "preview": "プレビュー",
+    "createTag": "「{name}」を作成",
+    "existingTags": "既存のタグ",
+    "noTagsYet": "タグはまだ作成されていません",
+    "selectTags": "タグを選択",
+    "searchTags": "タグを検索...",
+    "selectedCount": "{count}件のタグを選択中",
+    "noTags": "タグが見つかりません",
+    "createSuccess": "タグを作成しました",
+    "createError": "タグの作成に失敗しました",
+    "updateSuccess": "タグを更新しました",
+    "updateError": "タグの更新に失敗しました",
+    "deleteSuccess": "タグを削除しました",
+    "deleteError": "タグの削除に失敗しました",
+    "deleteConfirm": "このタグを削除してもよろしいですか？この操作は取り消せません。"
   }
 }

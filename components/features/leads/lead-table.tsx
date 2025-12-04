@@ -28,7 +28,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Lead } from '@/lib/db/schema';
+import type { Lead, Tag } from '@/lib/db/schema';
+import { TagBadgeList } from '../tags/tag-badge';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -73,13 +74,16 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
+// Extended lead type with tags
+type LeadWithTags = Lead & { tags?: Tag[] };
+
 interface LeadTableProps {
-  leads: Lead[];
+  leads: LeadWithTags[];
   isLoading?: boolean;
   organizationId?: string;
-  onLeadClick?: (lead: Lead) => void;
-  onEdit?: (lead: Lead) => void;
-  onDelete?: (lead: Lead) => void;
+  onLeadClick?: (lead: LeadWithTags) => void;
+  onEdit?: (lead: LeadWithTags) => void;
+  onDelete?: (lead: LeadWithTags) => void;
   onRefresh?: () => void;
 }
 
@@ -126,6 +130,7 @@ export function LeadTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     phone: false,
     source: false,
+    tags: true,
   });
   const [globalFilter, setGlobalFilter] = useState('');
   const [pageSize, setPageSize] = useState(10);
@@ -224,15 +229,18 @@ export function LeadTable({
           phone: false,
           source: false,
           createdAt: false,
+          tags: false,
         });
       } else if (width < 1024) {
         setColumnVisibility({
           phone: false,
           source: false,
+          tags: true,
         });
       } else {
         setColumnVisibility({
           phone: false,
+          tags: true,
         });
       }
     };
@@ -251,7 +259,7 @@ export function LeadTable({
     }
   }, [statusFilter]);
 
-  const columns: ColumnDef<Lead>[] = [
+  const columns: ColumnDef<LeadWithTags>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -341,6 +349,18 @@ export function LeadTable({
       },
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id));
+      },
+    },
+    {
+      id: 'tags',
+      accessorFn: (row) => row.tags,
+      header: locale === 'ja' ? 'タグ' : 'Tags',
+      cell: ({ row }) => {
+        const leadTags = row.original.tags ?? [];
+        if (leadTags.length === 0) {
+          return <span className="text-gray-400">-</span>;
+        }
+        return <TagBadgeList tags={leadTags} maxVisible={2} />;
       },
     },
     {
@@ -578,6 +598,7 @@ export function LeadTable({
     company: t('company'),
     phone: t('phone'),
     status: t('status'),
+    tags: locale === 'ja' ? 'タグ' : 'Tags',
     score: t('score'),
     source: t('source'),
     createdAt: t('createdAt'),

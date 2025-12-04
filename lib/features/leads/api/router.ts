@@ -1,4 +1,4 @@
-import { leads } from '@/lib/db/schema';
+import { leadTags, leads, tags } from '@/lib/db/schema';
 import { organizationProcedure, router } from '@/lib/trpc/init';
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, ilike, inArray, or } from 'drizzle-orm';
@@ -63,6 +63,13 @@ export const leadsRouter = router({
 
     const lead = await ctx.db.query.leads.findFirst({
       where: and(eq(leads.id, input.id), eq(leads.organizationId, input.organizationId)),
+      with: {
+        leadTags: {
+          with: {
+            tag: true,
+          },
+        },
+      },
     });
 
     if (!lead) {
@@ -72,7 +79,11 @@ export const leadsRouter = router({
       });
     }
 
-    return lead;
+    // Transform to include tags array
+    return {
+      ...lead,
+      tags: lead.leadTags.map((lt) => lt.tag),
+    };
   }),
 
   /**
@@ -115,17 +126,29 @@ export const leadsRouter = router({
       .from(leads)
       .where(and(...conditions));
 
-    // Get paginated results
-    const results = await ctx.db
-      .select()
-      .from(leads)
-      .where(and(...conditions))
-      .orderBy(desc(leads.createdAt))
-      .limit(input.limit)
-      .offset(input.offset);
+    // Get paginated results with tags
+    const results = await ctx.db.query.leads.findMany({
+      where: and(...conditions),
+      orderBy: [desc(leads.createdAt)],
+      limit: input.limit,
+      offset: input.offset,
+      with: {
+        leadTags: {
+          with: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    // Transform results to include tags array
+    const itemsWithTags = results.map((lead) => ({
+      ...lead,
+      tags: lead.leadTags.map((lt) => lt.tag),
+    }));
 
     return {
-      items: results,
+      items: itemsWithTags,
       total: totalCount.length,
       limit: input.limit,
       offset: input.offset,

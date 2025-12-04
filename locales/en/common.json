@@ -975,5 +975,30 @@
       "logout": "Logout",
       "logoutError": "Failed to log out."
     }
+  },
+  "tags": {
+    "manageTags": "Manage Tags",
+    "manageTitle": "Tag Management",
+    "manageDescription": "Create, edit, and delete tags for organizing your leads",
+    "tagName": "Tag Name",
+    "tagNamePlaceholder": "e.g., Hot Lead, VIP",
+    "tagColor": "Tag Color",
+    "tagDescription": "Description",
+    "tagDescriptionPlaceholder": "Optional description for this tag",
+    "preview": "Preview",
+    "createTag": "Create \"{name}\"",
+    "existingTags": "Existing Tags",
+    "noTagsYet": "No tags created yet",
+    "selectTags": "Select Tags",
+    "searchTags": "Search tags...",
+    "selectedCount": "{count} tag(s) selected",
+    "noTags": "No tags found",
+    "createSuccess": "Tag created successfully",
+    "createError": "Failed to create tag",
+    "updateSuccess": "Tag updated successfully",
+    "updateError": "Failed to update tag",
+    "deleteSuccess": "Tag deleted successfully",
+    "deleteError": "Failed to delete tag",
+    "deleteConfirm": "Are you sure you want to delete this tag? This action cannot be undone."
   }
 }

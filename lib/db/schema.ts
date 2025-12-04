@@ -291,11 +291,12 @@ export const organizationMembersRelations = relations(organizationMembers, ({ on
   }),
 }));
 
-export const leadsRelations = relations(leads, ({ one }) => ({
+export const leadsRelations = relations(leads, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [leads.organizationId],
     references: [organizations.id],
   }),
+  leadTags: many(leadTags),
 }));
 
 /**
@@ -540,3 +541,61 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type NewNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+// ============================================
+// Tags (Phase 9 - P1 Features)
+// ============================================
+
+/**
+ * Tags for categorizing leads
+ * Organization-scoped tags with customizable colors
+ */
+export const tags = pgTable('tags', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  color: text('color').notNull().default('#3b82f6'), // Default blue
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Lead-Tag junction table (many-to-many)
+ */
+export const leadTags = pgTable('lead_tags', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  leadId: uuid('lead_id')
+    .notNull()
+    .references(() => leads.id, { onDelete: 'cascade' }),
+  tagId: uuid('tag_id')
+    .notNull()
+    .references(() => tags.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const tagsRelations = relations(tags, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [tags.organizationId],
+    references: [organizations.id],
+  }),
+  leadTags: many(leadTags),
+}));
+
+export const leadTagsRelations = relations(leadTags, ({ one }) => ({
+  lead: one(leads, {
+    fields: [leadTags.leadId],
+    references: [leads.id],
+  }),
+  tag: one(tags, {
+    fields: [leadTags.tagId],
+    references: [tags.id],
+  }),
+}));
+
+export type Tag = typeof tags.$inferSelect;
+export type NewTag = typeof tags.$inferInsert;
+export type LeadTag = typeof leadTags.$inferSelect;
+export type NewLeadTag = typeof leadTags.$inferInsert;
