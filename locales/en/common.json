@@ -1033,5 +1033,90 @@
     "pinSuccess": "Comment pinned",
     "unpinSuccess": "Comment unpinned",
     "pinError": "Failed to update pin status"
+  },
+  "reports": {
+    "title": "Scheduled Reports",
+    "description": "Set up automated reports to be delivered on a schedule",
+    "createReport": "Create Report",
+    "editReport": "Edit Report",
+    "noReports": "No scheduled reports",
+    "noReportsHint": "Create your first scheduled report",
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly"
+    },
+    "types": {
+      "leadSummary": "Lead Summary",
+      "conversionAnalysis": "Conversion Analysis",
+      "sourcePerformance": "Source Performance",
+      "teamPerformance": "Team Performance",
+      "custom": "Custom Report"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "scheduleDaily": "Every day at {time}",
+    "scheduleWeekly": "Every {day} at {time}",
+    "scheduleMonthly": "Day {day} of each month at {time}",
+    "scheduleQuarterly": "Day {day} of each quarter at {time}",
+    "recipientCount": "{count} recipient(s)",
+    "lastRun": "Last run: {date}",
+    "nextRun": "Next run: {date}",
+    "runNow": "Run Now",
+    "pause": "Pause",
+    "resume": "Resume",
+    "form": {
+      "name": "Report Name",
+      "namePlaceholder": "Weekly Lead Summary",
+      "reportType": "Report Type",
+      "frequency": "Frequency",
+      "format": "Format",
+      "dayOfWeek": "Day of Week",
+      "dayOfMonth": "Day of Month",
+      "sendHour": "Send Time",
+      "timezone": "Timezone",
+      "recipients": "Recipients",
+      "recipientsPlaceholder": "user@example.com, another@example.com",
+      "recipientsHint": "Enter email addresses separated by commas"
+    },
+    "historyTitle": "Report History: {name}",
+    "noHistory": "No report history yet",
+    "history": {
+      "executedAt": "Executed At",
+      "status": "Status",
+      "triggeredBy": "Triggered By",
+      "recipients": "Recipients Sent",
+      "scheduled": "Scheduled",
+      "manual": "Manual",
+      "statuses": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "failed": "Failed"
+      }
+    },
+    "createSuccess": "Report created successfully",
+    "createError": "Failed to create report",
+    "updateSuccess": "Report updated successfully",
+    "updateError": "Failed to update report",
+    "deleteSuccess": "Report deleted successfully",
+    "deleteError": "Failed to delete report",
+    "runSuccess": "Report is being generated",
+    "runError": "Failed to run report",
+    "deleteConfirm": "Are you sure you want to delete this report? This action cannot be undone."
+  },
+  "common": {
+    "weekdays": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "saving": "Saving..."
   }
 }

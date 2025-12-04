@@ -1033,5 +1033,90 @@
     "pinSuccess": "コメントをピン留めしました",
     "unpinSuccess": "ピン留めを解除しました",
     "pinError": "ピン留めの更新に失敗しました"
+  },
+  "reports": {
+    "title": "スケジュールレポート",
+    "description": "自動でレポートを作成・配信する設定を行います",
+    "createReport": "レポートを作成",
+    "editReport": "レポートを編集",
+    "noReports": "スケジュールレポートはありません",
+    "noReportsHint": "最初のスケジュールレポートを作成しましょう",
+    "frequency": {
+      "daily": "日次",
+      "weekly": "週次",
+      "monthly": "月次",
+      "quarterly": "四半期"
+    },
+    "types": {
+      "leadSummary": "リードサマリー",
+      "conversionAnalysis": "コンバージョン分析",
+      "sourcePerformance": "ソースパフォーマンス",
+      "teamPerformance": "チームパフォーマンス",
+      "custom": "カスタムレポート"
+    },
+    "status": {
+      "active": "有効",
+      "paused": "一時停止"
+    },
+    "scheduleDaily": "毎日 {time}",
+    "scheduleWeekly": "毎週{day} {time}",
+    "scheduleMonthly": "毎月{day}日 {time}",
+    "scheduleQuarterly": "四半期ごとの{day}日 {time}",
+    "recipientCount": "{count}名の受信者",
+    "lastRun": "前回実行: {date}",
+    "nextRun": "次回実行: {date}",
+    "runNow": "今すぐ実行",
+    "pause": "一時停止",
+    "resume": "再開",
+    "form": {
+      "name": "レポート名",
+      "namePlaceholder": "週次リードサマリー",
+      "reportType": "レポートタイプ",
+      "frequency": "頻度",
+      "format": "形式",
+      "dayOfWeek": "曜日",
+      "dayOfMonth": "日",
+      "sendHour": "送信時刻",
+      "timezone": "タイムゾーン",
+      "recipients": "受信者",
+      "recipientsPlaceholder": "user@example.com, another@example.com",
+      "recipientsHint": "メールアドレスをカンマ区切りで入力してください"
+    },
+    "historyTitle": "レポート履歴: {name}",
+    "noHistory": "レポート履歴はまだありません",
+    "history": {
+      "executedAt": "実行日時",
+      "status": "ステータス",
+      "triggeredBy": "トリガー",
+      "recipients": "送信先数",
+      "scheduled": "スケジュール",
+      "manual": "手動",
+      "statuses": {
+        "pending": "保留中",
+        "sent": "送信済",
+        "failed": "失敗"
+      }
+    },
+    "createSuccess": "レポートを作成しました",
+    "createError": "レポートの作成に失敗しました",
+    "updateSuccess": "レポートを更新しました",
+    "updateError": "レポートの更新に失敗しました",
+    "deleteSuccess": "レポートを削除しました",
+    "deleteError": "レポートの削除に失敗しました",
+    "runSuccess": "レポートを生成中です",
+    "runError": "レポートの実行に失敗しました",
+    "deleteConfirm": "このレポートを削除してもよろしいですか？この操作は取り消せません。"
+  },
+  "common": {
+    "weekdays": {
+      "sunday": "日曜日",
+      "monday": "月曜日",
+      "tuesday": "火曜日",
+      "wednesday": "水曜日",
+      "thursday": "木曜日",
+      "friday": "金曜日",
+      "saturday": "土曜日"
+    },
+    "saving": "保存中..."
   }
 }

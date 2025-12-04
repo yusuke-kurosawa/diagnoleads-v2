@@ -666,3 +666,171 @@ export const leadCommentsRelations = relations(leadComments, ({ one, many }) => 
 
 export type LeadComment = typeof leadComments.$inferSelect;
 export type NewLeadComment = typeof leadComments.$inferInsert;
+
+// ============================================================================
+// Scheduled Reports Feature
+// ============================================================================
+
+/**
+ * Report Schedule Frequency
+ */
+export type ReportFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
+/**
+ * Report Type
+ */
+export type ReportType =
+  | 'lead_summary'
+  | 'conversion_analysis'
+  | 'source_performance'
+  | 'team_performance'
+  | 'custom';
+
+/**
+ * Report Format
+ */
+export type ReportFormat = 'pdf' | 'csv' | 'excel';
+
+/**
+ * Report Status
+ */
+export type ReportStatus = 'active' | 'paused' | 'disabled';
+
+/**
+ * Report Delivery Status
+ */
+export type ReportDeliveryStatus = 'pending' | 'sent' | 'failed';
+
+/**
+ * Report Configuration
+ */
+export interface ReportConfig {
+  /** Include lead status breakdown */
+  includeStatusBreakdown?: boolean;
+  /** Include source analysis */
+  includeSourceAnalysis?: boolean;
+  /** Include conversion funnel */
+  includeConversionFunnel?: boolean;
+  /** Include score distribution */
+  includeScoreDistribution?: boolean;
+  /** Include recent leads list */
+  includeRecentLeads?: boolean;
+  /** Number of recent leads to include */
+  recentLeadsCount?: number;
+  /** Date range for the report (days) */
+  dateRangeDays?: number;
+  /** Custom filters */
+  filters?: {
+    status?: string[];
+    source?: string[];
+    minScore?: number;
+    maxScore?: number;
+  };
+}
+
+/**
+ * Scheduled Reports Table
+ * Stores report schedule configurations
+ */
+export const scheduledReports = pgTable('scheduled_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  createdById: uuid('created_by_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  reportType: text('report_type').$type<ReportType>().default('lead_summary').notNull(),
+  frequency: text('frequency').$type<ReportFrequency>().default('weekly').notNull(),
+  /** Day of week for weekly reports (0=Sunday, 6=Saturday) */
+  dayOfWeek: integer('day_of_week').default(1), // Monday
+  /** Day of month for monthly reports (1-28) */
+  dayOfMonth: integer('day_of_month').default(1),
+  /** Hour to send the report (0-23) */
+  sendHour: integer('send_hour').default(9).notNull(),
+  /** Timezone for scheduling */
+  timezone: text('timezone').default('Asia/Tokyo').notNull(),
+  format: text('format').$type<ReportFormat>().default('pdf').notNull(),
+  /** Email recipients (comma-separated) */
+  recipients: text('recipients').notNull(),
+  /** Report configuration */
+  config: jsonb('config').$type<ReportConfig>().default({
+    includeStatusBreakdown: true,
+    includeSourceAnalysis: true,
+    includeConversionFunnel: true,
+    dateRangeDays: 30,
+  }),
+  status: text('status').$type<ReportStatus>().default('active').notNull(),
+  lastSentAt: timestamp('last_sent_at'),
+  nextScheduledAt: timestamp('next_scheduled_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Report History Table
+ * Stores history of generated reports
+ */
+export const reportHistory = pgTable('report_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  scheduledReportId: uuid('scheduled_report_id')
+    .notNull()
+    .references(() => scheduledReports.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Report period start date */
+  periodStart: timestamp('period_start').notNull(),
+  /** Report period end date */
+  periodEnd: timestamp('period_end').notNull(),
+  /** Number of leads in the report */
+  leadCount: integer('lead_count').default(0).notNull(),
+  /** Summary statistics stored as JSON */
+  summary: jsonb('summary').$type<Record<string, unknown>>(),
+  deliveryStatus: text('delivery_status')
+    .$type<ReportDeliveryStatus>()
+    .default('pending')
+    .notNull(),
+  /** Error message if delivery failed */
+  errorMessage: text('error_message'),
+  /** File URL if stored */
+  fileUrl: text('file_url'),
+  sentAt: timestamp('sent_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Scheduled Reports Relations
+ */
+export const scheduledReportsRelations = relations(scheduledReports, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [scheduledReports.organizationId],
+    references: [organizations.id],
+  }),
+  createdBy: one(users, {
+    fields: [scheduledReports.createdById],
+    references: [users.id],
+  }),
+  history: many(reportHistory),
+}));
+
+/**
+ * Report History Relations
+ */
+export const reportHistoryRelations = relations(reportHistory, ({ one }) => ({
+  scheduledReport: one(scheduledReports, {
+    fields: [reportHistory.scheduledReportId],
+    references: [scheduledReports.id],
+  }),
+  organization: one(organizations, {
+    fields: [reportHistory.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export type ScheduledReport = typeof scheduledReports.$inferSelect;
+export type NewScheduledReport = typeof scheduledReports.$inferInsert;
+export type ReportHistory = typeof reportHistory.$inferSelect;
+export type NewReportHistory = typeof reportHistory.$inferInsert;
