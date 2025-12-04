@@ -25,6 +25,9 @@ export const env = createEnv({
 
     // Node environment
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+
+    // Public diagnostic form
+    DEFAULT_ORGANIZATION_ID: z.string().uuid().optional(),
   },
 
   /**
@@ -49,6 +52,7 @@ export const env = createEnv({
     TRIGGER_API_KEY: process.env.TRIGGER_API_KEY,
     TRIGGER_API_URL: process.env.TRIGGER_API_URL,
     NODE_ENV: process.env.NODE_ENV,
+    DEFAULT_ORGANIZATION_ID: process.env.DEFAULT_ORGANIZATION_ID,
 
     // Client
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

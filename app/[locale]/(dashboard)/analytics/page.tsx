@@ -48,6 +48,7 @@ import {
   Download,
   FileJson,
   FileSpreadsheet,
+  FileText,
   PieChart,
   Target,
   TrendingUp,
@@ -152,9 +153,12 @@ export default function AnalyticsPage() {
   );
 
   // Export functionality
-  const { exportAnalyticsReport, exportAnalyticsJSON, isExporting } = useExport({
-    organizationName: 'Organization',
-  });
+  const { exportAnalyticsReport, exportAnalyticsJSON, exportAnalyticsPDF, isExporting } = useExport(
+    {
+      organizationName: 'Organization',
+      locale: locale as 'en' | 'ja',
+    }
+  );
 
   const handleExportCSV = () => {
     if (overview && leadTrend && sourceBreakdown && statusBreakdown && funnelData) {
@@ -172,6 +176,19 @@ export default function AnalyticsPage() {
   const handleExportJSON = () => {
     if (overview && leadTrend && sourceBreakdown && statusBreakdown && funnelData) {
       exportAnalyticsJSON({
+        overview,
+        trend: leadTrend,
+        sourceBreakdown,
+        statusBreakdown,
+        funnel: funnelData,
+        dateRange,
+      });
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (overview) {
+      exportAnalyticsPDF({
         overview,
         trend: leadTrend,
         sourceBreakdown,
@@ -299,6 +316,10 @@ export default function AnalyticsPage() {
               <DropdownMenuItem onClick={handleExportJSON}>
                 <FileJson className="h-4 w-4 mr-2" />
                 JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF}>
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

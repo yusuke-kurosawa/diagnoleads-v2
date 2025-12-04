@@ -1,3 +1,9 @@
+import { db } from '@/lib/db/client';
+import { leads, organizations } from '@/lib/db/schema';
+import { env } from '@/lib/env';
+import { generateDiagnosticResultEmail, isEmailConfigured, sendEmail } from '@/lib/features/email';
+import { triggerWebhooks } from '@/lib/features/webhooks/services/webhook-service';
+import { eq } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -5,9 +11,9 @@ import { z } from 'zod';
  * Diagnostic Form API
  *
  * 公開診断フォームからの送信を処理
- * - リードとして保存
+ * - リードとしてDBに保存
+ * - Webhookをトリガー
  * - AIスコアリング（将来実装）
- * - 通知送信（将来実装）
  */
 
 // Validation schema
@@ -82,6 +88,52 @@ function calculateScore(data: z.infer<typeof diagnosticSchema>): number {
   return Math.min(score, 100);
 }
 
+/**
+ * Get or create the default organization for public diagnostic submissions
+ */
+async function getDefaultOrganization(): Promise<string> {
+  // First, check if DEFAULT_ORGANIZATION_ID is set in env
+  if (env.DEFAULT_ORGANIZATION_ID) {
+    // Verify it exists
+    const org = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.id, env.DEFAULT_ORGANIZATION_ID))
+      .limit(1);
+
+    if (org.length > 0) {
+      return env.DEFAULT_ORGANIZATION_ID;
+    }
+  }
+
+  // Look for existing "Public Leads" organization
+  const publicOrg = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.slug, 'public-leads'))
+    .limit(1);
+
+  if (publicOrg.length > 0) {
+    return publicOrg[0].id;
+  }
+
+  // Create "Public Leads" organization
+  const [newOrg] = await db
+    .insert(organizations)
+    .values({
+      name: 'Public Leads',
+      slug: 'public-leads',
+      organizationType: 'independent',
+      settings: {
+        description: 'Organization for leads from public diagnostic forms',
+        isPublic: true,
+      },
+    })
+    .returning({ id: organizations.id });
+
+  return newOrg.id;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -100,19 +152,82 @@ export async function POST(req: NextRequest) {
     // Calculate lead score
     const score = calculateScore(data);
 
-    // TODO: Save to database as a lead
-    // This would typically:
-    // 1. Create a new lead in the database
-    // 2. Trigger AI scoring for more detailed analysis
-    // 3. Send notification emails
-    // 4. Queue for CRM integration
+    // Get organization ID for public leads
+    const organizationId = await getDefaultOrganization();
 
-    // For now, return a success response with the score
+    // Save lead to database
+    const [lead] = await db
+      .insert(leads)
+      .values({
+        organizationId,
+        email: data.email,
+        name: data.name,
+        company: data.companyName,
+        phone: data.phone || null,
+        status: 'new',
+        score,
+        source: 'website',
+        responses: {
+          industry: data.industry,
+          employeeCount: data.employeeCount,
+          position: data.position,
+          currentChallenge: data.currentChallenge,
+          primaryGoal: data.primaryGoal,
+          timeline: data.timeline,
+          budget: data.budget,
+          additionalInfo: data.additionalInfo,
+          marketingConsent: data.marketingConsent,
+          locale: data.locale,
+          submittedAt: data.submittedAt || new Date().toISOString(),
+        },
+      })
+      .returning({ id: leads.id });
+
+    // Trigger webhooks for diagnostic.submitted event (non-blocking)
+    triggerWebhooks(organizationId, 'diagnostic.submitted', {
+      leadId: lead.id,
+      email: data.email,
+      name: data.name,
+      company: data.companyName,
+      score,
+      source: 'website',
+      submittedAt: data.submittedAt || new Date().toISOString(),
+    }).catch((error) => {
+      console.error('Failed to trigger webhooks:', error);
+    });
+
+    // Send diagnostic result email (non-blocking)
+    if (isEmailConfigured()) {
+      const emailData = generateDiagnosticResultEmail({
+        name: data.name,
+        company: data.companyName,
+        email: data.email,
+        score,
+        industry: data.industry,
+        employeeCount: data.employeeCount,
+        timeline: data.timeline,
+        budget: data.budget,
+        challenge: data.currentChallenge,
+        goal: data.primaryGoal,
+        locale: (data.locale as 'en' | 'ja') || 'en',
+      });
+
+      sendEmail({
+        to: data.email,
+        subject: emailData.subject,
+        html: emailData.html,
+        text: emailData.text,
+      }).catch((error) => {
+        console.error('Failed to send diagnostic result email:', error);
+      });
+    }
+
+    // Return success response
     return NextResponse.json({
       success: true,
       message: 'Diagnostic submitted successfully',
       score,
-      leadId: `lead_${Date.now()}`, // Placeholder ID
+      leadId: lead.id,
       data: {
         email: data.email,
         company: data.companyName,

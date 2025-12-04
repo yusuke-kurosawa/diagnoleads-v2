@@ -441,3 +441,102 @@ export type Webhook = typeof webhooks.$inferSelect;
 export type NewWebhook = typeof webhooks.$inferInsert;
 export type WebhookDelivery = typeof webhookDeliveries.$inferSelect;
 export type NewWebhookDelivery = typeof webhookDeliveries.$inferInsert;
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Notification Type
+ */
+export type NotificationType =
+  | 'lead_created'
+  | 'lead_status_changed'
+  | 'lead_scored'
+  | 'import_completed'
+  | 'export_completed'
+  | 'member_invited'
+  | 'member_removed'
+  | 'system';
+
+/**
+ * Notifications Table
+ * Stores in-app notifications for users
+ */
+export const notifications = pgTable('notifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id').references(() => organizations.id, {
+    onDelete: 'cascade',
+  }),
+  type: text('type').$type<NotificationType>().notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  data: jsonb('data').$type<Record<string, unknown>>(),
+  read: boolean('read').default(false).notNull(),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Notification Preferences Table
+ * User preferences for notification channels and types
+ */
+export const notificationPreferences = pgTable('notification_preferences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  // In-app notifications
+  inAppLeadCreated: boolean('in_app_lead_created').default(true).notNull(),
+  inAppLeadStatusChanged: boolean('in_app_lead_status_changed').default(true).notNull(),
+  inAppLeadScored: boolean('in_app_lead_scored').default(true).notNull(),
+  inAppImportExport: boolean('in_app_import_export').default(true).notNull(),
+  inAppMemberChanges: boolean('in_app_member_changes').default(true).notNull(),
+  // Email notifications
+  emailLeadCreated: boolean('email_lead_created').default(false).notNull(),
+  emailLeadStatusChanged: boolean('email_lead_status_changed').default(false).notNull(),
+  emailLeadScored: boolean('email_lead_scored').default(false).notNull(),
+  emailDailyDigest: boolean('email_daily_digest').default(false).notNull(),
+  emailWeeklyReport: boolean('email_weekly_report').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Notification Relations
+ */
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [notifications.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [notificationPreferences.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+/**
+ * Notification Type Exports
+ */
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type NewNotificationPreference = typeof notificationPreferences.$inferInsert;

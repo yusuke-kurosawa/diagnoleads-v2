@@ -1,62 +1,43 @@
 #!/usr/bin/env tsx
 /**
- * Generate OpenAPI specification from tRPC routers
- * Run: npm run openapi:generate
+ * OpenAPI Specification Generator
+ *
+ * The OpenAPI spec is maintained in openapi/openapi.json
+ * This script validates and optionally serves the documentation.
+ *
+ * Run: bun run openapi:generate
+ *
+ * To view the documentation:
+ *   npx @redocly/cli preview-docs openapi/openapi.json
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
-const registry = new OpenAPIRegistry();
+const openApiPath = join(process.cwd(), 'openapi', 'openapi.json');
 
-// TODO: Register your tRPC procedures here
-// Example:
-// registry.registerPath({
-//   method: 'get',
-//   path: '/api/health',
-//   summary: 'Health check endpoint',
-//   responses: {
-//     200: {
-//       description: 'Service is healthy',
-//       content: {
-//         'application/json': {
-//           schema: z.object({
-//             status: z.literal('ok'),
-//             timestamp: z.string(),
-//           }),
-//         },
-//       },
-//     },
-//   },
-// });
+if (!existsSync(openApiPath)) {
+  console.error('❌ OpenAPI specification not found at:', openApiPath);
+  process.exit(1);
+}
 
-const generator = new OpenApiGeneratorV3(registry.definitions);
+try {
+  const spec = JSON.parse(readFileSync(openApiPath, 'utf-8'));
 
-const document = generator.generateDocument({
-  openapi: '3.0.0',
-  info: {
-    title: 'DiagnoLeads v2 API',
-    version: '1.0.0',
-    description: 'AI-Powered B2B Diagnostic Platform API',
-  },
-  servers: [
-    {
-      url: 'http://localhost:3000',
-      description: 'Development server',
-    },
-    {
-      url: 'https://diagnoleads.com',
-      description: 'Production server',
-    },
-  ],
-});
+  console.log(`
+✅ OpenAPI Specification: ${openApiPath}
 
-// Create openapi directory if it doesn't exist
-const openApiDir = join(process.cwd(), 'openapi');
-mkdirSync(openApiDir, { recursive: true });
+   Title: ${spec.info.title}
+   Version: ${spec.info.version}
+   Paths: ${Object.keys(spec.paths).length}
+   Schemas: ${Object.keys(spec.components?.schemas || {}).length}
 
-// Write OpenAPI spec to file
-const outputPath = join(openApiDir, 'openapi.json');
-writeFileSync(outputPath, JSON.stringify(document, null, 2));
+View documentation:
+   npx @redocly/cli preview-docs openapi/openapi.json
 
-console.log(`✅ OpenAPI specification generated at: ${outputPath}`);
+Or use Swagger UI:
+   npx swagger-ui-watcher openapi/openapi.json
+  `);
+} catch (error) {
+  console.error('❌ Failed to parse OpenAPI specification:', error);
+  process.exit(1);
+}

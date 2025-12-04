@@ -32,6 +32,7 @@ import type { Lead } from '@/lib/db/schema';
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type RowSelectionState,
   type SortingState,
   type VisibilityState,
   flexRender,
@@ -41,8 +42,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { BulkActions } from './bulk-actions';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatDistance } from 'date-fns';
 import { enUS, ja } from 'date-fns/locale';
+import {
+  downloadPDF,
+  exportLeadsToPDF,
+  generatePDFFilename,
+} from '@/lib/features/reports/pdf-export-service';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -53,6 +61,7 @@ import {
   Eye,
   FileJson,
   FileSpreadsheet,
+  FileText,
   MoreHorizontal,
   Pencil,
   Search,
@@ -67,9 +76,11 @@ import { useCallback, useEffect, useState } from 'react';
 interface LeadTableProps {
   leads: Lead[];
   isLoading?: boolean;
+  organizationId?: string;
   onLeadClick?: (lead: Lead) => void;
   onEdit?: (lead: Lead) => void;
   onDelete?: (lead: Lead) => void;
+  onRefresh?: () => void;
 }
 
 type StatusKey = 'new' | 'contacted' | 'qualified' | 'converted';
@@ -86,9 +97,17 @@ const statusConfig: Record<
 
 /**
  * Lead table component with TanStack Table + modern UI
- * Features: sorting, filtering, pagination, responsive columns, actions
+ * Features: sorting, filtering, pagination, responsive columns, actions, bulk operations
  */
-export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: LeadTableProps) {
+export function LeadTable({
+  leads,
+  isLoading,
+  organizationId,
+  onLeadClick,
+  onEdit,
+  onDelete,
+  onRefresh,
+}: LeadTableProps) {
   const t = useTranslations('leads');
   const tStatus = useTranslations('status');
   const tCommon = useTranslations('common');
@@ -111,6 +130,7 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
   const [globalFilter, setGlobalFilter] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Export functions
   const exportToCSV = useCallback(() => {
@@ -170,6 +190,30 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
     link.click();
   }, []);
 
+  const exportToPDF = useCallback(() => {
+    const filteredData = table.getFilteredRowModel().rows.map((row) => ({
+      id: row.original.id,
+      email: row.original.email,
+      name: row.original.name,
+      company: row.original.company,
+      phone: row.original.phone,
+      position: null,
+      source: row.original.source,
+      status: row.original.status,
+      score: row.original.score,
+      notes: null,
+      createdAt: row.original.createdAt ?? new Date(),
+      updatedAt: row.original.updatedAt ?? new Date(),
+    }));
+
+    const doc = exportLeadsToPDF(filteredData, {
+      generatedAt: new Date(),
+      locale: locale as 'en' | 'ja',
+    });
+    const filename = generatePDFFilename('leads');
+    downloadPDF(doc, filename);
+  }, [locale]);
+
   // Responsive column visibility based on screen size
   useEffect(() => {
     const handleResize = () => {
@@ -208,6 +252,31 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
   }, [statusFilter]);
 
   const columns: ColumnDef<Lead>[] = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="translate-y-[2px]"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: 'name',
       header: ({ column }) => (
@@ -402,18 +471,106 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
     globalFilterFn: 'includesString',
+    enableRowSelection: true,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       globalFilter,
+      rowSelection,
       pagination: {
         pageIndex: 0,
         pageSize,
       },
     },
   });
+
+  // Get selected leads for bulk actions
+  const selectedLeads = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+
+  // Helper functions for bulk export
+  const exportSelectedToCSV = useCallback((leadsToExport: Lead[]) => {
+    const headers = [
+      'Name',
+      'Email',
+      'Company',
+      'Phone',
+      'Status',
+      'Score',
+      'Source',
+      'Created At',
+    ];
+    const csvContent = [
+      headers.join(','),
+      ...leadsToExport.map((lead) =>
+        [
+          `"${lead.name || ''}"`,
+          `"${lead.email}"`,
+          `"${lead.company || ''}"`,
+          `"${lead.phone || ''}"`,
+          `"${lead.status}"`,
+          lead.score ?? '',
+          `"${lead.source || ''}"`,
+          `"${lead.createdAt ? new Date(lead.createdAt).toISOString() : ''}"`,
+        ].join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_selected_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  }, []);
+
+  const exportSelectedToJSON = useCallback((leadsToExport: Lead[]) => {
+    const data = leadsToExport.map((lead) => ({
+      id: lead.id,
+      name: lead.name,
+      email: lead.email,
+      company: lead.company,
+      phone: lead.phone,
+      status: lead.status,
+      score: lead.score,
+      source: lead.source,
+      createdAt: lead.createdAt,
+    }));
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_selected_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  }, []);
+
+  const exportSelectedToPDF = useCallback(
+    (leadsToExport: Lead[]) => {
+      const data = leadsToExport.map((lead) => ({
+        id: lead.id,
+        email: lead.email,
+        name: lead.name,
+        company: lead.company,
+        phone: lead.phone,
+        position: null,
+        source: lead.source,
+        status: lead.status,
+        score: lead.score,
+        notes: null,
+        createdAt: lead.createdAt ?? new Date(),
+        updatedAt: lead.updatedAt ?? new Date(),
+      }));
+
+      const doc = exportLeadsToPDF(data, {
+        generatedAt: new Date(),
+        locale: locale as 'en' | 'ja',
+      });
+      const filename = generatePDFFilename('leads');
+      downloadPDF(doc, filename);
+    },
+    [locale]
+  );
 
   const columnLabels: Record<string, string> = {
     name: t('name'),
@@ -441,6 +598,21 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
 
   return (
     <Card className="overflow-hidden">
+      {/* Bulk Actions */}
+      {organizationId && selectedLeads.length > 0 && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <BulkActions
+            selectedLeads={selectedLeads}
+            organizationId={organizationId}
+            onClearSelection={() => setRowSelection({})}
+            onActionComplete={() => onRefresh?.()}
+            onExportCSV={exportSelectedToCSV}
+            onExportJSON={exportSelectedToJSON}
+            onExportPDF={exportSelectedToPDF}
+          />
+        </div>
+      )}
+
       {/* Search and filters */}
       <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
@@ -535,6 +707,10 @@ export function LeadTable({ leads, isLoading, onLeadClick, onEdit, onDelete }: L
                 <DropdownMenuItem onClick={exportToJSON}>
                   <FileJson className="mr-2 h-4 w-4" />
                   JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToPDF}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  PDF
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

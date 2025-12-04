@@ -387,7 +387,26 @@
     "leadTrend": "リードトレンド",
     "leadStatusBreakdown": "リードステータス内訳",
     "count": "件",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "converted": "成約",
+    "widgets": {
+      "customize": "カスタマイズ",
+      "title": "ダッシュボードのカスタマイズ",
+      "description": "ウィジェットの表示/非表示や並び替えができます",
+      "reset": "デフォルトに戻す",
+      "kpiCards": "KPIカード",
+      "kpiCardsDesc": "主要パフォーマンス指標",
+      "statusBreakdown": "ステータス内訳",
+      "statusBreakdownDesc": "リードステータスの分布",
+      "leadTrend": "リードトレンド",
+      "leadTrendDesc": "リード獲得のトレンドチャート",
+      "statusDonut": "ステータスチャート",
+      "statusDonutDesc": "リードステータスのドーナツチャート",
+      "conversionRadial": "コンバージョン＆スコア",
+      "conversionRadialDesc": "ラジアル進捗チャート",
+      "recentActivity": "最近のアクティビティ",
+      "recentActivityDesc": "最新のリードアクティビティ"
+    }
   },
   "leads": {
     "title": "リード管理",
@@ -438,7 +457,49 @@
     "deleteConfirmMessage": "この操作は取り消せません。{name}のすべてのデータが完全に削除されます。",
     "deleting": "削除中...",
     "rowsPerPage": "表示件数",
-    "addFirstLead": "最初のリードを追加"
+    "addFirstLead": "最初のリードを追加",
+    "bulk": {
+      "selected": "{count}件選択中",
+      "updateStatus": "ステータス変更",
+      "deleteSelected": "選択を削除",
+      "exportSelected": "選択をエクスポート",
+      "clearSelection": "選択解除",
+      "deleteConfirmTitle": "{count}件のリードを削除しますか？",
+      "deleteConfirmMessage": "この操作は取り消せません。選択したリードはすべて完全に削除されます。",
+      "updateStatusTitle": "ステータス変更",
+      "updateStatusDescription": "選択した{count}件のリードのステータスを変更します",
+      "selectStatus": "新しいステータスを選択",
+      "updating": "更新中...",
+      "deleting": "削除中...",
+      "updateSuccess": "{count}件のリードを更新しました",
+      "deleteSuccess": "{count}件のリードを削除しました",
+      "updateError": "リードの更新に失敗しました",
+      "deleteError": "リードの削除に失敗しました"
+    },
+    "import": {
+      "title": "リードをインポート",
+      "description": "CSVまたはExcelファイルをアップロードしてリードを一括インポート",
+      "selectFile": "ファイルを選択",
+      "dragDrop": "ここにファイルをドラッグ&ドロップ、またはクリックして選択",
+      "supportedFormats": "対応形式: CSV, XLS, XLSX",
+      "downloadTemplate": "テンプレートをダウンロード",
+      "preview": "プレビュー",
+      "previewDescription": "インポート前にデータを確認",
+      "columnMapping": "カラムマッピング",
+      "detected": "検出",
+      "mapTo": "対応先",
+      "validation": "検証",
+      "valid": "有効",
+      "invalid": "無効",
+      "errors": "件のエラー",
+      "importing": "インポート中...",
+      "importButton": "{count}件のリードをインポート",
+      "importSuccess": "{count}件のリードをインポートしました",
+      "importError": "リードのインポートに失敗しました",
+      "noData": "ファイルにデータが見つかりません",
+      "emailRequired": "メールカラムは必須です",
+      "duplicateEmails": "{count}件の重複メールアドレスが見つかりました"
+    }
   },
   "settings": {
     "organization": {

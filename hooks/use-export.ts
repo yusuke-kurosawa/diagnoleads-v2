@@ -2,6 +2,7 @@
  * Export Hook
  *
  * React hook for downloading analytics reports and lead exports
+ * Supports CSV, JSON, and PDF formats
  */
 
 import type {
@@ -19,10 +20,17 @@ import {
   leadsToCSV,
   triggerDownload,
 } from '@/lib/features/reports/export-service';
+import {
+  downloadPDF,
+  exportAnalyticsToPDF,
+  exportLeadsToPDF,
+  generatePDFFilename,
+} from '@/lib/features/reports/pdf-export-service';
 import { useCallback, useState } from 'react';
 
 interface UseExportOptions {
   organizationName?: string;
+  locale?: 'en' | 'ja';
 }
 
 /**
@@ -30,7 +38,7 @@ interface UseExportOptions {
  */
 export function useExport(options: UseExportOptions = {}) {
   const [isExporting, setIsExporting] = useState(false);
-  const { organizationName = 'Unknown Organization' } = options;
+  const { organizationName = 'Unknown Organization', locale = 'en' } = options;
 
   /**
    * Export leads to CSV
@@ -121,11 +129,74 @@ export function useExport(options: UseExportOptions = {}) {
     [organizationName]
   );
 
+  /**
+   * Export leads to PDF
+   */
+  const exportLeadsPDF = useCallback(
+    (leads: ExportLead[], dateRange?: string) => {
+      setIsExporting(true);
+      try {
+        const doc = exportLeadsToPDF(leads, {
+          organizationName,
+          dateRange,
+          generatedAt: new Date(),
+          locale,
+        });
+        const filename = generatePDFFilename('leads', dateRange);
+        downloadPDF(doc, filename);
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [organizationName, locale]
+  );
+
+  /**
+   * Export analytics report to PDF
+   */
+  const exportAnalyticsPDF = useCallback(
+    (data: {
+      overview: OverviewStats;
+      trend?: TrendDataPoint[];
+      sourceBreakdown?: SourceBreakdown[];
+      statusBreakdown?: StatusBreakdown[];
+      funnel?: ConversionFunnelData;
+      dateRange: string;
+    }) => {
+      setIsExporting(true);
+      try {
+        const doc = exportAnalyticsToPDF(
+          {
+            overview: data.overview,
+            trend: data.trend,
+            sourceBreakdown: data.sourceBreakdown,
+            statusBreakdown: data.statusBreakdown,
+            funnel: data.funnel,
+          },
+          {
+            title: 'Analytics Report',
+            organizationName,
+            dateRange: data.dateRange,
+            generatedAt: new Date(),
+            locale,
+          }
+        );
+        const filename = generatePDFFilename('analytics', data.dateRange);
+        downloadPDF(doc, filename);
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [organizationName, locale]
+  );
+
   return {
     isExporting,
     exportLeadsCSV,
     exportLeadsJSON,
+    exportLeadsPDF,
     exportAnalyticsReport,
     exportAnalyticsJSON,
+    exportAnalyticsPDF,
   };
 }

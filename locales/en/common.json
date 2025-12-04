@@ -387,7 +387,26 @@
     "leadTrend": "Lead Trend",
     "leadStatusBreakdown": "Lead Status Breakdown",
     "count": "",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "converted": "Converted",
+    "widgets": {
+      "customize": "Customize",
+      "title": "Customize Dashboard",
+      "description": "Show, hide, or reorder widgets on your dashboard",
+      "reset": "Reset to Default",
+      "kpiCards": "KPI Cards",
+      "kpiCardsDesc": "Key performance indicators",
+      "statusBreakdown": "Status Breakdown",
+      "statusBreakdownDesc": "Lead status distribution",
+      "leadTrend": "Lead Trend",
+      "leadTrendDesc": "Lead acquisition trend chart",
+      "statusDonut": "Status Chart",
+      "statusDonutDesc": "Donut chart of lead status",
+      "conversionRadial": "Conversion & Score",
+      "conversionRadialDesc": "Radial progress charts",
+      "recentActivity": "Recent Activity",
+      "recentActivityDesc": "Latest lead activity"
+    }
   },
   "leads": {
     "title": "Lead Management",
@@ -438,7 +457,49 @@
     "deleteConfirmMessage": "This action cannot be undone. All data for {name} will be permanently deleted.",
     "deleting": "Deleting...",
     "rowsPerPage": "Rows per page",
-    "addFirstLead": "Add your first lead"
+    "addFirstLead": "Add your first lead",
+    "bulk": {
+      "selected": "{count} selected",
+      "updateStatus": "Update Status",
+      "deleteSelected": "Delete Selected",
+      "exportSelected": "Export Selected",
+      "clearSelection": "Clear Selection",
+      "deleteConfirmTitle": "Delete {count} leads?",
+      "deleteConfirmMessage": "This action cannot be undone. All selected leads will be permanently deleted.",
+      "updateStatusTitle": "Update Status",
+      "updateStatusDescription": "Change the status of {count} selected leads",
+      "selectStatus": "Select new status",
+      "updating": "Updating...",
+      "deleting": "Deleting...",
+      "updateSuccess": "{count} leads updated successfully",
+      "deleteSuccess": "{count} leads deleted successfully",
+      "updateError": "Failed to update leads",
+      "deleteError": "Failed to delete leads"
+    },
+    "import": {
+      "title": "Import Leads",
+      "description": "Upload a CSV or Excel file to import leads in bulk",
+      "selectFile": "Select File",
+      "dragDrop": "Drag and drop a file here, or click to browse",
+      "supportedFormats": "Supported formats: CSV, XLS, XLSX",
+      "downloadTemplate": "Download Template",
+      "preview": "Preview",
+      "previewDescription": "Review the data before importing",
+      "columnMapping": "Column Mapping",
+      "detected": "Detected",
+      "mapTo": "Map to",
+      "validation": "Validation",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "errors": "errors",
+      "importing": "Importing...",
+      "importButton": "Import {count} Leads",
+      "importSuccess": "{count} leads imported successfully",
+      "importError": "Failed to import leads",
+      "noData": "No data found in file",
+      "emailRequired": "Email column is required",
+      "duplicateEmails": "{count} duplicate emails found"
+    }
   },
   "settings": {
     "organization": {

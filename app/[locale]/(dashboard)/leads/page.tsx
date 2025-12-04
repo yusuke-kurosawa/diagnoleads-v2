@@ -1,5 +1,6 @@
 'use client';
 
+import { ImportDialog } from '@/components/features/leads/import-dialog';
 import { LeadDetails } from '@/components/features/leads/lead-details';
 import { LeadDialog } from '@/components/features/leads/lead-dialog';
 import { useCreateLead, useDeleteLead, useListLeads, useUpdateLead } from '@/hooks/use-leads';
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import type { Lead } from '@/lib/db/schema';
 import type { CreateLeadInput, UpdateLeadInput } from '@/lib/features/leads/types';
-import { Plus, Target, TrendingUp, UserCheck, Users } from 'lucide-react';
+import { Plus, Target, TrendingUp, Upload, UserCheck, Users } from 'lucide-react';
 
 // Dynamic import for heavy table component (TanStack Table)
 const LeadTable = dynamic(
@@ -60,6 +61,7 @@ function isValidUUID(str: string): boolean {
 export default function LeadsPage() {
   const t = useTranslations('leads');
   const tStatus = useTranslations('status');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const { organizationId: contextOrgId, isLoading: contextLoading } = useOrganization();
 
@@ -69,11 +71,16 @@ export default function LeadsPage() {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Fetch leads list
-  const { data: leadsData, isLoading } = useListLeads({
+  const {
+    data: leadsData,
+    isLoading,
+    refetch,
+  } = useListLeads({
     organizationId,
     limit: 100,
     offset: 0,
@@ -158,10 +165,16 @@ export default function LeadsPage() {
             <Text className="mt-1">{t('description')}</Text>
           </div>
         </div>
-        <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-5 w-5 mr-2" />
-          {t('createLead')}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="lg" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-5 w-5 mr-2" />
+            {tCommon('import')}
+          </Button>
+          <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-5 w-5 mr-2" />
+            {t('createLead')}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -253,7 +266,13 @@ export default function LeadsPage() {
       </div>
 
       {/* Lead Table */}
-      <LeadTable leads={leads} isLoading={isLoading} onLeadClick={handleLeadClick} />
+      <LeadTable
+        leads={leads}
+        isLoading={isLoading}
+        organizationId={organizationId}
+        onLeadClick={handleLeadClick}
+        onRefresh={() => refetch()}
+      />
 
       {/* Create Lead Dialog */}
       <LeadDialog
@@ -294,6 +313,14 @@ export default function LeadsPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Import Dialog */}
+      <ImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        organizationId={organizationId}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 }

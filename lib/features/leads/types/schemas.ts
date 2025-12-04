@@ -75,3 +75,43 @@ export const deleteLeadSchema = z.object({
   id: z.string().uuid(),
 });
 export type DeleteLeadInput = z.infer<typeof deleteLeadSchema>;
+
+/**
+ * Bulk update status schema
+ */
+export const bulkUpdateStatusSchema = z.object({
+  organizationId: z.string().uuid(),
+  ids: z.array(z.string().uuid()).min(1, '少なくとも1つのリードを選択してください'),
+  status: leadStatusEnum,
+});
+export type BulkUpdateStatusInput = z.infer<typeof bulkUpdateStatusSchema>;
+
+/**
+ * Bulk delete schema
+ */
+export const bulkDeleteSchema = z.object({
+  organizationId: z.string().uuid(),
+  ids: z.array(z.string().uuid()).min(1, '少なくとも1つのリードを選択してください'),
+});
+export type BulkDeleteInput = z.infer<typeof bulkDeleteSchema>;
+
+/**
+ * Bulk create schema for importing leads
+ */
+export const bulkCreateSchema = z.object({
+  organizationId: z.string().uuid(),
+  leads: z
+    .array(
+      z.object({
+        email: z.string().email(),
+        name: z.string().optional(),
+        company: z.string().optional(),
+        phone: z.string().optional(),
+        status: leadStatusEnum.default('new'),
+        source: leadSourceEnum.optional(),
+        score: z.number().int().min(0).max(100).optional(),
+      })
+    )
+    .min(1, '少なくとも1つのリードを指定してください'),
+});
+export type BulkCreateInput = z.infer<typeof bulkCreateSchema>;
