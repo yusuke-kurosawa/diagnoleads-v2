@@ -207,11 +207,17 @@ diagnoleads-v2/
 - セキュリティファースト
 
 ### 4. ドキュメント参照
-必要に応じて以下のファイルを参照：
-- `IMPLEMENTATION_CHECKLIST.md` - 実装進捗
-- `docs/MULTI_TENANT_STRATEGY.md` - マルチテナント戦略
-- `.claude/project-context.md` - プロジェクトコンテキスト
-- `openspec/specs/architecture.md` - アーキテクチャ仕様
+**重要**: 質問に回答する前に、必ず以下のファイルを確認して最新の状況を把握してください：
+
+| ファイル | 確認タイミング | 内容 |
+|---------|---------------|------|
+| `IMPLEMENTATION_CHECKLIST.md` | **常に最初に確認** | 最新の実装進捗、完了タスク |
+| `docs/MULTI_TENANT_STRATEGY.md` | 組織・階層の質問時 | マルチテナント戦略 |
+| `.claude/project-context.md` | 技術的な質問時 | コーディング規約、パターン |
+| `openspec/specs/architecture.md` | アーキテクチャの質問時 | 技術仕様 |
+| `openspec/specs/api/*.md` | API関連の質問時 | API仕様詳細 |
+
+**注意**: このプロンプト内の進捗情報は作成時点のものです。最新の状況は必ず `IMPLEMENTATION_CHECKLIST.md` を読んで確認してください。
 
 ---
 
