@@ -13,12 +13,15 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, sql } from 'drizzle-orm';
 import { generateLeadSummary } from '../chat/assistant';
 import { prepareLeadText } from '../embeddings/openai';
+import { predictConversion, predictConversionBatch } from '../prediction/conversion';
 import { scoreLeadWithAI, scoreLeadsBatch } from '../scoring/claude';
 import { findSimilarLeads, semanticSearch, updateLeadEmbedding } from '../search/semantic';
 import {
+  batchPredictConversionSchema,
   batchScoreLeadsSchema,
   findSimilarLeadsSchema,
   generateSummarySchema,
+  predictConversionSchema,
   scoreLeadSchema,
   semanticSearchSchema,
   updateEmbeddingSchema,
@@ -243,5 +246,80 @@ export const aiRouter = router({
       await updateLeadEmbedding(input.leadId, text);
 
       return { success: true };
+    }),
+
+  /**
+   * Predict conversion probability for a lead
+   */
+  predictConversion: organizationProcedure
+    .input(predictConversionSchema)
+    .query(async ({ ctx, input }) => {
+      // Check permission
+      if (!ctx.ability.can('read', 'Lead')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'リードを閲覧する権限がありません',
+        });
+      }
+
+      // Get lead
+      const lead = await ctx.db.query.leads.findFirst({
+        where: and(eq(leads.id, input.leadId), eq(leads.organizationId, input.organizationId)),
+      });
+
+      if (!lead) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'リードが見つかりません',
+        });
+      }
+
+      // Predict conversion
+      const prediction = await predictConversion(lead);
+
+      return {
+        leadId: lead.id,
+        prediction,
+      };
+    }),
+
+  /**
+   * Batch predict conversion for multiple leads
+   */
+  batchPredictConversion: organizationProcedure
+    .input(batchPredictConversionSchema)
+    .query(async ({ ctx, input }) => {
+      // Check permission
+      if (!ctx.ability.can('read', 'Lead')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'リードを閲覧する権限がありません',
+        });
+      }
+
+      // Get all leads
+      const leadsToPredict = await ctx.db.query.leads.findMany({
+        where: and(
+          eq(leads.organizationId, input.organizationId),
+          sql`${leads.id} = ANY(${input.leadIds})`
+        ),
+      });
+
+      if (leadsToPredict.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'リードが見つかりません',
+        });
+      }
+
+      // Batch predict
+      const predictionsMap = await predictConversionBatch(leadsToPredict);
+
+      return {
+        predictions: Array.from(predictionsMap.entries()).map(([leadId, prediction]) => ({
+          leadId,
+          prediction,
+        })),
+      };
     }),
 });

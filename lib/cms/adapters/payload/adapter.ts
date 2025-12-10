@@ -4,12 +4,12 @@
  * Phase 4.3: PayloadCMS統合
  *
  * PayloadCMS Local APIを使用してCMSAdapterインターフェースを実装
- * NOTE: Temporarily disabled due to Next.js build issues with PayloadCMS
  *
  * @see https://payloadcms.com/docs/local-api/overview
  */
 
 import { revalidatePath } from 'next/cache';
+import { getPayload, type Payload } from 'payload';
 import {
   CMSConnectionError,
   CMSNotFoundError,
@@ -35,11 +35,11 @@ import type {
   UpdateParams,
   WhereCondition,
 } from '../../core/interfaces';
-import type { Payload, Where } from '../../types/payload-stubs';
+import type { Where } from 'payload';
 
 export class PayloadCMSAdapter implements CMSAdapter {
   readonly name = 'PayloadCMS';
-  readonly version = '3.0';
+  readonly version = '3.66';
 
   private payload: Payload | null = null;
   private initPromise: Promise<void> | null = null;
@@ -57,13 +57,15 @@ export class PayloadCMSAdapter implements CMSAdapter {
   }
 
   private async doInitialize(): Promise<void> {
-    // PayloadCMS is currently disabled due to incompatibility with Next.js 15.
-    // The PayloadCMS package uses Pages Router components internally which conflict
-    // with Next.js 15's static page generation.
-    // TODO: Re-enable when PayloadCMS releases a compatible version.
-    throw new CMSConnectionError(
-      'PayloadCMS is currently disabled. Please use an alternative CMS adapter or wait for PayloadCMS to support Next.js 15.'
-    );
+    try {
+      // Dynamic import to avoid build-time issues
+      const config = await import('@payload-config').then((m) => m.default);
+      this.payload = await getPayload({ config });
+    } catch (error) {
+      throw new CMSConnectionError(
+        `Failed to initialize PayloadCMS: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   async healthCheck(): Promise<boolean> {

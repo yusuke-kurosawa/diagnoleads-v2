@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import { withPayload } from '@payloadcms/next/withPayload';
 
 const withNextIntl = createNextIntlPlugin('./lib/i18n/request.ts');
 
@@ -63,5 +64,5 @@ const withBundleAnalyzer =
     ? require('@next/bundle-analyzer')({ enabled: true })
     : (config: NextConfig) => config;
 
-// Apply plugins: next-intl -> bundle analyzer
-export default withNextIntl(withBundleAnalyzer(nextConfig));
+// Apply plugins: next-intl -> bundle analyzer -> payload
+export default withPayload(withNextIntl(withBundleAnalyzer(nextConfig)));

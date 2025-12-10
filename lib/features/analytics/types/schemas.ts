@@ -142,3 +142,100 @@ export interface ResponseTimeData {
   percentage: number;
   averageHours: number;
 }
+
+/**
+ * ROI Calculator Schema
+ */
+export const getROISchema = z.object({
+  organizationId: z.string().uuid(),
+  dateRange: dateRangeSchema.default('30d'),
+  /** Cost per lead by source (optional, uses defaults if not provided) */
+  costPerLead: z
+    .object({
+      website: z.number().min(0).optional(),
+      embed: z.number().min(0).optional(),
+      api: z.number().min(0).optional(),
+      unknown: z.number().min(0).optional(),
+    })
+    .optional(),
+  /** Average deal value for converted leads */
+  averageDealValue: z.number().min(0).optional(),
+});
+export type GetROIInput = z.infer<typeof getROISchema>;
+
+/**
+ * ROI by Source Data
+ */
+export interface SourceROIData {
+  source: string;
+  leadCount: number;
+  convertedCount: number;
+  conversionRate: number;
+  totalCost: number;
+  totalRevenue: number;
+  roi: number; // ROI percentage
+  costPerAcquisition: number;
+  revenuePerLead: number;
+}
+
+/**
+ * Overall ROI Summary
+ */
+export interface ROISummary {
+  totalLeads: number;
+  totalConverted: number;
+  totalCost: number;
+  totalRevenue: number;
+  overallROI: number;
+  overallConversionRate: number;
+  averageCostPerLead: number;
+  averageCostPerAcquisition: number;
+  averageRevenuePerLead: number;
+  bySource: SourceROIData[];
+  bestPerformingSource: string | null;
+  worstPerformingSource: string | null;
+}
+
+/**
+ * Comparison Analysis Schema
+ */
+export const getComparisonSchema = z.object({
+  organizationId: z.string().uuid(),
+  /** Compare two date ranges */
+  currentPeriod: z.object({
+    start: z.string().datetime(),
+    end: z.string().datetime(),
+  }),
+  previousPeriod: z.object({
+    start: z.string().datetime(),
+    end: z.string().datetime(),
+  }),
+});
+export type GetComparisonInput = z.infer<typeof getComparisonSchema>;
+
+/**
+ * Period Metrics for Comparison
+ */
+export interface PeriodMetrics {
+  totalLeads: number;
+  convertedLeads: number;
+  conversionRate: number;
+  averageScore: number;
+  bySource: Record<string, number>;
+  byStatus: Record<string, number>;
+}
+
+/**
+ * Comparison Result
+ */
+export interface ComparisonResult {
+  currentPeriod: PeriodMetrics;
+  previousPeriod: PeriodMetrics;
+  changes: {
+    totalLeads: number; // percentage change
+    convertedLeads: number;
+    conversionRate: number;
+    averageScore: number;
+  };
+  insights: string[];
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { NotificationSettings } from '@/components/features/notifications/notification-settings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
@@ -364,6 +365,9 @@ export default function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        {/* Notification Settings */}
+        <NotificationSettings />
 
         {/* Danger Zone */}
         <Card className="border-red-200 dark:border-red-900/50">

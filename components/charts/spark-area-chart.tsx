@@ -57,6 +57,16 @@ export function SparkAreaChart({
         enabled: false,
       },
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     stroke: {
       curve: curveType,
       width: 2,

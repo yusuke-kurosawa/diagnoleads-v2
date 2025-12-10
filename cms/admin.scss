@@ -1,0 +1,517 @@
+/**
+ * DiagnoLeads Custom Admin Styles for PayloadCMS
+ * Matches the main app's TailAdmin-inspired design system
+ */
+
+/* ============================================
+   CSS Variables - DiagnoLeads Design System
+   ============================================ */
+:root {
+  /* Brand Colors (Teal) */
+  --theme-brand-25: #f0fdfa;
+  --theme-brand-50: #ccfbf1;
+  --theme-brand-100: #99f6e4;
+  --theme-brand-200: #5eead4;
+  --theme-brand-300: #2dd4bf;
+  --theme-brand-400: #14b8a6;
+  --theme-brand-500: #0d9488;
+  --theme-brand-600: #0f766e;
+  --theme-brand-700: #115e59;
+  --theme-brand-800: #134e4a;
+  --theme-brand-900: #042f2e;
+
+  /* Accent Colors (Violet) */
+  --theme-accent-400: #a78bfa;
+  --theme-accent-500: #8b5cf6;
+  --theme-accent-600: #7a5af8;
+
+  /* Gray Scale */
+  --theme-gray-25: #fcfcfd;
+  --theme-gray-50: #f9fafb;
+  --theme-gray-100: #f2f4f7;
+  --theme-gray-200: #e4e7ec;
+  --theme-gray-300: #d0d5dd;
+  --theme-gray-400: #98a2b3;
+  --theme-gray-500: #667085;
+  --theme-gray-600: #475467;
+  --theme-gray-700: #344054;
+  --theme-gray-800: #1d2939;
+  --theme-gray-900: #101828;
+  --theme-gray-950: #0c111d;
+
+  /* Status Colors */
+  --theme-success-500: #12b76a;
+  --theme-error-500: #f04438;
+  --theme-warning-500: #f79009;
+
+  /* Font */
+  --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shadows */
+  --theme-shadow-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --theme-shadow-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --theme-shadow-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+
+  /* Border Radius */
+  --theme-radius-sm: 0.375rem;
+  --theme-radius-md: 0.5rem;
+  --theme-radius-lg: 0.75rem;
+  --theme-radius-xl: 1rem;
+}
+
+/* ============================================
+   Global Overrides
+   ============================================ */
+
+/* Import Outfit font */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+body {
+  font-family: var(--font-outfit) !important;
+  background-color: var(--theme-gray-50) !important;
+}
+
+/* ============================================
+   Header Customization
+   ============================================ */
+.template-default__nav {
+  background-color: white !important;
+  border-right: 1px solid var(--theme-gray-200) !important;
+}
+
+header.app-header {
+  background-color: white !important;
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+  box-shadow: var(--theme-shadow-sm) !important;
+}
+
+/* ============================================
+   Navigation / Sidebar
+   ============================================ */
+.nav {
+  background-color: white !important;
+  border-right: 1px solid var(--theme-gray-200) !important;
+}
+
+.nav-group__label {
+  color: var(--theme-gray-500) !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Nav items */
+.nav-group__content .nav__link {
+  color: var(--theme-gray-700) !important;
+  border-radius: var(--theme-radius-md) !important;
+  transition: all 0.2s ease !important;
+  margin: 0.125rem 0 !important;
+  padding: 0.625rem 0.75rem !important;
+}
+
+.nav-group__content .nav__link:hover {
+  background-color: var(--theme-brand-50) !important;
+  color: var(--theme-brand-600) !important;
+}
+
+.nav-group__content .nav__link.active,
+.nav-group__content .nav__link--active {
+  background-color: var(--theme-brand-100) !important;
+  color: var(--theme-brand-700) !important;
+  font-weight: 500 !important;
+}
+
+.nav__link svg {
+  color: var(--theme-gray-400) !important;
+}
+
+.nav__link:hover svg,
+.nav__link.active svg,
+.nav__link--active svg {
+  color: var(--theme-brand-500) !important;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn {
+  font-family: var(--font-outfit) !important;
+  font-weight: 500 !important;
+  border-radius: var(--theme-radius-md) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Primary button */
+.btn--style-primary {
+  background-color: var(--theme-brand-500) !important;
+  border-color: var(--theme-brand-500) !important;
+  color: white !important;
+}
+
+.btn--style-primary:hover {
+  background-color: var(--theme-brand-600) !important;
+  border-color: var(--theme-brand-600) !important;
+}
+
+.btn--style-primary:focus {
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.3) !important;
+}
+
+/* Secondary button */
+.btn--style-secondary {
+  background-color: white !important;
+  border-color: var(--theme-gray-300) !important;
+  color: var(--theme-gray-700) !important;
+}
+
+.btn--style-secondary:hover {
+  background-color: var(--theme-gray-50) !important;
+  border-color: var(--theme-gray-400) !important;
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+.field-type {
+  font-family: var(--font-outfit) !important;
+}
+
+.field-type input,
+.field-type textarea,
+.field-type select {
+  font-family: var(--font-outfit) !important;
+  border-radius: var(--theme-radius-md) !important;
+  border-color: var(--theme-gray-300) !important;
+  transition: all 0.2s ease !important;
+}
+
+.field-type input:focus,
+.field-type textarea:focus,
+.field-type select:focus {
+  border-color: var(--theme-brand-400) !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
+  outline: none !important;
+}
+
+.field-type label {
+  color: var(--theme-gray-700) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+}
+
+.field-description {
+  color: var(--theme-gray-500) !important;
+  font-size: 0.75rem !important;
+}
+
+/* ============================================
+   Cards & Panels
+   ============================================ */
+.card,
+.collection-list__card,
+.document-fields {
+  background-color: white !important;
+  border: 1px solid var(--theme-gray-200) !important;
+  border-radius: var(--theme-radius-lg) !important;
+  box-shadow: var(--theme-shadow-sm) !important;
+}
+
+/* ============================================
+   Tables
+   ============================================ */
+.table {
+  font-family: var(--font-outfit) !important;
+}
+
+.table thead th {
+  background-color: var(--theme-gray-50) !important;
+  color: var(--theme-gray-600) !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--theme-gray-100) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.table tbody tr:hover {
+  background-color: var(--theme-brand-25) !important;
+}
+
+.table tbody td {
+  color: var(--theme-gray-700) !important;
+}
+
+/* ============================================
+   Dashboard
+   ============================================ */
+.dashboard {
+  background-color: var(--theme-gray-50) !important;
+}
+
+.dashboard__card {
+  background-color: white !important;
+  border: 1px solid var(--theme-gray-200) !important;
+  border-radius: var(--theme-radius-lg) !important;
+  box-shadow: var(--theme-shadow-sm) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dashboard__card:hover {
+  box-shadow: var(--theme-shadow-md) !important;
+  border-color: var(--theme-brand-200) !important;
+}
+
+.dashboard__card-title {
+  color: var(--theme-gray-900) !important;
+  font-weight: 600 !important;
+}
+
+/* ============================================
+   Tabs
+   ============================================ */
+.tabs {
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+}
+
+.tabs__tab {
+  color: var(--theme-gray-500) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+.tabs__tab:hover {
+  color: var(--theme-brand-600) !important;
+}
+
+.tabs__tab--active {
+  color: var(--theme-brand-600) !important;
+  border-bottom-color: var(--theme-brand-500) !important;
+}
+
+/* ============================================
+   Toasts / Notifications
+   ============================================ */
+.toast {
+  font-family: var(--font-outfit) !important;
+  border-radius: var(--theme-radius-md) !important;
+  box-shadow: var(--theme-shadow-lg) !important;
+}
+
+.toast--success {
+  background-color: #ecfdf5 !important;
+  border-left: 4px solid var(--theme-success-500) !important;
+}
+
+.toast--error {
+  background-color: #fef2f2 !important;
+  border-left: 4px solid var(--theme-error-500) !important;
+}
+
+.toast--warning {
+  background-color: #fffbeb !important;
+  border-left: 4px solid var(--theme-warning-500) !important;
+}
+
+/* ============================================
+   Pill / Badge
+   ============================================ */
+.pill {
+  font-family: var(--font-outfit) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  border-radius: 9999px !important;
+  padding: 0.25rem 0.625rem !important;
+}
+
+.pill--style-light-gray {
+  background-color: var(--theme-gray-100) !important;
+  color: var(--theme-gray-700) !important;
+}
+
+.pill--has-action:hover {
+  background-color: var(--theme-brand-100) !important;
+  color: var(--theme-brand-700) !important;
+}
+
+/* ============================================
+   Modal / Drawer
+   ============================================ */
+.drawer,
+.modal__content {
+  font-family: var(--font-outfit) !important;
+  border-radius: var(--theme-radius-xl) !important;
+  box-shadow: var(--theme-shadow-lg) !important;
+}
+
+.modal__header {
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+}
+
+/* ============================================
+   Search
+   ============================================ */
+.search-filter__input {
+  font-family: var(--font-outfit) !important;
+  border-radius: var(--theme-radius-md) !important;
+  border-color: var(--theme-gray-300) !important;
+}
+
+.search-filter__input:focus {
+  border-color: var(--theme-brand-400) !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
+}
+
+/* ============================================
+   Pagination
+   ============================================ */
+.paginator {
+  font-family: var(--font-outfit) !important;
+}
+
+.paginator__page {
+  border-radius: var(--theme-radius-md) !important;
+  transition: all 0.15s ease !important;
+}
+
+.paginator__page:hover {
+  background-color: var(--theme-brand-50) !important;
+}
+
+.paginator__page--is-current {
+  background-color: var(--theme-brand-500) !important;
+  color: white !important;
+}
+
+/* ============================================
+   Checkbox & Radio
+   ============================================ */
+.checkbox-input:checked {
+  background-color: var(--theme-brand-500) !important;
+  border-color: var(--theme-brand-500) !important;
+}
+
+.radio-input:checked {
+  border-color: var(--theme-brand-500) !important;
+}
+
+.radio-input:checked::before {
+  background-color: var(--theme-brand-500) !important;
+}
+
+/* ============================================
+   Status Indicators
+   ============================================ */
+.status-indicator--draft {
+  background-color: var(--theme-gray-400) !important;
+}
+
+.status-indicator--published {
+  background-color: var(--theme-success-500) !important;
+}
+
+/* ============================================
+   Rich Text Editor (Lexical)
+   ============================================ */
+.lexical-editor {
+  font-family: var(--font-outfit) !important;
+  border-radius: var(--theme-radius-md) !important;
+}
+
+.lexical-editor__toolbar {
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+  background-color: var(--theme-gray-50) !important;
+}
+
+/* ============================================
+   Logo Area
+   ============================================ */
+.nav__logo {
+  padding: 1.25rem 1rem !important;
+  border-bottom: 1px solid var(--theme-gray-200) !important;
+}
+
+.nav__logo svg,
+.nav__logo img {
+  max-height: 32px !important;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-gray-100);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-gray-400);
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+[data-theme="dark"] {
+  --theme-gray-25: #0c111d;
+  --theme-gray-50: #101828;
+  --theme-gray-100: #1d2939;
+  --theme-gray-200: #344054;
+  --theme-gray-300: #475467;
+  --theme-gray-400: #667085;
+  --theme-gray-500: #98a2b3;
+  --theme-gray-600: #d0d5dd;
+  --theme-gray-700: #e4e7ec;
+  --theme-gray-800: #f2f4f7;
+  --theme-gray-900: #f9fafb;
+  --theme-gray-950: #fcfcfd;
+}
+
+[data-theme="dark"] body {
+  background-color: var(--theme-gray-50) !important;
+  color: var(--theme-gray-700) !important;
+}
+
+[data-theme="dark"] .nav,
+[data-theme="dark"] .template-default__nav {
+  background-color: var(--theme-gray-100) !important;
+  border-color: var(--theme-gray-200) !important;
+}
+
+[data-theme="dark"] header.app-header {
+  background-color: var(--theme-gray-100) !important;
+  border-color: var(--theme-gray-200) !important;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .collection-list__card,
+[data-theme="dark"] .document-fields,
+[data-theme="dark"] .dashboard__card {
+  background-color: var(--theme-gray-100) !important;
+  border-color: var(--theme-gray-200) !important;
+}
+
+[data-theme="dark"] .table thead th {
+  background-color: var(--theme-gray-100) !important;
+  color: var(--theme-gray-500) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: var(--theme-gray-200) !important;
+}

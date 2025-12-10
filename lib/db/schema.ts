@@ -242,6 +242,9 @@ export const leads = pgTable('leads', {
   // Assessment data
   responses: jsonb('responses').$type<Record<string, unknown>>().default({}),
 
+  // Custom fields data (Phase 9 P1)
+  customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
+
   // AI features (Phase 3)
   embedding: vector('embedding'), // OpenAI text-embedding-3-small (1536 dimensions)
   searchVector: tsvector('search_vector'), // Full-text search vector (generated)
@@ -834,3 +837,845 @@ export type ScheduledReport = typeof scheduledReports.$inferSelect;
 export type NewScheduledReport = typeof scheduledReports.$inferInsert;
 export type ReportHistory = typeof reportHistory.$inferSelect;
 export type NewReportHistory = typeof reportHistory.$inferInsert;
+
+// ============================================================================
+// Workflow Automation Feature
+// ============================================================================
+
+/**
+ * Workflow Trigger Type
+ * When the workflow should be triggered
+ */
+export type WorkflowTrigger =
+  | 'lead_created'
+  | 'lead_updated'
+  | 'status_changed'
+  | 'score_changed'
+  | 'tag_added'
+  | 'tag_removed'
+  | 'scheduled';
+
+/**
+ * Workflow Action Type
+ * What action to perform when triggered
+ */
+export type WorkflowAction =
+  | 'update_status'
+  | 'update_score'
+  | 'add_tag'
+  | 'remove_tag'
+  | 'send_notification'
+  | 'send_email'
+  | 'webhook';
+
+/**
+ * Workflow Status
+ */
+export type WorkflowStatus = 'active' | 'paused' | 'disabled';
+
+/**
+ * Condition Operator
+ */
+export type ConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_or_equal'
+  | 'less_or_equal'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'in'
+  | 'not_in';
+
+/**
+ * Workflow Condition
+ */
+export interface WorkflowCondition {
+  field: string;
+  operator: ConditionOperator;
+  value: unknown;
+}
+
+/**
+ * Workflow Action Config
+ */
+export interface WorkflowActionConfig {
+  type: WorkflowAction;
+  params: Record<string, unknown>;
+}
+
+/**
+ * Automation Workflows Table
+ * Defines automated rules for lead management
+ */
+export const workflows = pgTable('workflows', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  createdById: uuid('created_by_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  /** Trigger that activates this workflow */
+  trigger: text('trigger').$type<WorkflowTrigger>().notNull(),
+  /** Conditions that must be met (AND logic) */
+  conditions: jsonb('conditions').$type<WorkflowCondition[]>().default([]).notNull(),
+  /** Actions to perform when triggered */
+  actions: jsonb('actions').$type<WorkflowActionConfig[]>().default([]).notNull(),
+  /** Workflow status */
+  status: text('status').$type<WorkflowStatus>().default('active').notNull(),
+  /** Priority order (lower = higher priority) */
+  priority: integer('priority').default(100).notNull(),
+  /** For scheduled triggers - cron expression */
+  cronExpression: text('cron_expression'),
+  /** Last executed time */
+  lastExecutedAt: timestamp('last_executed_at'),
+  /** Total execution count */
+  executionCount: integer('execution_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Workflow Execution History
+ * Logs of workflow executions
+ */
+export const workflowExecutions = pgTable('workflow_executions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workflowId: uuid('workflow_id')
+    .notNull()
+    .references(() => workflows.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  /** Trigger that caused execution */
+  trigger: text('trigger').$type<WorkflowTrigger>().notNull(),
+  /** Conditions evaluated */
+  conditionsMatched: boolean('conditions_matched').notNull(),
+  /** Actions executed */
+  actionsExecuted: jsonb('actions_executed').$type<WorkflowActionConfig[]>().default([]).notNull(),
+  /** Execution status */
+  status: text('status').$type<'success' | 'failed' | 'skipped'>().notNull(),
+  /** Error message if failed */
+  errorMessage: text('error_message'),
+  /** Execution duration in ms */
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Workflow Relations
+ */
+export const workflowsRelations = relations(workflows, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [workflows.organizationId],
+    references: [organizations.id],
+  }),
+  createdBy: one(users, {
+    fields: [workflows.createdById],
+    references: [users.id],
+  }),
+  executions: many(workflowExecutions),
+}));
+
+export const workflowExecutionsRelations = relations(workflowExecutions, ({ one }) => ({
+  workflow: one(workflows, {
+    fields: [workflowExecutions.workflowId],
+    references: [workflows.id],
+  }),
+  organization: one(organizations, {
+    fields: [workflowExecutions.organizationId],
+    references: [organizations.id],
+  }),
+  lead: one(leads, {
+    fields: [workflowExecutions.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export type Workflow = typeof workflows.$inferSelect;
+export type NewWorkflow = typeof workflows.$inferInsert;
+export type WorkflowExecution = typeof workflowExecutions.$inferSelect;
+export type NewWorkflowExecution = typeof workflowExecutions.$inferInsert;
+
+// ============================================================================
+// Custom Fields Feature
+// ============================================================================
+
+/**
+ * Custom Field Type
+ */
+export type CustomFieldType =
+  | 'text'
+  | 'number'
+  | 'date'
+  | 'datetime'
+  | 'boolean'
+  | 'select'
+  | 'multiselect'
+  | 'url'
+  | 'email'
+  | 'phone';
+
+/**
+ * Custom Field Options (for select/multiselect)
+ */
+export interface CustomFieldOption {
+  value: string;
+  label: string;
+  color?: string;
+}
+
+/**
+ * Custom Fields Definition Table
+ * Stores custom field definitions for organizations
+ */
+export const customFields = pgTable('custom_fields', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Field key (used in lead.customFields JSON) */
+  key: text('key').notNull(),
+  /** Display name */
+  name: text('name').notNull(),
+  /** Field description */
+  description: text('description'),
+  /** Field type */
+  fieldType: text('field_type').$type<CustomFieldType>().notNull(),
+  /** Options for select/multiselect fields */
+  options: jsonb('options').$type<CustomFieldOption[]>().default([]),
+  /** Is this field required? */
+  isRequired: boolean('is_required').default(false).notNull(),
+  /** Default value */
+  defaultValue: jsonb('default_value'),
+  /** Validation rules (JSON schema-like) */
+  validation: jsonb('validation').$type<Record<string, unknown>>(),
+  /** Display order */
+  displayOrder: integer('display_order').default(0).notNull(),
+  /** Show in lead table */
+  showInTable: boolean('show_in_table').default(false).notNull(),
+  /** Show in lead form */
+  showInForm: boolean('show_in_form').default(true).notNull(),
+  /** Is field active? */
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Custom Fields Relations
+ */
+export const customFieldsRelations = relations(customFields, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [customFields.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export type CustomField = typeof customFields.$inferSelect;
+export type NewCustomField = typeof customFields.$inferInsert;
+
+// ============================================================================
+// Saved Filters (Phase 9 P2: Advanced Filtering)
+// ============================================================================
+
+/**
+ * Filter Condition Operator Types
+ */
+export type FilterOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'starts_with'
+  | 'ends_with'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_or_equal'
+  | 'less_or_equal'
+  | 'between'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'in'
+  | 'not_in';
+
+/**
+ * Filter Condition Interface
+ */
+export interface FilterCondition {
+  /** Field to filter on */
+  field: string;
+  /** Comparison operator */
+  operator: FilterOperator;
+  /** Value to compare against */
+  value: unknown;
+  /** Second value for 'between' operator */
+  value2?: unknown;
+}
+
+/**
+ * Filter Group Interface
+ * Groups conditions with AND/OR logic
+ */
+export interface FilterGroup {
+  /** Logic operator for combining conditions */
+  logic: 'and' | 'or';
+  /** Conditions in this group */
+  conditions: FilterCondition[];
+  /** Nested groups for complex queries */
+  groups?: FilterGroup[];
+}
+
+/**
+ * Saved Filters Table
+ * Stores reusable filter configurations for leads
+ */
+export const savedFilters = pgTable('saved_filters', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** User who created this filter */
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  /** Filter name */
+  name: text('name').notNull(),
+  /** Filter description */
+  description: text('description'),
+  /** Filter configuration */
+  filters: jsonb('filters').$type<FilterGroup>().notNull(),
+  /** Is this a default/shared filter? */
+  isDefault: boolean('is_default').default(false).notNull(),
+  /** Is this filter public to all organization members? */
+  isPublic: boolean('is_public').default(false).notNull(),
+  /** Filter color for UI */
+  color: text('color'),
+  /** Filter icon */
+  icon: text('icon'),
+  /** Usage count for analytics */
+  usageCount: integer('usage_count').default(0).notNull(),
+  /** Last used timestamp */
+  lastUsedAt: timestamp('last_used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Saved Filters Relations
+ */
+export const savedFiltersRelations = relations(savedFilters, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [savedFilters.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [savedFilters.userId],
+    references: [users.id],
+  }),
+}));
+
+export type SavedFilter = typeof savedFilters.$inferSelect;
+export type NewSavedFilter = typeof savedFilters.$inferInsert;
+
+// ============================================================================
+// Custom Reports (Phase 9 P2: Custom Report Builder)
+// ============================================================================
+
+/**
+ * Report Widget Types
+ */
+export type ReportWidgetType =
+  | 'kpi_card'
+  | 'line_chart'
+  | 'bar_chart'
+  | 'pie_chart'
+  | 'donut_chart'
+  | 'area_chart'
+  | 'funnel'
+  | 'table'
+  | 'text'
+  | 'gauge';
+
+/**
+ * Report Widget Configuration
+ */
+export interface ReportWidget {
+  id: string;
+  type: ReportWidgetType;
+  title: string;
+  /** Data source: which analytics endpoint to use */
+  dataSource: string;
+  /** Configuration specific to widget type */
+  config: Record<string, unknown>;
+  /** Position in grid */
+  position: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
+}
+
+/**
+ * Custom Reports Table
+ * Stores user-created report templates
+ */
+export const customReports = pgTable('custom_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** User who created this report */
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  /** Report name */
+  name: text('name').notNull(),
+  /** Report description */
+  description: text('description'),
+  /** Report widgets configuration */
+  widgets: jsonb('widgets').$type<ReportWidget[]>().notNull().default([]),
+  /** Default date range for the report */
+  defaultDateRange: text('default_date_range').$type<'7d' | '30d' | '90d' | 'all'>().default('30d'),
+  /** Default filters to apply */
+  defaultFilters: jsonb('default_filters').$type<FilterGroup>(),
+  /** Is this a default/shared report? */
+  isDefault: boolean('is_default').default(false).notNull(),
+  /** Is this report public to all organization members? */
+  isPublic: boolean('is_public').default(false).notNull(),
+  /** Report thumbnail (base64 or URL) */
+  thumbnail: text('thumbnail'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Custom Reports Relations
+ */
+export const customReportsRelations = relations(customReports, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [customReports.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [customReports.userId],
+    references: [users.id],
+  }),
+}));
+
+export type CustomReport = typeof customReports.$inferSelect;
+export type NewCustomReport = typeof customReports.$inferInsert;
+
+// ============================================================================
+// Diagnostic Templates (Phase 9 P3: Diagnostic Template Management)
+// ============================================================================
+
+/**
+ * Diagnostic Question Types
+ */
+export type DiagnosticQuestionType =
+  | 'text'
+  | 'textarea'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'radio'
+  | 'checkbox'
+  | 'select'
+  | 'date'
+  | 'rating'
+  | 'slider'
+  | 'file';
+
+/**
+ * Diagnostic Question Option (for radio, checkbox, select)
+ */
+export interface DiagnosticQuestionOption {
+  id: string;
+  label: string;
+  value: string;
+  /** Score contribution for lead scoring */
+  score?: number;
+  /** Icon name (optional) */
+  icon?: string;
+}
+
+/**
+ * Conditional Logic for showing/hiding questions
+ */
+export interface QuestionCondition {
+  /** Question ID to check */
+  questionId: string;
+  /** Operator for comparison */
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'is_empty'
+    | 'is_not_empty';
+  /** Value to compare against */
+  value: string | number | boolean;
+}
+
+/**
+ * Diagnostic Question Configuration
+ */
+export interface DiagnosticQuestion {
+  id: string;
+  /** Question type */
+  type: DiagnosticQuestionType;
+  /** Question label */
+  label: string;
+  /** Question description/help text */
+  description?: string;
+  /** Placeholder text */
+  placeholder?: string;
+  /** Is this question required? */
+  required: boolean;
+  /** Options for radio, checkbox, select types */
+  options?: DiagnosticQuestionOption[];
+  /** Validation rules */
+  validation?: {
+    minLength?: number;
+    maxLength?: number;
+    min?: number;
+    max?: number;
+    pattern?: string;
+    patternMessage?: string;
+  };
+  /** Conditional display logic */
+  conditions?: QuestionCondition[];
+  /** Condition operator (and/or) when multiple conditions */
+  conditionOperator?: 'and' | 'or';
+  /** Map to lead field */
+  mapToLeadField?: string;
+  /** Score weight for this question */
+  scoreWeight?: number;
+  /** Order in the step */
+  order: number;
+}
+
+/**
+ * Diagnostic Step Configuration
+ */
+export interface DiagnosticStep {
+  id: string;
+  /** Step title */
+  title: string;
+  /** Step description */
+  description?: string;
+  /** Icon for this step */
+  icon?: string;
+  /** Icon color */
+  iconColor?: string;
+  /** Questions in this step */
+  questions: DiagnosticQuestion[];
+  /** Order of this step */
+  order: number;
+}
+
+/**
+ * Diagnostic Template Theme Configuration
+ */
+export interface DiagnosticTheme {
+  /** Primary color */
+  primaryColor: string;
+  /** Secondary color */
+  secondaryColor?: string;
+  /** Background color */
+  backgroundColor?: string;
+  /** Text color */
+  textColor?: string;
+  /** Border radius */
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Custom CSS */
+  customCss?: string;
+}
+
+/**
+ * Diagnostic Completion Configuration
+ */
+export interface DiagnosticCompletion {
+  /** Title shown on completion */
+  title: string;
+  /** Message shown on completion */
+  message: string;
+  /** Show score on completion? */
+  showScore: boolean;
+  /** Redirect URL after completion */
+  redirectUrl?: string;
+  /** Redirect delay in seconds */
+  redirectDelay?: number;
+  /** CTA button text */
+  ctaText?: string;
+  /** CTA button URL */
+  ctaUrl?: string;
+}
+
+/**
+ * Diagnostic Templates Table
+ * Stores diagnostic form templates
+ */
+export const diagnosticTemplates = pgTable('diagnostic_templates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** User who created this template */
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  /** Template name (internal) */
+  name: text('name').notNull(),
+  /** Template slug (URL-friendly) */
+  slug: text('slug').notNull(),
+  /** Template title (public-facing) */
+  title: text('title').notNull(),
+  /** Template description */
+  description: text('description'),
+  /** Steps configuration */
+  steps: jsonb('steps').$type<DiagnosticStep[]>().notNull().default([]),
+  /** Theme configuration */
+  theme: jsonb('theme').$type<DiagnosticTheme>(),
+  /** Completion configuration */
+  completion: jsonb('completion').$type<DiagnosticCompletion>(),
+  /** Lead source to use for submissions */
+  leadSource: text('lead_source').default('diagnostic'),
+  /** Is this template active? */
+  isActive: boolean('is_active').default(true).notNull(),
+  /** Is this the default template? */
+  isDefault: boolean('is_default').default(false).notNull(),
+  /** Template version for A/B testing */
+  version: integer('version').default(1).notNull(),
+  /** Parent template ID (for A/B variants) */
+  parentTemplateId: uuid('parent_template_id'),
+  /** Submission count */
+  submissionCount: integer('submission_count').default(0).notNull(),
+  /** Conversion count (completed forms) */
+  conversionCount: integer('conversion_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Diagnostic Templates Relations
+ */
+export const diagnosticTemplatesRelations = relations(diagnosticTemplates, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [diagnosticTemplates.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [diagnosticTemplates.userId],
+    references: [users.id],
+  }),
+  parentTemplate: one(diagnosticTemplates, {
+    fields: [diagnosticTemplates.parentTemplateId],
+    references: [diagnosticTemplates.id],
+    relationName: 'parent',
+  }),
+  variants: many(diagnosticTemplates, { relationName: 'parent' }),
+  abTests: many(diagnosticAbTests),
+}));
+
+export type DiagnosticTemplate = typeof diagnosticTemplates.$inferSelect;
+export type NewDiagnosticTemplate = typeof diagnosticTemplates.$inferInsert;
+
+// ============================================================================
+// A/B Tests (Phase 9 P3: A/B Testing for Diagnostic Forms)
+// ============================================================================
+
+/**
+ * A/B Test Status
+ */
+export type AbTestStatus = 'draft' | 'running' | 'paused' | 'completed' | 'cancelled';
+
+/**
+ * A/B Test Variant Configuration
+ */
+export interface AbTestVariant {
+  /** Variant ID (matches template ID) */
+  templateId: string;
+  /** Variant name (e.g., "Control", "Variant A") */
+  name: string;
+  /** Traffic percentage (0-100) */
+  trafficPercent: number;
+  /** Impressions count */
+  impressions: number;
+  /** Submissions count */
+  submissions: number;
+  /** Conversions count */
+  conversions: number;
+}
+
+/**
+ * A/B Test Goal Types
+ */
+export type AbTestGoalType =
+  | 'submission_rate'
+  | 'conversion_rate'
+  | 'completion_time'
+  | 'score_average';
+
+/**
+ * A/B Tests Table
+ * Stores A/B test configurations
+ */
+export const diagnosticAbTests = pgTable('diagnostic_ab_tests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Test name */
+  name: text('name').notNull(),
+  /** Test description */
+  description: text('description'),
+  /** Base template ID */
+  baseTemplateId: uuid('base_template_id')
+    .notNull()
+    .references(() => diagnosticTemplates.id, { onDelete: 'cascade' }),
+  /** Test status */
+  status: text('status').$type<AbTestStatus>().default('draft').notNull(),
+  /** Goal type for determining winner */
+  goalType: text('goal_type').$type<AbTestGoalType>().default('conversion_rate').notNull(),
+  /** Minimum sample size per variant */
+  minSampleSize: integer('min_sample_size').default(100).notNull(),
+  /** Statistical significance threshold (0-100) */
+  confidenceLevel: integer('confidence_level').default(95).notNull(),
+  /** Variants configuration */
+  variants: jsonb('variants').$type<AbTestVariant[]>().notNull().default([]),
+  /** Winner variant ID (when completed) */
+  winnerId: uuid('winner_id'),
+  /** Start date */
+  startedAt: timestamp('started_at'),
+  /** End date */
+  endedAt: timestamp('ended_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * A/B Tests Relations
+ */
+export const diagnosticAbTestsRelations = relations(diagnosticAbTests, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [diagnosticAbTests.organizationId],
+    references: [organizations.id],
+  }),
+  baseTemplate: one(diagnosticTemplates, {
+    fields: [diagnosticAbTests.baseTemplateId],
+    references: [diagnosticTemplates.id],
+  }),
+}));
+
+export type DiagnosticAbTest = typeof diagnosticAbTests.$inferSelect;
+export type NewDiagnosticAbTest = typeof diagnosticAbTests.$inferInsert;
+
+// ============================================================================
+// Lead Scoring Rules (Phase 9 P3: Custom Lead Scoring Rules)
+// ============================================================================
+
+/**
+ * Scoring Rule Condition Type
+ */
+export type ScoringConditionType =
+  | 'field_value'
+  | 'field_contains'
+  | 'field_matches'
+  | 'source_is'
+  | 'industry_is'
+  | 'employee_count'
+  | 'budget_range'
+  | 'timeline'
+  | 'custom';
+
+/**
+ * Scoring Rule Condition
+ */
+export interface ScoringCondition {
+  id: string;
+  type: ScoringConditionType;
+  /** Field to check (for field-based conditions) */
+  field?: string;
+  /** Operator */
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'between'
+    | 'in'
+    | 'not_in';
+  /** Value(s) to compare */
+  value: string | number | string[] | number[];
+  /** Secondary value (for between operator) */
+  value2?: string | number;
+}
+
+/**
+ * Scoring Rule
+ */
+export interface ScoringRule {
+  id: string;
+  /** Rule name */
+  name: string;
+  /** Rule description */
+  description?: string;
+  /** Conditions (all must match unless operator is 'or') */
+  conditions: ScoringCondition[];
+  /** Condition operator */
+  conditionOperator: 'and' | 'or';
+  /** Score adjustment (-100 to +100) */
+  scoreAdjustment: number;
+  /** Is this rule active? */
+  isActive: boolean;
+  /** Priority (higher = evaluated first) */
+  priority: number;
+}
+
+/**
+ * Lead Scoring Rulesets Table
+ * Stores custom scoring rule configurations
+ */
+export const leadScoringRulesets = pgTable('lead_scoring_rulesets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Ruleset name */
+  name: text('name').notNull(),
+  /** Ruleset description */
+  description: text('description'),
+  /** Base score (starting score for all leads) */
+  baseScore: integer('base_score').default(50).notNull(),
+  /** Minimum score */
+  minScore: integer('min_score').default(0).notNull(),
+  /** Maximum score */
+  maxScore: integer('max_score').default(100).notNull(),
+  /** Rules configuration */
+  rules: jsonb('rules').$type<ScoringRule[]>().notNull().default([]),
+  /** Is this ruleset active? */
+  isActive: boolean('is_active').default(true).notNull(),
+  /** Is this the default ruleset? */
+  isDefault: boolean('is_default').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Lead Scoring Rulesets Relations
+ */
+export const leadScoringRulesetsRelations = relations(leadScoringRulesets, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [leadScoringRulesets.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export type LeadScoringRuleset = typeof leadScoringRulesets.$inferSelect;
+export type NewLeadScoringRuleset = typeof leadScoringRulesets.$inferInsert;

@@ -3,9 +3,20 @@
  *
  * ブログ記事のデータアクセスを抽象化
  * CMS実装に依存しないインターフェースを提供
+ * キャッシュ機能付き
  */
 
+import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
+import {
+  getCollectionTag,
+  getSlugTag,
+  getDocumentTag,
+  invalidateCollection,
+  invalidateDocument,
+  invalidateBySlug,
+  CMS_CACHE_CONFIG,
+} from '../core/cache';
 import type { CMSAdapter, SortParams, WhereCondition, WhereOperator } from '../core/interfaces';
 import type { BlogPost, ContentStatus } from '../core/types';
 
@@ -25,6 +36,9 @@ export interface BlogPostsResult {
   hasNextPage: boolean;
 }
 
+const COLLECTION = 'blog-posts';
+const REVALIDATE = CMS_CACHE_CONFIG.collections[COLLECTION] || CMS_CACHE_CONFIG.defaultRevalidate;
+
 export class BlogRepository {
   private adapter: CMSAdapter;
 
@@ -33,7 +47,7 @@ export class BlogRepository {
   }
 
   /**
-   * ブログ記事一覧を取得
+   * ブログ記事一覧を取得（キャッシュなし - 管理画面用）
    */
   async findAll(options: FindBlogPostsOptions = {}): Promise<BlogPostsResult> {
     const {
@@ -74,11 +88,29 @@ export class BlogRepository {
   }
 
   /**
-   * スラッグでブログ記事を取得
+   * ブログ記事一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async findAllCached(options: FindBlogPostsOptions = {}): Promise<BlogPostsResult> {
+    const cacheKey = `findAll:${JSON.stringify(options)}`;
+
+    const cached = unstable_cache(
+      async () => this.findAll(options),
+      [`cms:${COLLECTION}:${cacheKey}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * スラッグでブログ記事を取得（キャッシュなし）
    */
   async findBySlug(slug: string, organizationId?: string): Promise<BlogPost | null> {
     const { data } = await this.adapter.findBySlug<BlogPost>({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       slug,
       organizationId,
     });
@@ -87,11 +119,27 @@ export class BlogRepository {
   }
 
   /**
-   * IDでブログ記事を取得
+   * スラッグでブログ記事を取得（キャッシュ付き - 公開ページ用）
+   */
+  async findBySlugCached(slug: string, organizationId?: string): Promise<BlogPost | null> {
+    const cached = unstable_cache(
+      async () => this.findBySlug(slug, organizationId),
+      [`cms:${COLLECTION}:slug:${slug}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION), getSlugTag(COLLECTION, slug)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * IDでブログ記事を取得（キャッシュなし）
    */
   async findById(id: string, organizationId?: string): Promise<BlogPost | null> {
     const { data } = await this.adapter.findById<BlogPost>({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       id,
       organizationId,
     });
@@ -100,11 +148,27 @@ export class BlogRepository {
   }
 
   /**
+   * IDでブログ記事を取得（キャッシュ付き）
+   */
+  async findByIdCached(id: string, organizationId?: string): Promise<BlogPost | null> {
+    const cached = unstable_cache(
+      async () => this.findById(id, organizationId),
+      [`cms:${COLLECTION}:id:${id}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION), getDocumentTag(COLLECTION, id)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
    * ブログ記事を検索
    */
   async search(query: string, organizationId?: string, limit = 10): Promise<BlogPost[]> {
     const { data } = await this.adapter.search<BlogPost>({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       query,
       fields: ['title.ja', 'title.en', 'content.ja', 'content.en', 'excerpt.ja', 'excerpt.en'],
       limit,
@@ -122,7 +186,7 @@ export class BlogRepository {
     organizationId?: string
   ): Promise<BlogPost> {
     const { data } = await this.adapter.create<BlogPost>({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       data: {
         ...post,
         publishedAt: new Date(),
@@ -130,6 +194,9 @@ export class BlogRepository {
       },
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateCollection(COLLECTION);
 
     return data;
   }
@@ -142,8 +209,11 @@ export class BlogRepository {
     updates: Partial<Omit<BlogPost, 'id'>>,
     organizationId?: string
   ): Promise<BlogPost> {
+    // 既存のスラッグを取得（キャッシュ無効化用）
+    const existing = await this.findById(id, organizationId);
+
     const { data } = await this.adapter.update<BlogPost>({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       id,
       data: {
         ...updates,
@@ -152,6 +222,15 @@ export class BlogRepository {
       organizationId,
     });
 
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
+    if (existing?.slug) {
+      await invalidateBySlug(COLLECTION, existing.slug);
+    }
+    if (data.slug && data.slug !== existing?.slug) {
+      await invalidateBySlug(COLLECTION, data.slug);
+    }
+
     return data;
   }
 
@@ -159,11 +238,21 @@ export class BlogRepository {
    * ブログ記事を削除
    */
   async delete(id: string, organizationId?: string): Promise<void> {
+    // 既存のスラッグを取得（キャッシュ無効化用）
+    const existing = await this.findById(id, organizationId);
+
     await this.adapter.delete({
-      collection: 'blog-posts',
+      collection: COLLECTION,
       id,
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
+    if (existing?.slug) {
+      await invalidateBySlug(COLLECTION, existing.slug);
+    }
+    await invalidateCollection(COLLECTION);
   }
 
   /**
@@ -194,7 +283,7 @@ export class BlogRepository {
   }
 
   /**
-   * 最新記事を取得
+   * 最新記事を取得（キャッシュなし）
    */
   async findLatest(limit = 5, organizationId?: string): Promise<BlogPost[]> {
     const { posts } = await this.findAll({
@@ -208,7 +297,23 @@ export class BlogRepository {
   }
 
   /**
-   * カテゴリ一覧を取得
+   * 最新記事を取得（キャッシュ付き - 公開ページ用）
+   */
+  async findLatestCached(limit = 5, organizationId?: string): Promise<BlogPost[]> {
+    const cached = unstable_cache(
+      async () => this.findLatest(limit, organizationId),
+      [`cms:${COLLECTION}:latest:${limit}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * カテゴリ一覧を取得（キャッシュなし）
    */
   async getCategories(organizationId?: string): Promise<string[]> {
     const { posts } = await this.findAll({
@@ -228,7 +333,23 @@ export class BlogRepository {
   }
 
   /**
-   * タグ一覧を取得
+   * カテゴリ一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async getCategoriesCached(organizationId?: string): Promise<string[]> {
+    const cached = unstable_cache(
+      async () => this.getCategories(organizationId),
+      [`cms:${COLLECTION}:categories:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * タグ一覧を取得（キャッシュなし）
    */
   async getTags(organizationId?: string): Promise<string[]> {
     const { posts } = await this.findAll({
@@ -247,5 +368,21 @@ export class BlogRepository {
     }
 
     return Array.from(tags);
+  }
+
+  /**
+   * タグ一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async getTagsCached(organizationId?: string): Promise<string[]> {
+    const cached = unstable_cache(
+      async () => this.getTags(organizationId),
+      [`cms:${COLLECTION}:tags:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
   }
 }

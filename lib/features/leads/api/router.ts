@@ -1,8 +1,30 @@
 import { leadTags, leads, tags } from '@/lib/db/schema';
 import { organizationProcedure, router } from '@/lib/trpc/init';
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import {
+  type SQL,
+  and,
+  asc,
+  between,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  ne,
+  notIlike,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
+import {
+  type FilterCondition,
+  type FilterGroup,
   bulkCreateSchema,
   bulkDeleteSchema,
   bulkUpdateStatusSchema,
@@ -12,6 +34,98 @@ import {
   listLeadsSchema,
   updateLeadSchema,
 } from '../types/schemas';
+
+/**
+ * Build SQL condition from a filter condition
+ */
+function buildCondition(condition: FilterCondition): SQL | undefined {
+  const { field, operator, value, value2 } = condition;
+
+  // Map field names to lead columns
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const columnMap: Record<string, any> = {
+    name: leads.name,
+    email: leads.email,
+    company: leads.company,
+    phone: leads.phone,
+    status: leads.status,
+    source: leads.source,
+    score: leads.score,
+    createdAt: leads.createdAt,
+    updatedAt: leads.updatedAt,
+  };
+
+  const column = columnMap[field];
+  if (!column) return undefined;
+
+  switch (operator) {
+    case 'equals':
+      return eq(column, value as string);
+    case 'not_equals':
+      return ne(column, value as string);
+    case 'contains':
+      return ilike(column, `%${value}%`);
+    case 'not_contains':
+      return notIlike(column, `%${value}%`);
+    case 'starts_with':
+      return ilike(column, `${value}%`);
+    case 'ends_with':
+      return ilike(column, `%${value}`);
+    case 'greater_than':
+      return gt(column, value as number | Date);
+    case 'less_than':
+      return lt(column, value as number | Date);
+    case 'greater_or_equal':
+      return gte(column, value as number | Date);
+    case 'less_or_equal':
+      return lte(column, value as number | Date);
+    case 'between':
+      return between(column, value as number | Date, value2 as number | Date);
+    case 'is_empty':
+      return or(isNull(column), eq(column, ''));
+    case 'is_not_empty':
+      return and(isNotNull(column), ne(column, ''));
+    case 'in':
+      return inArray(column, value as string[]);
+    case 'not_in':
+      return notInArray(column, value as string[]);
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Build SQL conditions from a filter group (recursive)
+ */
+function buildFilterGroup(group: FilterGroup): SQL | undefined {
+  const conditions: (SQL | undefined)[] = [];
+
+  // Build conditions from this group
+  for (const condition of group.conditions) {
+    const sqlCondition = buildCondition(condition);
+    if (sqlCondition) {
+      conditions.push(sqlCondition);
+    }
+  }
+
+  // Build nested groups
+  if (group.groups) {
+    for (const nestedGroup of group.groups) {
+      const nestedCondition = buildFilterGroup(nestedGroup as FilterGroup);
+      if (nestedCondition) {
+        conditions.push(nestedCondition);
+      }
+    }
+  }
+
+  // Filter out undefined
+  const validConditions = conditions.filter((c): c is SQL => c !== undefined);
+
+  if (validConditions.length === 0) return undefined;
+  if (validConditions.length === 1) return validConditions[0];
+
+  return group.logic === 'and' ? and(...validConditions) : or(...validConditions);
+}
 
 /**
  * Leads tRPC router
@@ -99,8 +213,9 @@ export const leadsRouter = router({
     }
 
     // Build where conditions
-    const conditions = [eq(leads.organizationId, input.organizationId)];
+    const conditions: (SQL | undefined)[] = [eq(leads.organizationId, input.organizationId)];
 
+    // Basic filters
     if (input.status) {
       conditions.push(eq(leads.status, input.status));
     }
@@ -120,16 +235,88 @@ export const leadsRouter = router({
       );
     }
 
+    // Date range filter
+    if (input.createdFrom) {
+      conditions.push(gte(leads.createdAt, new Date(input.createdFrom)));
+    }
+
+    if (input.createdTo) {
+      conditions.push(lte(leads.createdAt, new Date(input.createdTo)));
+    }
+
+    // Score range filter
+    if (input.scoreMin !== undefined) {
+      conditions.push(gte(leads.score, input.scoreMin));
+    }
+
+    if (input.scoreMax !== undefined) {
+      conditions.push(lte(leads.score, input.scoreMax));
+    }
+
+    // Tag filter - get lead IDs that have the specified tags
+    if (input.tagIds && input.tagIds.length > 0) {
+      const leadsWithTags = await ctx.db
+        .select({ leadId: leadTags.leadId })
+        .from(leadTags)
+        .where(inArray(leadTags.tagId, input.tagIds))
+        .groupBy(leadTags.leadId);
+
+      if (leadsWithTags.length > 0) {
+        conditions.push(
+          inArray(
+            leads.id,
+            leadsWithTags.map((lt) => lt.leadId)
+          )
+        );
+      } else {
+        // No leads match the tag filter
+        return {
+          items: [],
+          total: 0,
+          limit: input.limit,
+          offset: input.offset,
+        };
+      }
+    }
+
+    // Advanced filter
+    if (input.advancedFilter) {
+      const advancedCondition = buildFilterGroup(input.advancedFilter);
+      if (advancedCondition) {
+        conditions.push(advancedCondition);
+      }
+    }
+
+    // Build order by
+    const sortColumn = input.sortBy || 'createdAt';
+    const sortOrder = input.sortOrder || 'desc';
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const orderByMap: Record<string, any> = {
+      createdAt: leads.createdAt,
+      updatedAt: leads.updatedAt,
+      name: leads.name,
+      email: leads.email,
+      score: leads.score,
+      status: leads.status,
+    };
+
+    const orderColumn = orderByMap[sortColumn] || leads.createdAt;
+    const orderDirection = sortOrder === 'asc' ? asc(orderColumn) : desc(orderColumn);
+
+    // Filter out undefined conditions
+    const validConditions = conditions.filter((c): c is SQL => c !== undefined);
+
     // Get total count
     const totalCount = await ctx.db
       .select({ count: leads.id })
       .from(leads)
-      .where(and(...conditions));
+      .where(and(...validConditions));
 
     // Get paginated results with tags
     const results = await ctx.db.query.leads.findMany({
-      where: and(...conditions),
-      orderBy: [desc(leads.createdAt)],
+      where: and(...validConditions),
+      orderBy: [orderDirection],
       limit: input.limit,
       offset: input.offset,
       with: {

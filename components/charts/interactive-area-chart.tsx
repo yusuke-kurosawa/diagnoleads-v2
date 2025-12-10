@@ -162,27 +162,29 @@ export function InteractiveAreaChart({
         },
       },
     },
-    title: title
-      ? {
-          text: title,
-          align: 'left',
-          style: {
-            fontSize: '16px',
-            fontWeight: 600,
-            color: isDark ? '#f3f4f6' : '#111827',
-          },
-        }
-      : undefined,
-    subtitle: subtitle
-      ? {
-          text: subtitle,
-          align: 'left',
-          style: {
-            fontSize: '13px',
-            color: textColor,
-          },
-        }
-      : undefined,
+    title: {
+      text: title || '',
+      align: 'left',
+      offsetX: 0,
+      offsetY: 0,
+      floating: false,
+      style: {
+        fontSize: '16px',
+        fontWeight: 600,
+        color: isDark ? '#f3f4f6' : '#111827',
+      },
+    },
+    subtitle: {
+      text: subtitle || '',
+      align: 'left',
+      offsetX: 0,
+      offsetY: title ? 20 : 0,
+      floating: false,
+      style: {
+        fontSize: '13px',
+        color: textColor,
+      },
+    },
     stroke: {
       curve: curveType,
       width: 2,
@@ -374,6 +376,16 @@ export function BrushChart({
       },
       foreColor: textColor,
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     stroke: {
       curve: 'smooth',
       width: 2,
@@ -434,6 +446,16 @@ export function BrushChart({
         },
       },
       foreColor: textColor,
+    },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
     },
     stroke: {
       curve: 'smooth',

@@ -3,9 +3,18 @@
  *
  * FAQのデータアクセスを抽象化
  * CMS実装に依存しないインターフェースを提供
+ * キャッシュ機能付き
  */
 
+import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
+import {
+  getCollectionTag,
+  getDocumentTag,
+  invalidateCollection,
+  invalidateDocument,
+  CMS_CACHE_CONFIG,
+} from '../core/cache';
 import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
 import type { FAQ } from '../core/types';
 
@@ -26,6 +35,9 @@ export interface FAQsByCategory {
   faqs: FAQ[];
 }
 
+const COLLECTION = 'faqs';
+const REVALIDATE = CMS_CACHE_CONFIG.collections[COLLECTION] || CMS_CACHE_CONFIG.defaultRevalidate;
+
 export class FAQRepository {
   private adapter: CMSAdapter;
 
@@ -34,7 +46,7 @@ export class FAQRepository {
   }
 
   /**
-   * FAQ一覧を取得
+   * FAQ一覧を取得（キャッシュなし - 管理画面用）
    */
   async findAll(options: FindFAQsOptions = {}): Promise<FAQsResult> {
     const { organizationId, category, limit = 100, offset = 0 } = options;
@@ -46,7 +58,7 @@ export class FAQRepository {
     }
 
     const { data, meta } = await this.adapter.find<FAQ>({
-      collection: 'faqs',
+      collection: COLLECTION,
       where: Object.keys(where).length > 0 ? where : undefined,
       limit,
       offset,
@@ -61,11 +73,29 @@ export class FAQRepository {
   }
 
   /**
-   * IDでFAQを取得
+   * FAQ一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async findAllCached(options: FindFAQsOptions = {}): Promise<FAQsResult> {
+    const cacheKey = `findAll:${JSON.stringify(options)}`;
+
+    const cached = unstable_cache(
+      async () => this.findAll(options),
+      [`cms:${COLLECTION}:${cacheKey}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * IDでFAQを取得（キャッシュなし）
    */
   async findById(id: string, organizationId?: string): Promise<FAQ | null> {
     const { data } = await this.adapter.findById<FAQ>({
-      collection: 'faqs',
+      collection: COLLECTION,
       id,
       organizationId,
     });
@@ -74,11 +104,27 @@ export class FAQRepository {
   }
 
   /**
+   * IDでFAQを取得（キャッシュ付き）
+   */
+  async findByIdCached(id: string, organizationId?: string): Promise<FAQ | null> {
+    const cached = unstable_cache(
+      async () => this.findById(id, organizationId),
+      [`cms:${COLLECTION}:id:${id}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION), getDocumentTag(COLLECTION, id)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
    * FAQを検索
    */
   async search(query: string, organizationId?: string): Promise<FAQ[]> {
     const { data } = await this.adapter.search<FAQ>({
-      collection: 'faqs',
+      collection: COLLECTION,
       query,
       fields: ['question.ja', 'question.en', 'answer.ja', 'answer.en'],
       organizationId,
@@ -88,7 +134,7 @@ export class FAQRepository {
   }
 
   /**
-   * カテゴリ別にグループ化されたFAQを取得
+   * カテゴリ別にグループ化されたFAQを取得（キャッシュなし）
    */
   async findByCategories(organizationId?: string): Promise<FAQsByCategory[]> {
     const { faqs } = await this.findAll({ organizationId });
@@ -128,17 +174,36 @@ export class FAQRepository {
   }
 
   /**
+   * カテゴリ別にグループ化されたFAQを取得（キャッシュ付き - 公開ページ用）
+   */
+  async findByCategoriesCached(organizationId?: string): Promise<FAQsByCategory[]> {
+    const cached = unstable_cache(
+      async () => this.findByCategories(organizationId),
+      [`cms:${COLLECTION}:byCategories:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
    * FAQを作成
    */
   async create(faq: Omit<FAQ, 'id' | 'publishedAt'>, organizationId?: string): Promise<FAQ> {
     const { data } = await this.adapter.create<FAQ>({
-      collection: 'faqs',
+      collection: COLLECTION,
       data: {
         ...faq,
         publishedAt: new Date(),
       },
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateCollection(COLLECTION);
 
     return data;
   }
@@ -152,11 +217,14 @@ export class FAQRepository {
     organizationId?: string
   ): Promise<FAQ> {
     const { data } = await this.adapter.update<FAQ>({
-      collection: 'faqs',
+      collection: COLLECTION,
       id,
       data: updates,
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
 
     return data;
   }
@@ -166,14 +234,18 @@ export class FAQRepository {
    */
   async delete(id: string, organizationId?: string): Promise<void> {
     await this.adapter.delete({
-      collection: 'faqs',
+      collection: COLLECTION,
       id,
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
+    await invalidateCollection(COLLECTION);
   }
 
   /**
-   * カテゴリ一覧を取得
+   * カテゴリ一覧を取得（キャッシュなし）
    */
   async getCategories(organizationId?: string): Promise<string[]> {
     const { faqs } = await this.findAll({ organizationId });
@@ -189,6 +261,22 @@ export class FAQRepository {
   }
 
   /**
+   * カテゴリ一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async getCategoriesCached(organizationId?: string): Promise<string[]> {
+    const cached = unstable_cache(
+      async () => this.getCategories(organizationId),
+      [`cms:${COLLECTION}:categories:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
    * 順序を更新（一括）
    */
   async updateOrder(
@@ -196,12 +284,15 @@ export class FAQRepository {
     organizationId?: string
   ): Promise<void> {
     await this.adapter.bulkUpdate({
-      collection: 'faqs',
+      collection: COLLECTION,
       updates: updates.map(({ id, order }) => ({
         id,
         data: { order },
       })),
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateCollection(COLLECTION);
   }
 }

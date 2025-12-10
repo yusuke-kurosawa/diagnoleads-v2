@@ -92,6 +92,16 @@ export function RadialChart({
         speed: 800,
       },
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     plotOptions: {
       radialBar: {
         startAngle: -135,
@@ -187,6 +197,16 @@ export function MultiRadialChart({
       animations: {
         enabled: showAnimation,
       },
+    },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
     },
     plotOptions: {
       radialBar: {

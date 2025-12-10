@@ -95,6 +95,16 @@ export function AreaChart({
       },
       foreColor: textColor,
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     stroke: {
       curve: curveType,
       width: 2,

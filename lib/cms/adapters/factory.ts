@@ -10,7 +10,7 @@
 import { CMSConfigurationError } from '../core/errors';
 import type { CMSAdapter } from '../core/interfaces';
 import { MockCMSAdapter } from './mock/adapter';
-// PayloadCMS adapter import is dynamic to avoid build errors when payload is not installed
+import { PayloadCMSAdapter } from './payload/adapter';
 
 type CMSProvider = 'payload' | 'mock' | 'sanity';
 
@@ -21,7 +21,7 @@ let currentProvider: CMSProvider | null = null;
  * 環境変数からCMSプロバイダーを取得
  */
 function getCMSProvider(): CMSProvider {
-  const provider = process.env.CMS_PROVIDER || 'mock';
+  const provider = process.env.CMS_PROVIDER || 'payload';
 
   if (!['payload', 'mock', 'sanity'].includes(provider)) {
     throw new CMSConfigurationError(
@@ -56,10 +56,8 @@ export function getCMSAdapter(): CMSAdapter {
 
   switch (provider) {
     case 'payload':
-      // PayloadCMSアダプターを使用
-      // 注: PayloadCMSパッケージがインストールされていない場合はMockにフォールバック
-      console.warn('[CMS] PayloadCMS is not currently installed. Using MockCMSAdapter.');
-      adapterInstance = new MockCMSAdapter();
+      // PayloadCMS 3.66アダプターを使用
+      adapterInstance = new PayloadCMSAdapter();
       break;
 
     case 'sanity':

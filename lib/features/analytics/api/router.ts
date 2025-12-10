@@ -2,17 +2,23 @@ import { leads } from '@/lib/db/schema';
 import { organizationProcedure, router } from '@/lib/trpc/init';
 import { and, avg, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import {
+  type ComparisonResult,
   type ConversionFunnelData,
   type FunnelStage,
   type OverviewStats,
+  type PeriodMetrics,
+  type ROISummary,
   type ResponseTimeData,
   type ScoreDistributionData,
   type SourceBreakdown,
+  type SourceROIData,
   type StatusBreakdown,
   type TrendDataPoint,
+  getComparisonSchema,
   getConversionFunnelSchema,
   getLeadTrendSchema,
   getOverviewSchema,
+  getROISchema,
   getResponseTimeSchema,
   getScoreDistributionSchema,
   getSourceBreakdownSchema,
@@ -446,6 +452,250 @@ export const analyticsRouter = router({
       }
 
       return distribution;
+    }),
+
+  /**
+   * Get ROI Analysis by Lead Source
+   * Calculates return on investment for each lead source
+   */
+  getROI: organizationProcedure
+    .input(getROISchema)
+    .query(async ({ ctx, input }): Promise<ROISummary> => {
+      const { organizationId, dateRange, costPerLead, averageDealValue } = input;
+
+      const dateThreshold = getDateThreshold(dateRange);
+
+      // Default costs per lead by source (in currency units)
+      const defaultCosts: Record<string, number> = {
+        website: costPerLead?.website ?? 50,
+        embed: costPerLead?.embed ?? 30,
+        api: costPerLead?.api ?? 20,
+        unknown: costPerLead?.unknown ?? 40,
+      };
+
+      // Default average deal value
+      const dealValue = averageDealValue ?? 5000;
+
+      // Get leads grouped by source with conversion counts
+      const sourceData = await ctx.db
+        .select({
+          source: sql<string>`COALESCE(${leads.source}, 'unknown')`.as('source'),
+          total: count().as('total'),
+          converted: sql<number>`SUM(CASE WHEN ${leads.status} = 'converted' THEN 1 ELSE 0 END)`.as(
+            'converted'
+          ),
+        })
+        .from(leads)
+        .where(and(eq(leads.organizationId, organizationId), gte(leads.createdAt, dateThreshold)))
+        .groupBy(sql`COALESCE(${leads.source}, 'unknown')`);
+
+      // Calculate ROI for each source
+      const bySource: SourceROIData[] = sourceData.map((row) => {
+        const source = row.source;
+        const leadCount = row.total;
+        const convertedCount = Number(row.converted) || 0;
+        const costPerLeadForSource = defaultCosts[source] ?? defaultCosts.unknown;
+
+        const totalCost = leadCount * costPerLeadForSource;
+        const totalRevenue = convertedCount * dealValue;
+        const roi = totalCost > 0 ? ((totalRevenue - totalCost) / totalCost) * 100 : 0;
+        const conversionRate = leadCount > 0 ? (convertedCount / leadCount) * 100 : 0;
+        const costPerAcquisition = convertedCount > 0 ? totalCost / convertedCount : 0;
+        const revenuePerLead = leadCount > 0 ? totalRevenue / leadCount : 0;
+
+        return {
+          source,
+          leadCount,
+          convertedCount,
+          conversionRate: Math.round(conversionRate * 100) / 100,
+          totalCost: Math.round(totalCost * 100) / 100,
+          totalRevenue: Math.round(totalRevenue * 100) / 100,
+          roi: Math.round(roi * 100) / 100,
+          costPerAcquisition: Math.round(costPerAcquisition * 100) / 100,
+          revenuePerLead: Math.round(revenuePerLead * 100) / 100,
+        };
+      });
+
+      // Calculate totals
+      const totalLeads = bySource.reduce((sum, s) => sum + s.leadCount, 0);
+      const totalConverted = bySource.reduce((sum, s) => sum + s.convertedCount, 0);
+      const totalCost = bySource.reduce((sum, s) => sum + s.totalCost, 0);
+      const totalRevenue = bySource.reduce((sum, s) => sum + s.totalRevenue, 0);
+      const overallROI = totalCost > 0 ? ((totalRevenue - totalCost) / totalCost) * 100 : 0;
+      const overallConversionRate = totalLeads > 0 ? (totalConverted / totalLeads) * 100 : 0;
+      const averageCostPerLead = totalLeads > 0 ? totalCost / totalLeads : 0;
+      const averageCostPerAcquisition = totalConverted > 0 ? totalCost / totalConverted : 0;
+      const averageRevenuePerLead = totalLeads > 0 ? totalRevenue / totalLeads : 0;
+
+      // Find best and worst performing sources
+      const sourcesWithROI = bySource.filter((s) => s.leadCount > 0);
+      const sortedByROI = [...sourcesWithROI].sort((a, b) => b.roi - a.roi);
+      const bestPerformingSource = sortedByROI[0]?.source ?? null;
+      const worstPerformingSource = sortedByROI[sortedByROI.length - 1]?.source ?? null;
+
+      return {
+        totalLeads,
+        totalConverted,
+        totalCost: Math.round(totalCost * 100) / 100,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        overallROI: Math.round(overallROI * 100) / 100,
+        overallConversionRate: Math.round(overallConversionRate * 100) / 100,
+        averageCostPerLead: Math.round(averageCostPerLead * 100) / 100,
+        averageCostPerAcquisition: Math.round(averageCostPerAcquisition * 100) / 100,
+        averageRevenuePerLead: Math.round(averageRevenuePerLead * 100) / 100,
+        bySource,
+        bestPerformingSource,
+        worstPerformingSource,
+      };
+    }),
+
+  /**
+   * Get Comparison Analysis
+   * Compare metrics between two time periods
+   */
+  getComparison: organizationProcedure
+    .input(getComparisonSchema)
+    .query(async ({ ctx, input }): Promise<ComparisonResult> => {
+      const { organizationId, currentPeriod, previousPeriod } = input;
+
+      // Helper to get metrics for a period
+      const getMetricsForPeriod = async (start: Date, end: Date): Promise<PeriodMetrics> => {
+        // Get total and converted counts
+        const countsResult = await ctx.db
+          .select({
+            total: count().as('total'),
+            converted:
+              sql<number>`SUM(CASE WHEN ${leads.status} = 'converted' THEN 1 ELSE 0 END)`.as(
+                'converted'
+              ),
+            avgScore: sql<number>`COALESCE(AVG(${leads.score}), 0)`.as('avgScore'),
+          })
+          .from(leads)
+          .where(
+            and(
+              eq(leads.organizationId, organizationId),
+              gte(leads.createdAt, start),
+              lte(leads.createdAt, end)
+            )
+          );
+
+        const totalLeads = countsResult[0]?.total || 0;
+        const convertedLeads = Number(countsResult[0]?.converted) || 0;
+        const averageScore = Math.round(Number(countsResult[0]?.avgScore) || 0);
+
+        // Get by source
+        const sourceData = await ctx.db
+          .select({
+            source: sql<string>`COALESCE(${leads.source}, 'unknown')`.as('source'),
+            count: count().as('count'),
+          })
+          .from(leads)
+          .where(
+            and(
+              eq(leads.organizationId, organizationId),
+              gte(leads.createdAt, start),
+              lte(leads.createdAt, end)
+            )
+          )
+          .groupBy(sql`COALESCE(${leads.source}, 'unknown')`);
+
+        const bySource: Record<string, number> = {};
+        for (const row of sourceData) {
+          bySource[row.source] = row.count;
+        }
+
+        // Get by status
+        const statusData = await ctx.db
+          .select({
+            status: leads.status,
+            count: count().as('count'),
+          })
+          .from(leads)
+          .where(
+            and(
+              eq(leads.organizationId, organizationId),
+              gte(leads.createdAt, start),
+              lte(leads.createdAt, end)
+            )
+          )
+          .groupBy(leads.status);
+
+        const byStatus: Record<string, number> = {};
+        for (const row of statusData) {
+          byStatus[row.status] = row.count;
+        }
+
+        return {
+          totalLeads,
+          convertedLeads,
+          conversionRate:
+            totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 10000) / 100 : 0,
+          averageScore,
+          bySource,
+          byStatus,
+        };
+      };
+
+      // Get metrics for both periods
+      const current = await getMetricsForPeriod(
+        new Date(currentPeriod.start),
+        new Date(currentPeriod.end)
+      );
+      const previous = await getMetricsForPeriod(
+        new Date(previousPeriod.start),
+        new Date(previousPeriod.end)
+      );
+
+      // Calculate percentage changes
+      const calculateChange = (currentVal: number, previousVal: number): number => {
+        if (previousVal === 0) return currentVal > 0 ? 100 : 0;
+        return Math.round(((currentVal - previousVal) / previousVal) * 10000) / 100;
+      };
+
+      const changes = {
+        totalLeads: calculateChange(current.totalLeads, previous.totalLeads),
+        convertedLeads: calculateChange(current.convertedLeads, previous.convertedLeads),
+        conversionRate: calculateChange(current.conversionRate, previous.conversionRate),
+        averageScore: calculateChange(current.averageScore, previous.averageScore),
+      };
+
+      // Generate insights
+      const insights: string[] = [];
+
+      if (changes.totalLeads > 10) {
+        insights.push(`Lead volume increased by ${changes.totalLeads}%`);
+      } else if (changes.totalLeads < -10) {
+        insights.push(`Lead volume decreased by ${Math.abs(changes.totalLeads)}%`);
+      }
+
+      if (changes.conversionRate > 5) {
+        insights.push(`Conversion rate improved by ${changes.conversionRate}%`);
+      } else if (changes.conversionRate < -5) {
+        insights.push(`Conversion rate dropped by ${Math.abs(changes.conversionRate)}%`);
+      }
+
+      if (changes.averageScore > 5) {
+        insights.push(`Lead quality improved (score up ${changes.averageScore}%)`);
+      } else if (changes.averageScore < -5) {
+        insights.push(`Lead quality declined (score down ${Math.abs(changes.averageScore)}%)`);
+      }
+
+      // Source comparison
+      const currentTopSource = Object.entries(current.bySource).sort((a, b) => b[1] - a[1])[0];
+      const previousTopSource = Object.entries(previous.bySource).sort((a, b) => b[1] - a[1])[0];
+
+      if (currentTopSource && previousTopSource && currentTopSource[0] !== previousTopSource[0]) {
+        insights.push(
+          `Top lead source changed from ${previousTopSource[0]} to ${currentTopSource[0]}`
+        );
+      }
+
+      return {
+        currentPeriod: current,
+        previousPeriod: previous,
+        changes,
+        insights,
+      };
     }),
 });
 

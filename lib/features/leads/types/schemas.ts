@@ -13,6 +13,56 @@ export const leadSourceEnum = z.enum(['website', 'embed', 'api']);
 export type LeadSource = z.infer<typeof leadSourceEnum>;
 
 /**
+ * Advanced filter operator enum
+ */
+export const filterOperatorEnum = z.enum([
+  'equals',
+  'not_equals',
+  'contains',
+  'not_contains',
+  'starts_with',
+  'ends_with',
+  'greater_than',
+  'less_than',
+  'greater_or_equal',
+  'less_or_equal',
+  'between',
+  'is_empty',
+  'is_not_empty',
+  'in',
+  'not_in',
+]);
+export type FilterOperator = z.infer<typeof filterOperatorEnum>;
+
+/**
+ * Advanced filter condition schema
+ */
+export const filterConditionSchema = z.object({
+  field: z.string().min(1),
+  operator: filterOperatorEnum,
+  value: z.unknown(),
+  value2: z.unknown().optional(),
+});
+export type FilterCondition = z.infer<typeof filterConditionSchema>;
+
+/**
+ * Advanced filter group schema (supports nested groups)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const filterGroupSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    logic: z.enum(['and', 'or']),
+    conditions: z.array(filterConditionSchema).default([]),
+    groups: z.array(filterGroupSchema).optional(),
+  })
+);
+export type FilterGroup = {
+  logic: 'and' | 'or';
+  conditions: FilterCondition[];
+  groups?: FilterGroup[];
+};
+
+/**
  * Lead creation schema
  */
 export const createLeadSchema = z.object({
@@ -64,6 +114,19 @@ export const listLeadsSchema = z.object({
   status: leadStatusEnum.optional(),
   source: leadSourceEnum.optional(),
   search: z.string().optional(), // Search in name, email, company
+  // Advanced filtering
+  advancedFilter: filterGroupSchema.optional(),
+  // Sort options
+  sortBy: z.enum(['createdAt', 'updatedAt', 'name', 'email', 'score', 'status']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  // Date range filter
+  createdFrom: z.string().datetime().optional(),
+  createdTo: z.string().datetime().optional(),
+  // Score range filter
+  scoreMin: z.number().int().min(0).max(100).optional(),
+  scoreMax: z.number().int().min(0).max(100).optional(),
+  // Tag filter
+  tagIds: z.array(z.string().uuid()).optional(),
 });
 export type ListLeadsInput = z.infer<typeof listLeadsSchema>;
 

@@ -28,7 +28,7 @@ export const intlMiddleware = createMiddleware({
  * Check if a path should skip i18n middleware
  */
 export function shouldSkipI18nMiddleware(pathname: string): boolean {
-  // APIルート、静的ファイル、Next.js内部ファイルはスキップ
+  // APIルート、静的ファイル、Next.js内部ファイル、PayloadCMS管理画面はスキップ
   const skipPaths = [
     '/api',
     '/_next',
@@ -37,6 +37,7 @@ export function shouldSkipI18nMiddleware(pathname: string): boolean {
     '/robots.txt',
     '/sitemap.xml',
     '/manifest.json',
+    '/admin', // PayloadCMS admin panel
   ];
 
   // ファイル拡張子を持つパスをスキップ

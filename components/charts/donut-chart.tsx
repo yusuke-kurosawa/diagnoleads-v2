@@ -85,6 +85,16 @@ export function DonutChart({
       },
       foreColor: labelColor,
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     labels: labels,
     legend: {
       show: true,

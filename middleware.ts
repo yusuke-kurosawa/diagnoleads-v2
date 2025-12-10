@@ -19,6 +19,30 @@ const publicRoutes = ['/', '/api/auth'];
 const publicApiRoutes = ['/api/auth', '/api/trpc'];
 
 /**
+ * Cache control headers for static assets
+ */
+function getCacheHeaders(pathname: string): Record<string, string> {
+  // Static assets - cache for 1 year
+  if (pathname.match(/\.(js|css|woff|woff2|ttf|eot|ico|png|jpg|jpeg|gif|svg|webp|avif)$/)) {
+    return {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    };
+  }
+
+  // API routes - no cache
+  if (pathname.startsWith('/api/')) {
+    return {
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    };
+  }
+
+  // HTML pages - short cache with revalidation
+  return {
+    'Cache-Control': 'public, max-age=0, must-revalidate',
+  };
+}
+
+/**
  * Security headers including CSP
  */
 function getSecurityHeaders(request: NextRequest) {
@@ -172,6 +196,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set(key, value);
   });
 
+  // 7. Add cache control headers
+  const cacheHeaders = getCacheHeaders(pathname);
+  Object.entries(cacheHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
   return response;
 }
 
@@ -186,7 +216,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files
+     * - admin (PayloadCMS admin panel)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|admin|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

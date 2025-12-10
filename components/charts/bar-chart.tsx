@@ -70,6 +70,16 @@ export function BarChart({
         enabled: showAnimation,
       },
     },
+    title: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
+    subtitle: {
+      text: '',
+      offsetX: 0,
+      offsetY: 0,
+    },
     plotOptions: {
       bar: {
         horizontal: isVertical,

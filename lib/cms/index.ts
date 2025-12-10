@@ -48,6 +48,23 @@ export type {
   Industry,
 } from './core/types';
 
+// Diagnostic Form Types
+export type {
+  DiagnosticForm,
+  DiagnosticStep,
+  DiagnosticQuestion,
+  DiagnosticQuestionOption,
+  DiagnosticQuestionType,
+  DiagnosticScoring,
+  DiagnosticSettings,
+  DiagnosticSEO,
+  DiagnosticSubmission,
+  ScoringThreshold,
+  ThresholdColor,
+  ThresholdPriority,
+  ScoreCalculationResult,
+} from './core/diagnostic-form.types';
+
 // =============================================================================
 // Interface Exports
 // =============================================================================
@@ -104,6 +121,12 @@ export type {
   AssessmentsResult,
 } from './repositories/assessment.repository';
 
+export { DiagnosticFormRepository } from './repositories/diagnostic-form.repository';
+export type {
+  FindDiagnosticFormsOptions,
+  DiagnosticFormsResult,
+} from './repositories/diagnostic-form.repository';
+
 // =============================================================================
 // Adapter Factory (Advanced Usage)
 // =============================================================================
@@ -121,8 +144,7 @@ export {
 // =============================================================================
 
 export { MockCMSAdapter } from './adapters/mock/adapter';
-// PayloadCMS adapter is disabled until payload package is installed
-// export { PayloadCMSAdapter } from './adapters/payload/adapter';
+export { PayloadCMSAdapter } from './adapters/payload/adapter';
 
 // =============================================================================
 // Helpers (Multi-tenant & Utilities)
@@ -137,3 +159,78 @@ export {
   getPublicContentContext,
   type TenantContext,
 } from './helpers';
+
+// =============================================================================
+// Cache Layer
+// =============================================================================
+
+export {
+  CMS_CACHE_CONFIG,
+  getCollectionTag,
+  getDocumentTag,
+  getSlugTag,
+  getOrganizationTag,
+  generateCacheKey,
+  invalidateCollection,
+  invalidateDocument,
+  invalidateBySlug,
+  invalidateOrganization,
+  invalidateAllCMS,
+  createCachedQuery,
+  createCachedFindById,
+  createCachedFindBySlug,
+  getCacheStats,
+  resetCacheStats,
+} from './core/cache';
+
+// =============================================================================
+// AI Content Generation
+// =============================================================================
+
+export {
+  AIContentGenerator,
+  getAIContentGenerator,
+  resetAIContentGenerator,
+  type ContentGenerationRequest,
+  type GeneratedBlogContent,
+  type GeneratedFAQ,
+  type GeneratedDiagnosticQuestion,
+  type GeneratedSEO,
+  type AIProvider,
+} from './ai/content-generator';
+
+// =============================================================================
+// Figma Integration
+// =============================================================================
+
+export {
+  registerComponentMapping,
+  getComponentMapping,
+  getAllComponentMappings,
+  initializeDefaultMappings,
+  registerDesignToken,
+  getDesignToken,
+  getAllDesignTokens,
+  tokensToCSS,
+  figmaClient,
+  figmaSitesManager,
+  type ComponentMapping,
+  type FieldMapping,
+  type DesignToken,
+  type FigmaPage,
+} from './integrations/figma';
+
+// =============================================================================
+// Real-time Subscriptions
+// =============================================================================
+
+export {
+  cmsEventEmitter,
+  sseConnectionManager,
+  cmsSubscriptionManager,
+  createCMSEvent,
+  emitFromPayloadHook,
+  type CMSEventType,
+  type CMSEvent,
+  type Subscription,
+} from './core/realtime';

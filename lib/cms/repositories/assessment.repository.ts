@@ -3,9 +3,20 @@
  *
  * 診断テンプレートのデータアクセスを抽象化
  * CMS実装に依存しないインターフェースを提供
+ * キャッシュ機能付き
  */
 
+import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
+import {
+  getCollectionTag,
+  getSlugTag,
+  getDocumentTag,
+  invalidateCollection,
+  invalidateDocument,
+  invalidateBySlug,
+  CMS_CACHE_CONFIG,
+} from '../core/cache';
 import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
 import type { AssessmentTemplate, ContentStatus, Industry } from '../core/types';
 
@@ -22,6 +33,9 @@ export interface AssessmentsResult {
   total: number;
 }
 
+const COLLECTION = 'assessment-templates';
+const REVALIDATE = CMS_CACHE_CONFIG.collections[COLLECTION] || CMS_CACHE_CONFIG.defaultRevalidate;
+
 export class AssessmentRepository {
   private adapter: CMSAdapter;
 
@@ -30,7 +44,7 @@ export class AssessmentRepository {
   }
 
   /**
-   * 診断テンプレート一覧を取得
+   * 診断テンプレート一覧を取得（キャッシュなし - 管理画面用）
    */
   async findAll(options: FindAssessmentsOptions = {}): Promise<AssessmentsResult> {
     const { organizationId, industry, status = 'published', limit = 50, offset = 0 } = options;
@@ -42,7 +56,7 @@ export class AssessmentRepository {
     }
 
     const { data, meta } = await this.adapter.find<AssessmentTemplate>({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       where: Object.keys(where).length > 0 ? where : undefined,
       limit,
       offset,
@@ -58,11 +72,29 @@ export class AssessmentRepository {
   }
 
   /**
-   * スラッグで診断テンプレートを取得
+   * 診断テンプレート一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async findAllCached(options: FindAssessmentsOptions = {}): Promise<AssessmentsResult> {
+    const cacheKey = `findAll:${JSON.stringify(options)}`;
+
+    const cached = unstable_cache(
+      async () => this.findAll(options),
+      [`cms:${COLLECTION}:${cacheKey}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * スラッグで診断テンプレートを取得（キャッシュなし）
    */
   async findBySlug(slug: string, organizationId?: string): Promise<AssessmentTemplate | null> {
     const { data } = await this.adapter.findBySlug<AssessmentTemplate>({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       slug,
       organizationId,
     });
@@ -71,11 +103,30 @@ export class AssessmentRepository {
   }
 
   /**
-   * IDで診断テンプレートを取得
+   * スラッグで診断テンプレートを取得（キャッシュ付き - 公開ページ用）
+   */
+  async findBySlugCached(
+    slug: string,
+    organizationId?: string
+  ): Promise<AssessmentTemplate | null> {
+    const cached = unstable_cache(
+      async () => this.findBySlug(slug, organizationId),
+      [`cms:${COLLECTION}:slug:${slug}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION), getSlugTag(COLLECTION, slug)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * IDで診断テンプレートを取得（キャッシュなし）
    */
   async findById(id: string, organizationId?: string): Promise<AssessmentTemplate | null> {
     const { data } = await this.adapter.findById<AssessmentTemplate>({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       id,
       organizationId,
     });
@@ -84,7 +135,23 @@ export class AssessmentRepository {
   }
 
   /**
-   * 業界別の診断テンプレートを取得
+   * IDで診断テンプレートを取得（キャッシュ付き）
+   */
+  async findByIdCached(id: string, organizationId?: string): Promise<AssessmentTemplate | null> {
+    const cached = unstable_cache(
+      async () => this.findById(id, organizationId),
+      [`cms:${COLLECTION}:id:${id}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION), getDocumentTag(COLLECTION, id)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
+   * 業界別の診断テンプレートを取得（キャッシュなし）
    */
   async findByIndustry(industry: Industry, organizationId?: string): Promise<AssessmentTemplate[]> {
     const { templates } = await this.findAll({
@@ -97,6 +164,25 @@ export class AssessmentRepository {
   }
 
   /**
+   * 業界別の診断テンプレートを取得（キャッシュ付き - 公開ページ用）
+   */
+  async findByIndustryCached(
+    industry: Industry,
+    organizationId?: string
+  ): Promise<AssessmentTemplate[]> {
+    const cached = unstable_cache(
+      async () => this.findByIndustry(industry, organizationId),
+      [`cms:${COLLECTION}:industry:${industry}:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
+  }
+
+  /**
    * 診断テンプレートを作成
    */
   async create(
@@ -104,13 +190,16 @@ export class AssessmentRepository {
     organizationId?: string
   ): Promise<AssessmentTemplate> {
     const { data } = await this.adapter.create<AssessmentTemplate>({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       data: {
         ...template,
         publishedAt: template.status === 'published' ? new Date() : undefined,
       },
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateCollection(COLLECTION);
 
     return data;
   }
@@ -123,12 +212,24 @@ export class AssessmentRepository {
     updates: Partial<Omit<AssessmentTemplate, 'id'>>,
     organizationId?: string
   ): Promise<AssessmentTemplate> {
+    // 既存のスラッグを取得（キャッシュ無効化用）
+    const existing = await this.findById(id, organizationId);
+
     const { data } = await this.adapter.update<AssessmentTemplate>({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       id,
       data: updates,
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
+    if (existing?.slug) {
+      await invalidateBySlug(COLLECTION, existing.slug);
+    }
+    if (data.slug && data.slug !== existing?.slug) {
+      await invalidateBySlug(COLLECTION, data.slug);
+    }
 
     return data;
   }
@@ -137,11 +238,21 @@ export class AssessmentRepository {
    * 診断テンプレートを削除
    */
   async delete(id: string, organizationId?: string): Promise<void> {
+    // 既存のスラッグを取得（キャッシュ無効化用）
+    const existing = await this.findById(id, organizationId);
+
     await this.adapter.delete({
-      collection: 'assessment-templates',
+      collection: COLLECTION,
       id,
       organizationId,
     });
+
+    // キャッシュを無効化
+    await invalidateDocument(COLLECTION, id);
+    if (existing?.slug) {
+      await invalidateBySlug(COLLECTION, existing.slug);
+    }
+    await invalidateCollection(COLLECTION);
   }
 
   /**
@@ -198,7 +309,7 @@ export class AssessmentRepository {
   }
 
   /**
-   * 業界一覧を取得
+   * 業界一覧を取得（キャッシュなし）
    */
   async getIndustries(organizationId?: string): Promise<Industry[]> {
     const { templates } = await this.findAll({
@@ -213,6 +324,22 @@ export class AssessmentRepository {
     }
 
     return Array.from(industries);
+  }
+
+  /**
+   * 業界一覧を取得（キャッシュ付き - 公開ページ用）
+   */
+  async getIndustriesCached(organizationId?: string): Promise<Industry[]> {
+    const cached = unstable_cache(
+      async () => this.getIndustries(organizationId),
+      [`cms:${COLLECTION}:industries:${organizationId || 'default'}`],
+      {
+        revalidate: REVALIDATE,
+        tags: [getCollectionTag(COLLECTION)],
+      }
+    );
+
+    return cached();
   }
 
   /**
