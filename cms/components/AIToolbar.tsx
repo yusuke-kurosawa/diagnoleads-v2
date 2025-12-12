@@ -7,8 +7,8 @@
  * that can be used to generate content for various fields
  */
 
+import { useDocumentInfo, useForm, useFormFields } from '@payloadcms/ui';
 import { useCallback, useState } from 'react';
-import { useDocumentInfo, useFormFields, useForm } from '@payloadcms/ui';
 
 interface GenerateResponse {
   success: boolean;

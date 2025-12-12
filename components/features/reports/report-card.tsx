@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { scheduledReports } from '@/lib/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 import {
   Calendar,
@@ -25,7 +26,6 @@ import {
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { scheduledReports } from '@/lib/db/schema';
 
 type ScheduledReport = InferSelectModel<typeof scheduledReports>;
 

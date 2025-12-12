@@ -4,8 +4,8 @@
  * コレクション変更時に自動的にキャッシュを無効化するフック
  */
 
+import { invalidateBySlug, invalidateCollection, invalidateDocument } from '@/lib/cms/core/cache';
 import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload';
-import { invalidateCollection, invalidateDocument, invalidateBySlug } from '@/lib/cms/core/cache';
 
 /**
  * ドキュメント作成・更新後にキャッシュを無効化

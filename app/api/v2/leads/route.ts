@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth';
 /**
  * REST API v2 - Leads Endpoint
  *
@@ -6,10 +7,9 @@
  */
 import { db } from '@/lib/db';
 import { leads } from '@/lib/db/schema';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
 import { and, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 // ============================================================================

@@ -1,12 +1,13 @@
 'use client';
 
+import { Logo, LogoMark } from '@/components/common/Logo';
 import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
 import NotificationDropdown from '@/components/header/NotificationDropdown';
 import UserDropdown from '@/components/header/UserDropdown';
 import { useSidebar } from '@/context/SidebarContext';
-import { Logo, LogoMark } from '@/components/common/Logo';
-import React, { useState, useEffect, useRef } from 'react';
-import { RiMenuLine, RiCloseLine, RiSearchLine, RiMore2Fill } from '@remixicon/react';
+import { RiCloseLine, RiMenuLine, RiMore2Fill, RiSearchLine } from '@remixicon/react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);

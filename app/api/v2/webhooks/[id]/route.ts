@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth';
 /**
  * REST API v2 - Single Webhook Endpoint
  *
@@ -6,11 +7,10 @@
  * DELETE /api/v2/webhooks/[id] - Delete a webhook
  */
 import { db } from '@/lib/db';
-import { webhooks, webhookDeliveries } from '@/lib/db/schema';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { webhookDeliveries, webhooks } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 // ============================================================================

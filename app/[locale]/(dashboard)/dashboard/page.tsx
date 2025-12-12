@@ -11,9 +11,9 @@ import { KPICard, KPICardGroup } from '@/components/dashboard/kpi-card';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import {
   DashboardWidget,
-  useWidgetConfig,
-  WidgetSettings,
   type WidgetDefinition,
+  WidgetSettings,
+  useWidgetConfig,
 } from '@/components/dashboard/widget-settings';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';

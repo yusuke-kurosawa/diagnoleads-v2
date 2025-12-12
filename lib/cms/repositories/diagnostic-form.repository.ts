@@ -9,21 +9,21 @@
 import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
 import {
+  CMS_CACHE_CONFIG,
   getCollectionTag,
-  getSlugTag,
   getDocumentTag,
+  getSlugTag,
+  invalidateBySlug,
   invalidateCollection,
   invalidateDocument,
-  invalidateBySlug,
-  CMS_CACHE_CONFIG,
 } from '../core/cache';
-import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
-import type { ContentStatus } from '../core/types';
 import type {
   DiagnosticForm,
   DiagnosticSubmission,
   ScoreCalculationResult,
 } from '../core/diagnostic-form.types';
+import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
+import type { ContentStatus } from '../core/types';
 
 export interface FindDiagnosticFormsOptions {
   status?: ContentStatus | 'all';
@@ -368,18 +368,19 @@ export class DiagnosticFormRepository {
               }
               break;
             case 'number':
-              if (typeof answer === 'string' && isNaN(Number(answer))) {
+              if (typeof answer === 'string' && Number.isNaN(Number(answer))) {
                 errors[question.fieldName] = 'invalidNumber';
               }
               break;
-            case 'scale':
+            case 'scale': {
               const numValue = Number(answer);
               const min = question.scaleMin ?? 1;
               const max = question.scaleMax ?? 10;
-              if (isNaN(numValue) || numValue < min || numValue > max) {
+              if (Number.isNaN(numValue) || numValue < min || numValue > max) {
                 errors[question.fieldName] = 'invalidScale';
               }
               break;
+            }
           }
         }
       }

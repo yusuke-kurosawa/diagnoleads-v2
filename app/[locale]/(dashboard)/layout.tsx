@@ -1,11 +1,11 @@
 'use client';
 
-import { SidebarProvider } from '@/context/SidebarContext';
-import { ThemeProvider } from '@/context/ThemeContext';
 import AppHeader from '@/components/layout/AppHeader';
 import AppSidebar from '@/components/layout/AppSidebar';
 import Backdrop from '@/components/layout/Backdrop';
+import { SidebarProvider } from '@/context/SidebarContext';
 import { useSidebar } from '@/context/SidebarContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();

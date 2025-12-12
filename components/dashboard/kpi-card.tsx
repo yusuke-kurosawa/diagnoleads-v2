@@ -1,11 +1,11 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps, cva } from 'class-variance-authority';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AnimatedCounter, AnimatedPercentage, AnimatedScore } from '../ui/animated-counter';
 import { SparkAreaChart } from '../charts';
+import { AnimatedCounter, AnimatedPercentage, AnimatedScore } from '../ui/animated-counter';
 
 const kpiCardVariants = cva(
   'relative overflow-hidden rounded-xl border bg-white p-6 transition-all duration-300 dark:bg-gray-800',

@@ -221,7 +221,7 @@ ${options?.targetAudience ? `ターゲット読者: ${options.targetAudience}` :
   /**
    * FAQを自動生成
    */
-  async generateFAQs(topic: string, count: number = 5, category?: string): Promise<GeneratedFAQ[]> {
+  async generateFAQs(topic: string, count = 5, category?: string): Promise<GeneratedFAQ[]> {
     const prompt = `
 あなたはカスタマーサポートの専門家です。
 以下のトピックについて、よくある質問と回答を${count}件生成してください。
@@ -247,7 +247,7 @@ ${category ? `カテゴリ: ${category}` : ''}
    */
   async generateDiagnosticQuestions(
     topic: string,
-    count: number = 5,
+    count = 5,
     questionType: 'single' | 'multiple' | 'scale' = 'single'
   ): Promise<GeneratedDiagnosticQuestion[]> {
     const prompt = `

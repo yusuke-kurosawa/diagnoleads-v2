@@ -314,7 +314,9 @@ describe("Diagnostic Templates Router", () => {
 
 	describe("duplicate", () => {
 		it("should duplicate a template with new name and slug", async () => {
-			mockDb.query.diagnosticTemplates.findFirst.mockResolvedValue(mockTemplate);
+			mockDb.query.diagnosticTemplates.findFirst
+				.mockResolvedValueOnce(mockTemplate) // First call: find existing template
+				.mockResolvedValueOnce(null); // Second call: check slug uniqueness - null means no conflict
 			const duplicatedTemplate = {
 				...mockTemplate,
 				id: "999e8400-e29b-41d4-a716-446655440000",

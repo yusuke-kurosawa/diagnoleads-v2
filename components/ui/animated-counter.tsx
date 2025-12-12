@@ -39,7 +39,7 @@ export function AnimatedCounter({
 
     // Easing function for smooth animation
     const easeOutQuart = (t: number): number => {
-      return 1 - Math.pow(1 - t, 4);
+      return 1 - (1 - t) ** 4;
     };
 
     const animate = (timestamp: number) => {

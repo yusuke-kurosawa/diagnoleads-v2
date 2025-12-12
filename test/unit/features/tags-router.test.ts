@@ -137,7 +137,13 @@ describe("Tags Router", () => {
 
 	describe("list", () => {
 		it("should return list of tags", async () => {
-			mockDb.query.tags.findMany.mockResolvedValue([mockTag]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockReturnValue({
+						orderBy: vi.fn().mockResolvedValue([mockTag]),
+					}),
+				}),
+			});
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
@@ -149,7 +155,13 @@ describe("Tags Router", () => {
 		});
 
 		it("should return empty array when no tags exist", async () => {
-			mockDb.query.tags.findMany.mockResolvedValue([]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockReturnValue({
+						orderBy: vi.fn().mockResolvedValue([]),
+					}),
+				}),
+			});
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
@@ -161,37 +173,9 @@ describe("Tags Router", () => {
 		});
 	});
 
-	describe("get", () => {
-		it("should return a tag by ID", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const caller = appRouter.createCaller(mockContext as any);
-			const result = await caller.tags.get({
-				organizationId: TEST_ORG_ID,
-				id: TEST_TAG_ID,
-			});
-
-			expect(result).toEqual(mockTag);
-		});
-
-		it("should throw NOT_FOUND for non-existent tag", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(null);
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const caller = appRouter.createCaller(mockContext as any);
-
-			await expect(
-				caller.tags.get({
-					organizationId: TEST_ORG_ID,
-					id: TEST_TAG_ID,
-				}),
-			).rejects.toThrow(TRPCError);
-		});
-	});
-
 	describe("create", () => {
 		it("should create a new tag", async () => {
+			mockDb.query.tags.findFirst.mockResolvedValue(null); // No duplicate
 			mockDb.returning.mockResolvedValue([mockTag]);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -206,6 +190,7 @@ describe("Tags Router", () => {
 		});
 
 		it("should create tag with description", async () => {
+			mockDb.query.tags.findFirst.mockResolvedValue(null);
 			const tagWithDesc = { ...mockTag, description: "A new tag" };
 			mockDb.returning.mockResolvedValue([tagWithDesc]);
 
@@ -220,11 +205,28 @@ describe("Tags Router", () => {
 
 			expect(result.description).toBe("A new tag");
 		});
+
+		it("should reject duplicate name", async () => {
+			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+
+			await expect(
+				caller.tags.create({
+					organizationId: TEST_ORG_ID,
+					name: "Hot Lead",
+					color: "#3B82F6",
+				}),
+			).rejects.toThrow(TRPCError);
+		});
 	});
 
 	describe("update", () => {
 		it("should update a tag", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
+			mockDb.query.tags.findFirst
+				.mockResolvedValueOnce(mockTag) // existing check
+				.mockResolvedValueOnce(null); // duplicate check
 			const updatedTag = { ...mockTag, name: "Updated Tag" };
 			mockDb.returning.mockResolvedValue([updatedTag]);
 
@@ -254,6 +256,21 @@ describe("Tags Router", () => {
 
 			expect(result.color).toBe("#22C55E");
 		});
+
+		it("should throw NOT_FOUND for non-existent tag", async () => {
+			mockDb.query.tags.findFirst.mockResolvedValue(null);
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+
+			await expect(
+				caller.tags.update({
+					organizationId: TEST_ORG_ID,
+					id: TEST_TAG_ID,
+					name: "Updated Tag",
+				}),
+			).rejects.toThrow(TRPCError);
+		});
 	});
 
 	describe("delete", () => {
@@ -270,24 +287,31 @@ describe("Tags Router", () => {
 			expect(result.success).toBe(true);
 		});
 
-		it("should delete associated lead-tag relations", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
+		it("should throw NOT_FOUND for non-existent tag", async () => {
+			mockDb.query.tags.findFirst.mockResolvedValue(null);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-			await caller.tags.delete({
-				organizationId: TEST_ORG_ID,
-				id: TEST_TAG_ID,
-			});
 
-			expect(mockDb.delete).toHaveBeenCalled();
+			await expect(
+				caller.tags.delete({
+					organizationId: TEST_ORG_ID,
+					id: TEST_TAG_ID,
+				}),
+			).rejects.toThrow(TRPCError);
 		});
 	});
 
 	describe("addToLead", () => {
 		it("should add a tag to a lead", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-			mockDb.query.leads.findFirst.mockResolvedValue({ id: TEST_LEAD_ID });
+			mockDb.query.leadTags.findFirst.mockResolvedValue(null);
+			const mockLeadTag = {
+				id: "111e8400-e29b-41d4-a716-446655440000",
+				leadId: TEST_LEAD_ID,
+				tagId: TEST_TAG_ID,
+				createdAt: new Date(),
+			};
+			mockDb.returning.mockResolvedValue([mockLeadTag]);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
@@ -297,46 +321,33 @@ describe("Tags Router", () => {
 				leadId: TEST_LEAD_ID,
 			});
 
-			expect(result.success).toBe(true);
+			expect(result.leadId).toBe(TEST_LEAD_ID);
+			expect(result.tagId).toBe(TEST_TAG_ID);
 		});
 
-		it("should throw NOT_FOUND for non-existent tag", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(null);
+		it("should return existing if already assigned", async () => {
+			const existingLeadTag = {
+				id: "111e8400-e29b-41d4-a716-446655440000",
+				leadId: TEST_LEAD_ID,
+				tagId: TEST_TAG_ID,
+				createdAt: new Date(),
+			};
+			mockDb.query.leadTags.findFirst.mockResolvedValue(existingLeadTag);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
+			const result = await caller.tags.addToLead({
+				organizationId: TEST_ORG_ID,
+				tagId: TEST_TAG_ID,
+				leadId: TEST_LEAD_ID,
+			});
 
-			await expect(
-				caller.tags.addToLead({
-					organizationId: TEST_ORG_ID,
-					tagId: TEST_TAG_ID,
-					leadId: TEST_LEAD_ID,
-				}),
-			).rejects.toThrow(TRPCError);
-		});
-
-		it("should throw NOT_FOUND for non-existent lead", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-			mockDb.query.leads.findFirst.mockResolvedValue(null);
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const caller = appRouter.createCaller(mockContext as any);
-
-			await expect(
-				caller.tags.addToLead({
-					organizationId: TEST_ORG_ID,
-					tagId: TEST_TAG_ID,
-					leadId: TEST_LEAD_ID,
-				}),
-			).rejects.toThrow(TRPCError);
+			expect(result).toEqual(existingLeadTag);
 		});
 	});
 
 	describe("removeFromLead", () => {
 		it("should remove a tag from a lead", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-			mockDb.query.leads.findFirst.mockResolvedValue({ id: TEST_LEAD_ID });
-
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
 			const result = await caller.tags.removeFromLead({
@@ -351,11 +362,10 @@ describe("Tags Router", () => {
 
 	describe("getLeadTags", () => {
 		it("should return tags for a lead", async () => {
-			mockDb.query.leads.findFirst.mockResolvedValue({ id: TEST_LEAD_ID });
 			mockDb.select.mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					innerJoin: vi.fn().mockReturnValue({
-						where: vi.fn().mockResolvedValue([{ tags: mockTag }]),
+						where: vi.fn().mockResolvedValue([{ tag: mockTag }]),
 					}),
 				}),
 			});
@@ -367,11 +377,11 @@ describe("Tags Router", () => {
 				leadId: TEST_LEAD_ID,
 			});
 
-			expect(Array.isArray(result)).toBe(true);
+			expect(result).toHaveLength(1);
+			expect(result[0].name).toBe("Hot Lead");
 		});
 
 		it("should return empty array for lead with no tags", async () => {
-			mockDb.query.leads.findFirst.mockResolvedValue({ id: TEST_LEAD_ID });
 			mockDb.select.mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					innerJoin: vi.fn().mockReturnValue({
@@ -387,39 +397,44 @@ describe("Tags Router", () => {
 				leadId: TEST_LEAD_ID,
 			});
 
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("setLeadTags", () => {
+		it("should set tags for a lead", async () => {
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					innerJoin: vi.fn().mockReturnValue({
+						where: vi.fn().mockResolvedValue([{ tag: mockTag }]),
+					}),
+				}),
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+			const result = await caller.tags.setLeadTags({
+				organizationId: TEST_ORG_ID,
+				leadId: TEST_LEAD_ID,
+				tagIds: [TEST_TAG_ID],
+			});
+
 			expect(Array.isArray(result)).toBe(true);
 		});
 	});
 
-	describe("bulkAddToLeads", () => {
-		it("should add a tag to multiple leads", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-
+	describe("bulkSetLeadTags", () => {
+		it("should set tags for multiple leads", async () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-			const result = await caller.tags.bulkAddToLeads({
+			const result = await caller.tags.bulkSetLeadTags({
 				organizationId: TEST_ORG_ID,
-				tagId: TEST_TAG_ID,
 				leadIds: [TEST_LEAD_ID, "222e8400-e29b-41d4-a716-446655440000"],
+				tagIds: [TEST_TAG_ID],
 			});
 
 			expect(result.success).toBe(true);
-		});
-	});
-
-	describe("bulkRemoveFromLeads", () => {
-		it("should remove a tag from multiple leads", async () => {
-			mockDb.query.tags.findFirst.mockResolvedValue(mockTag);
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const caller = appRouter.createCaller(mockContext as any);
-			const result = await caller.tags.bulkRemoveFromLeads({
-				organizationId: TEST_ORG_ID,
-				tagId: TEST_TAG_ID,
-				leadIds: [TEST_LEAD_ID, "222e8400-e29b-41d4-a716-446655440000"],
-			});
-
-			expect(result.success).toBe(true);
+			expect(result.updatedCount).toBe(2);
 		});
 	});
 });

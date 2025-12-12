@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { RiCheckLine } from '@remixicon/react';
+import React from 'react';
 
 interface Step {
   id: number;

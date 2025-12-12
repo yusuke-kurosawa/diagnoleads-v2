@@ -1,11 +1,3 @@
-import { AIDiagnosticToolbar as AIDiagnosticToolbar_81ee7c5036cc2ebf2a4eb64fe21ffe3e } from '../../../cms/components/AIDiagnosticToolbar';
-import { AIToolbar as AIToolbar_f770839684754e9fa6cd2d3a96013fd7 } from '../../../cms/components/AIToolbar';
-import { Logo as Logo_cms } from '../../../cms/components/Logo';
-import { Icon as Icon_cms } from '../../../cms/components/Icon';
-import { StyleProvider as StyleProvider_cms } from '../../../cms/components/StyleProvider';
-import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
-import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
-import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
 import { InlineToolbarFeatureClient as InlineToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { UploadFeatureClient as UploadFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
@@ -26,7 +18,15 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client';
+import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
+import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
+import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc';
+import { AIDiagnosticToolbar as AIDiagnosticToolbar_81ee7c5036cc2ebf2a4eb64fe21ffe3e } from '../../../cms/components/AIDiagnosticToolbar';
 import { AIFAQToolbar as AIFAQToolbar_ee38123b9a6427e45afda329c62a5841 } from '../../../cms/components/AIFAQToolbar';
+import { AIToolbar as AIToolbar_f770839684754e9fa6cd2d3a96013fd7 } from '../../../cms/components/AIToolbar';
+import { Icon as Icon_cms } from '../../../cms/components/Icon';
+import { Logo as Logo_cms } from '../../../cms/components/Logo';
+import { StyleProvider as StyleProvider_cms } from '../../../cms/components/StyleProvider';
 
 export const importMap = {
   '/cms/components/AIDiagnosticToolbar#AIDiagnosticToolbar':

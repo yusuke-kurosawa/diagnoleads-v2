@@ -9,13 +9,13 @@
 import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
 import {
+  CMS_CACHE_CONFIG,
   getCollectionTag,
-  getSlugTag,
   getDocumentTag,
+  getSlugTag,
+  invalidateBySlug,
   invalidateCollection,
   invalidateDocument,
-  invalidateBySlug,
-  CMS_CACHE_CONFIG,
 } from '../core/cache';
 import type { CMSAdapter, SortParams, WhereCondition, WhereOperator } from '../core/interfaces';
 import type { BlogPost, ContentStatus } from '../core/types';

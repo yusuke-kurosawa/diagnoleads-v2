@@ -11,10 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { reportHistory, scheduledReports } from '@/lib/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 import { AlertCircle, CheckCircle, Clock, Download, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { reportHistory, scheduledReports } from '@/lib/db/schema';
 
 type ReportHistory = InferSelectModel<typeof reportHistory>;
 type ScheduledReport = InferSelectModel<typeof scheduledReports>;

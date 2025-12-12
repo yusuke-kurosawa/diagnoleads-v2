@@ -1,19 +1,20 @@
 'use client';
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { Logo, LogoMark } from '@/components/common/Logo';
 import { useSidebar } from '@/context/SidebarContext';
 import {
-  RiDashboardLine,
-  RiUserLine,
-  RiBarChartLine,
-  RiSettings4Line,
-  RiQuestionLine,
   RiArticleLine,
+  RiBarChartLine,
+  RiDashboardLine,
+  RiQuestionLine,
+  RiSettings4Line,
+  RiUserLine,
 } from '@remixicon/react';
+import { useLocale, useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SidebarWidget from './SidebarWidget';
-import { Logo, LogoMark } from '@/components/common/Logo';
 
 type NavItem = {
   name: string;
@@ -90,7 +91,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const isActive = useCallback(
-    (path: string) => pathname === path || pathname?.startsWith(path + '/'),
+    (path: string) => pathname === path || pathname?.startsWith(`${path}/`),
     [pathname]
   );
 

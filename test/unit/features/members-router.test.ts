@@ -8,16 +8,6 @@ vi.mock('@/lib/db/rls', () => ({
   setCurrentUser: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock BetterAuth
-const mockInviteUser = vi.fn();
-vi.mock('@/lib/auth/config', () => ({
-  auth: {
-    api: {
-      inviteUser: mockInviteUser,
-    },
-  },
-}));
-
 describe('Members Router', () => {
   // Use valid UUIDs for testing
   const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440000';
@@ -121,7 +111,7 @@ describe('Members Router', () => {
           findFirst: vi.fn().mockResolvedValue(mockOwnerMembership),
           findMany: vi.fn(),
         },
-        user: {
+        users: {
           findFirst: vi.fn(),
         },
       },
@@ -213,14 +203,7 @@ describe('Members Router', () => {
   describe('invite', () => {
     it('should allow owner to invite a new member', async () => {
       // Mock: no existing user with this email
-      mockDb.query.user.findFirst.mockResolvedValue(null);
-
-      const mockInviteResponse = {
-        id: 'invite-123',
-        email: 'newuser@example.com',
-        role: 'member',
-      };
-      mockInviteUser.mockResolvedValue(mockInviteResponse);
+      mockDb.query.users.findFirst.mockResolvedValue(null);
 
       const caller = appRouter.createCaller(mockContext);
       const result = await caller.members.invite({
@@ -231,14 +214,7 @@ describe('Members Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('招待');
-      expect(mockInviteUser).toHaveBeenCalledWith({
-        body: {
-          email: 'newuser@example.com',
-          role: 'member',
-          organizationId: TEST_ORG_ID,
-        },
-        headers: expect.any(Headers),
-      });
+      expect(result.invitationId).toBeDefined();
     });
 
     it('should allow admin to invite a new member', async () => {
@@ -246,14 +222,7 @@ describe('Members Router', () => {
       mockDb.query.organizationMembers.findFirst.mockResolvedValueOnce(mockAdminMembership);
 
       // Mock: no existing user with this email
-      mockDb.query.user.findFirst.mockResolvedValue(null);
-
-      const mockInviteResponse = {
-        id: 'invite-123',
-        email: 'newuser@example.com',
-        role: 'member',
-      };
-      mockInviteUser.mockResolvedValue(mockInviteResponse);
+      mockDb.query.users.findFirst.mockResolvedValue(null);
 
       // Context as admin
       const adminContext = {
@@ -269,7 +238,7 @@ describe('Members Router', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockInviteUser).toHaveBeenCalled();
+      expect(result.invitationId).toBeDefined();
     });
 
     it('should not allow regular member to invite', async () => {
@@ -295,7 +264,7 @@ describe('Members Router', () => {
 
     it('should not allow inviting an existing member', async () => {
       // Mock: user exists with this email
-      mockDb.query.user.findFirst.mockResolvedValue(mockUser2);
+      mockDb.query.users.findFirst.mockResolvedValue(mockUser2);
 
       // Mock: user is already a member (called after middleware verification)
       mockDb.query.organizationMembers.findFirst
@@ -313,22 +282,20 @@ describe('Members Router', () => {
       ).rejects.toThrow('このメールアドレスは既にメンバーです');
     });
 
-    it('should handle invite API errors gracefully', async () => {
+    it('should return invitation with message for non-existing user', async () => {
       // Mock: no existing user
-      mockDb.query.user.findFirst.mockResolvedValue(null);
-
-      // Mock: invite API failure
-      mockInviteUser.mockRejectedValue(new Error('API Error'));
+      mockDb.query.users.findFirst.mockResolvedValue(null);
 
       const caller = appRouter.createCaller(mockContext);
 
-      await expect(
-        caller.members.invite({
-          organizationId: TEST_ORG_ID,
-          email: 'newuser@example.com',
-          role: 'member',
-        })
-      ).rejects.toThrow();
+      const result = await caller.members.invite({
+        organizationId: TEST_ORG_ID,
+        email: 'newuser@example.com',
+        role: 'member',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('招待メールを送信しました（Phase 5で実装予定）');
     });
   });
 

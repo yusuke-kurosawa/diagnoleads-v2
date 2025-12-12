@@ -5,7 +5,7 @@
  * PayloadCMSのdiagnostic-formsコレクションに対応
  */
 
-import type { LocalizedString, MediaAsset, ContentStatus } from './types';
+import type { ContentStatus, LocalizedString, MediaAsset } from './types';
 
 // =============================================================================
 // Question Types

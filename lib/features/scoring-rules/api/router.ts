@@ -5,8 +5,8 @@
 import {
   type ScoringCondition,
   type ScoringRule,
-  leads,
   leadScoringRulesets,
+  leads,
 } from '@/lib/db/schema';
 import { organizationProcedure, router } from '@/lib/trpc/init';
 import { TRPCError } from '@trpc/server';
@@ -176,10 +176,11 @@ function evaluateCondition(condition: ScoringCondition, leadData: LeadData): boo
     case 'less_than':
       return Number(fieldValue) < Number(value);
 
-    case 'between':
+    case 'between': {
       if (value2 === undefined) return false;
       const numValue = Number(fieldValue);
       return numValue >= Number(value) && numValue <= Number(value2);
+    }
 
     case 'in':
       if (!Array.isArray(value)) return false;
@@ -205,9 +206,8 @@ function evaluateRule(rule: ScoringRule, leadData: LeadData): boolean {
 
   if (rule.conditionOperator === 'and') {
     return results.every((r) => r);
-  } else {
-    return results.some((r) => r);
   }
+  return results.some((r) => r);
 }
 
 /**

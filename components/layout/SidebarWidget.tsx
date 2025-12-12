@@ -1,7 +1,7 @@
 'use client';
 
+import { RiArrowRightLine, RiHeartPulseLine, RiSparklingLine } from '@remixicon/react';
 import React from 'react';
-import { RiSparklingLine, RiArrowRightLine, RiHeartPulseLine } from '@remixicon/react';
 
 export default function SidebarWidget() {
   return (

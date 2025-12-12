@@ -18,10 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import type { scheduledReports } from '@/lib/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import type { scheduledReports } from '@/lib/db/schema';
 
 type ScheduledReport = InferSelectModel<typeof scheduledReports>;
 
@@ -213,7 +213,9 @@ export function ReportForm({ open, onOpenChange, report, onSubmit, isLoading }: 
               <Label htmlFor="dayOfWeek">{t('reports.form.dayOfWeek')}</Label>
               <Select
                 value={formData.dayOfWeek?.toString()}
-                onValueChange={(value) => setFormData({ ...formData, dayOfWeek: parseInt(value) })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, dayOfWeek: Number.parseInt(value) })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -234,7 +236,9 @@ export function ReportForm({ open, onOpenChange, report, onSubmit, isLoading }: 
               <Label htmlFor="dayOfMonth">{t('reports.form.dayOfMonth')}</Label>
               <Select
                 value={formData.dayOfMonth?.toString()}
-                onValueChange={(value) => setFormData({ ...formData, dayOfMonth: parseInt(value) })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, dayOfMonth: Number.parseInt(value) })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -255,7 +259,9 @@ export function ReportForm({ open, onOpenChange, report, onSubmit, isLoading }: 
               <Label htmlFor="sendHour">{t('reports.form.sendHour')}</Label>
               <Select
                 value={formData.sendHour.toString()}
-                onValueChange={(value) => setFormData({ ...formData, sendHour: parseInt(value) })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, sendHour: Number.parseInt(value) })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />

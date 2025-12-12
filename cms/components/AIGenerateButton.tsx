@@ -7,8 +7,8 @@
  * Supports: Blog ideas, FAQ generation, SEO optimization, translation
  */
 
-import { useState } from 'react';
 import { useDocumentInfo, useField } from '@payloadcms/ui';
+import { useState } from 'react';
 
 interface AIGenerateButtonProps {
   path: string;

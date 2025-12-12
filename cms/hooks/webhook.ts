@@ -112,7 +112,7 @@ async function sendWebhook(config: WebhookConfig, payload: WebhookPayload): Prom
 
     // 署名を追加（セキュリティ用）
     if (config.secret) {
-      const { createHmac } = await import('crypto');
+      const { createHmac } = await import('node:crypto');
       const signature = createHmac('sha256', config.secret)
         .update(JSON.stringify(payload))
         .digest('hex');

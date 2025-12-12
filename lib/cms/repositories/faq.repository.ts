@@ -9,11 +9,11 @@
 import { unstable_cache } from 'next/cache';
 import { getCMSAdapter } from '../adapters/factory';
 import {
+  CMS_CACHE_CONFIG,
   getCollectionTag,
   getDocumentTag,
   invalidateCollection,
   invalidateDocument,
-  CMS_CACHE_CONFIG,
 } from '../core/cache';
 import type { CMSAdapter, WhereCondition, WhereOperator } from '../core/interfaces';
 import type { FAQ } from '../core/types';

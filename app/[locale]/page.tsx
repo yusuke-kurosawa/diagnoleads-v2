@@ -1,5 +1,3 @@
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import {
   BarChart3,
   Brain,
@@ -17,6 +15,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 
 /**
  * ランディングページ

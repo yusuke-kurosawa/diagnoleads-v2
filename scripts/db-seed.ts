@@ -1,11 +1,11 @@
 #!/usr/bin/env tsx
+import { db } from '@/lib/db/client';
+import { accounts, organizationMembers, organizations, users } from '@/lib/db/schema';
 /**
  * Seed the database with initial data
  * Usage: npm run db:seed
  */
 import { hashPassword } from 'better-auth/crypto';
-import { db } from '@/lib/db/client';
-import { accounts, organizationMembers, organizations, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 async function createUser(

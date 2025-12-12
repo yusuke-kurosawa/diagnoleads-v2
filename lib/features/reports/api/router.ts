@@ -127,11 +127,12 @@ function calculateNextScheduledDate(
     case 'weekly':
       nextDate = setHours(setDay(startOfDay(addWeeks(now, 1)), dayOfWeek ?? 1), sendHour);
       break;
-    case 'monthly':
+    case 'monthly': {
       const nextMonth = addMonths(now, 1);
       nextDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayOfMonth ?? 1, sendHour);
       break;
-    case 'quarterly':
+    }
+    case 'quarterly': {
       const nextQuarter = addMonths(now, 3);
       nextDate = new Date(
         nextQuarter.getFullYear(),
@@ -140,6 +141,7 @@ function calculateNextScheduledDate(
         sendHour
       );
       break;
+    }
     default:
       nextDate = addDays(now, 1);
   }

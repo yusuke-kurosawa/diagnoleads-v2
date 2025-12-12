@@ -7,8 +7,8 @@
  * to text/textarea fields in the Payload admin UI
  */
 
-import { useCallback, useState } from 'react';
 import type { TextFieldClientComponent, TextareaFieldClientComponent } from 'payload';
+import { useCallback, useState } from 'react';
 
 interface AIGenerateFieldProps {
   path: string;

@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+import { auth } from '@/lib/auth';
 /**
  * REST API v2 - Webhooks Endpoint
  *
@@ -5,13 +7,11 @@
  * POST /api/v2/webhooks - Create a webhook
  */
 import { db } from '@/lib/db';
-import { webhooks, type WebhookEventType } from '@/lib/db/schema';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { type WebhookEventType, webhooks } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 // ============================================================================
 // Schemas

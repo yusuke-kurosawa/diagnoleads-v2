@@ -53,7 +53,7 @@ class CMSEventEmitter {
     if (!this.listeners.has(collection)) {
       this.listeners.set(collection, new Set());
     }
-    this.listeners.get(collection)!.add(listener);
+    this.listeners.get(collection)?.add(listener);
 
     // アンサブスクライブ関数を返す
     return () => {

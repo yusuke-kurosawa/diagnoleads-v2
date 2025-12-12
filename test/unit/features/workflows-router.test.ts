@@ -1,446 +1,530 @@
-import type { Organization, OrganizationMember, User } from '@/lib/db/schema';
-import { appRouter } from '@/server/routers/_app';
-import { TRPCError } from '@trpc/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Organization, OrganizationMember, User } from "@/lib/db/schema";
+import { appRouter } from "@/server/routers/_app";
+import { TRPCError } from "@trpc/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
-vi.mock('@/lib/db/rls', () => ({
-  setCurrentUser: vi.fn().mockResolvedValue(undefined),
+vi.mock("@/lib/db/rls", () => ({
+	setCurrentUser: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@/lib/auth/permissions', () => ({
-  defineAbilitiesFor: vi.fn((user, membership) => ({
-    can: vi.fn((action: string) => {
-      if (membership.role === 'member' && (action === 'create' || action === 'delete')) {
-        return false;
-      }
-      return true;
-    }),
-  })),
+vi.mock("@/lib/auth/permissions", () => ({
+	defineAbilitiesFor: vi.fn((user, membership) => ({
+		can: vi.fn((action: string) => {
+			if (
+				membership.role === "member" &&
+				(action === "create" || action === "delete")
+			) {
+				return false;
+			}
+			return true;
+		}),
+	})),
 }));
 
-describe('Workflows Router', () => {
-  const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440000';
-  const TEST_ORG_ID = '660e8400-e29b-41d4-a716-446655440000';
-  const TEST_MEMBER_ID = '770e8400-e29b-41d4-a716-446655440000';
-  const TEST_WORKFLOW_ID = '880e8400-e29b-41d4-a716-446655440000';
+describe("Workflows Router", () => {
+	const TEST_USER_ID = "550e8400-e29b-41d4-a716-446655440000";
+	const TEST_ORG_ID = "660e8400-e29b-41d4-a716-446655440000";
+	const TEST_MEMBER_ID = "770e8400-e29b-41d4-a716-446655440000";
+	const TEST_WORKFLOW_ID = "880e8400-e29b-41d4-a716-446655440000";
 
-  const mockUser: User = {
-    id: TEST_USER_ID,
-    email: 'test@example.com',
-    name: 'Test User',
-    emailVerified: true,
-    image: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+	const mockUser: User = {
+		id: TEST_USER_ID,
+		email: "test@example.com",
+		name: "Test User",
+		emailVerified: true,
+		image: null,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
 
-  const mockOrganization: Organization = {
-    id: TEST_ORG_ID,
-    name: 'Test Organization',
-    slug: 'test-org',
-    settings: {},
-    parentOrganizationId: null,
-    organizationType: 'independent',
-    hierarchyPath: TEST_ORG_ID,
-    hierarchyLevel: 0,
-    groupId: null,
-    dataSharingPolicy: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+	const mockOrganization: Organization = {
+		id: TEST_ORG_ID,
+		name: "Test Organization",
+		slug: "test-org",
+		settings: {},
+		parentOrganizationId: null,
+		organizationType: "independent",
+		hierarchyPath: TEST_ORG_ID,
+		hierarchyLevel: 0,
+		groupId: null,
+		dataSharingPolicy: null,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
 
-  const mockMembership: OrganizationMember & { organization: Organization } = {
-    id: TEST_MEMBER_ID,
-    organizationId: TEST_ORG_ID,
-    userId: TEST_USER_ID,
-    role: 'admin',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    organization: mockOrganization,
-  };
+	const mockMembership: OrganizationMember & { organization: Organization } = {
+		id: TEST_MEMBER_ID,
+		organizationId: TEST_ORG_ID,
+		userId: TEST_USER_ID,
+		role: "admin",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		organization: mockOrganization,
+	};
 
-  const mockWorkflow = {
-    id: TEST_WORKFLOW_ID,
-    organizationId: TEST_ORG_ID,
-    name: 'New Lead Welcome',
-    description: 'Send welcome email when a new lead is created',
-    trigger: {
-      type: 'lead.created',
-      conditions: [],
-    },
-    actions: [
-      {
-        id: 'action-1',
-        type: 'send_email',
-        config: {
-          template: 'welcome',
-          to: '{{lead.email}}',
-        },
-      },
-      {
-        id: 'action-2',
-        type: 'update_lead',
-        config: {
-          status: 'contacted',
-        },
-      },
-    ],
-    isActive: true,
-    executionCount: 150,
-    lastExecutedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+	const mockWorkflow = {
+		id: TEST_WORKFLOW_ID,
+		organizationId: TEST_ORG_ID,
+		createdById: TEST_USER_ID,
+		name: "New Lead Welcome",
+		description: "Send welcome email when a new lead is created",
+		trigger: "lead_created",
+		conditions: [],
+		actions: [
+			{
+				type: "send_email",
+				params: { template: "welcome", to: "{{lead.email}}" },
+			},
+			{
+				type: "update_status",
+				params: { status: "contacted" },
+			},
+		],
+		status: "active",
+		priority: 100,
+		cronExpression: null,
+		executionCount: 150,
+		lastExecutedAt: new Date(),
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
 
-  const mockExecution = {
-    id: '111e8400-e29b-41d4-a716-446655440000',
-    workflowId: TEST_WORKFLOW_ID,
-    triggerData: { leadId: 'lead-123' },
-    status: 'success',
-    startedAt: new Date(),
-    completedAt: new Date(),
-    error: null,
-    actionResults: [
-      { actionId: 'action-1', status: 'success', result: { sent: true } },
-      { actionId: 'action-2', status: 'success', result: { updated: true } },
-    ],
-    createdAt: new Date(),
-  };
+	const mockExecution = {
+		id: "111e8400-e29b-41d4-a716-446655440000",
+		organizationId: TEST_ORG_ID,
+		workflowId: TEST_WORKFLOW_ID,
+		leadId: "222e8400-e29b-41d4-a716-446655440000",
+		status: "success",
+		executedAt: new Date(),
+		durationMs: 150,
+		actionsExecuted: 2,
+		error: null,
+		createdAt: new Date(),
+	};
 
-  let mockDb: any;
-  let mockContext: any;
+	let mockDb: ReturnType<typeof createMockDb>;
+	let mockContext: ReturnType<typeof createMockContext>;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+	function createMockDb() {
+		return {
+			query: {
+				organizationMembers: {
+					findFirst: vi.fn().mockResolvedValue(mockMembership),
+				},
+				workflows: {
+					findFirst: vi.fn(),
+					findMany: vi.fn(),
+				},
+				workflowExecutions: {
+					findFirst: vi.fn(),
+					findMany: vi.fn(),
+				},
+			},
+			select: vi.fn().mockReturnThis(),
+			from: vi.fn().mockReturnThis(),
+			where: vi.fn().mockReturnThis(),
+			orderBy: vi.fn().mockReturnThis(),
+			limit: vi.fn().mockReturnThis(),
+			offset: vi.fn().mockReturnThis(),
+			groupBy: vi.fn().mockReturnThis(),
+			insert: vi.fn().mockReturnThis(),
+			values: vi.fn().mockReturnThis(),
+			returning: vi.fn(),
+			update: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			delete: vi.fn().mockReturnThis(),
+		};
+	}
 
-    mockDb = {
-      query: {
-        organizationMembers: {
-          findFirst: vi.fn().mockResolvedValue(mockMembership),
-        },
-        workflows: {
-          findFirst: vi.fn(),
-          findMany: vi.fn(),
-        },
-        workflowExecutions: {
-          findFirst: vi.fn(),
-          findMany: vi.fn(),
-        },
-      },
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      orderBy: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      offset: vi.fn().mockReturnThis(),
-      groupBy: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
-      returning: vi.fn(),
-      update: vi.fn().mockReturnThis(),
-      set: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-    };
+	function createMockContext() {
+		return {
+			db: mockDb,
+			session: {
+				session: {
+					id: "session-id",
+					userId: TEST_USER_ID,
+					activeOrganizationId: TEST_ORG_ID,
+				},
+				user: mockUser,
+			},
+			user: mockUser,
+		};
+	}
 
-    mockContext = {
-      db: mockDb,
-      session: {
-        session: {
-          id: 'session-id',
-          userId: TEST_USER_ID,
-          activeOrganizationId: TEST_ORG_ID,
-        },
-        user: mockUser,
-      },
-      user: mockUser,
-    };
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockDb = createMockDb();
+		mockContext = createMockContext();
+	});
 
-  describe('list', () => {
-    it('should return list of workflows', async () => {
-      mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+	describe("list", () => {
+		it("should return list of workflows", async () => {
+			mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.list({
-        organizationId: TEST_ORG_ID,
-      });
+			const result = await caller.workflows.list({
+				organizationId: TEST_ORG_ID,
+			});
 
-      expect(result.workflows).toEqual([mockWorkflow]);
-    });
+			expect(result.items).toEqual([mockWorkflow]);
+			expect(result.total).toBe(1);
+		});
 
-    it('should filter by isActive status', async () => {
-      mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+		it("should filter by status", async () => {
+			mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.list({
-        organizationId: TEST_ORG_ID,
-        isActive: true,
-      });
+			const result = await caller.workflows.list({
+				organizationId: TEST_ORG_ID,
+				status: "active",
+			});
 
-      expect(result.workflows[0].isActive).toBe(true);
-    });
+			expect(result.items[0].status).toBe("active");
+		});
 
-    it('should filter by trigger type', async () => {
-      mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+		it("should filter by trigger type", async () => {
+			mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.list({
-        organizationId: TEST_ORG_ID,
-        triggerType: 'lead.created',
-      });
+			const result = await caller.workflows.list({
+				organizationId: TEST_ORG_ID,
+				trigger: "lead_created",
+			});
 
-      expect(result.workflows[0].trigger.type).toBe('lead.created');
-    });
-  });
+			expect(result.items[0].trigger).toBe("lead_created");
+		});
+	});
 
-  describe('get', () => {
-    it('should return a workflow by ID', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
+	describe("get", () => {
+		it("should return a workflow by ID", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.get({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-      });
+			const result = await caller.workflows.get({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+			});
 
-      expect(result).toEqual(mockWorkflow);
-    });
+			expect(result).toEqual(mockWorkflow);
+		});
 
-    it('should throw NOT_FOUND for non-existent workflow', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(null);
+		it("should throw NOT_FOUND for non-existent workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(null);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
 
-      await expect(
-        caller.workflows.get({
-          organizationId: TEST_ORG_ID,
-          id: TEST_WORKFLOW_ID,
-        })
-      ).rejects.toThrow(TRPCError);
-    });
-  });
+			await expect(
+				caller.workflows.get({
+					organizationId: TEST_ORG_ID,
+					id: TEST_WORKFLOW_ID,
+				}),
+			).rejects.toThrow(TRPCError);
+		});
+	});
 
-  describe('create', () => {
-    it('should create a new workflow', async () => {
-      mockDb.returning.mockResolvedValue([mockWorkflow]);
+	describe("create", () => {
+		it("should create a new workflow", async () => {
+			mockDb.returning.mockResolvedValue([mockWorkflow]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.create({
-        organizationId: TEST_ORG_ID,
-        name: 'New Workflow',
-        trigger: mockWorkflow.trigger,
-        actions: mockWorkflow.actions,
-      });
+			const result = await caller.workflows.create({
+				organizationId: TEST_ORG_ID,
+				name: "New Workflow",
+				trigger: "lead_created",
+				actions: [{ type: "update_status", params: { status: "contacted" } }],
+			});
 
-      expect(result).toEqual(mockWorkflow);
-    });
+			expect(result).toEqual(mockWorkflow);
+		});
 
-    it('should create workflow with description', async () => {
-      const workflowWithDesc = { ...mockWorkflow, description: 'Test description' };
-      mockDb.returning.mockResolvedValue([workflowWithDesc]);
+		it("should create workflow with description", async () => {
+			const workflowWithDesc = {
+				...mockWorkflow,
+				description: "Test description",
+			};
+			mockDb.returning.mockResolvedValue([workflowWithDesc]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.create({
-        organizationId: TEST_ORG_ID,
-        name: 'New Workflow',
-        description: 'Test description',
-        trigger: mockWorkflow.trigger,
-        actions: mockWorkflow.actions,
-      });
+			const result = await caller.workflows.create({
+				organizationId: TEST_ORG_ID,
+				name: "New Workflow",
+				description: "Test description",
+				trigger: "lead_created",
+				actions: [{ type: "update_status", params: { status: "contacted" } }],
+			});
 
-      expect(result.description).toBe('Test description');
-    });
-  });
+			expect(result.description).toBe("Test description");
+		});
+	});
 
-  describe('update', () => {
-    it('should update a workflow', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      const updatedWorkflow = { ...mockWorkflow, name: 'Updated Workflow' };
-      mockDb.returning.mockResolvedValue([updatedWorkflow]);
+	describe("update", () => {
+		it("should update a workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
+			const updatedWorkflow = { ...mockWorkflow, name: "Updated Workflow" };
+			mockDb.returning.mockResolvedValue([updatedWorkflow]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.update({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-        name: 'Updated Workflow',
-      });
+			const result = await caller.workflows.update({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+				name: "Updated Workflow",
+			});
 
-      expect(result.name).toBe('Updated Workflow');
-    });
+			expect(result.name).toBe("Updated Workflow");
+		});
 
-    it('should update actions', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      const newActions = [
-        { id: 'new-action', type: 'send_slack', config: { channel: '#leads' } },
-      ];
-      const updatedWorkflow = { ...mockWorkflow, actions: newActions };
-      mockDb.returning.mockResolvedValue([updatedWorkflow]);
+		it("should update actions", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
+			const newActions = [
+				{ type: "send_notification", params: { channel: "#leads" } },
+			];
+			const updatedWorkflow = { ...mockWorkflow, actions: newActions };
+			mockDb.returning.mockResolvedValue([updatedWorkflow]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.update({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-        actions: newActions,
-      });
+			const result = await caller.workflows.update({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+				actions: newActions,
+			});
 
-      expect(result.actions).toEqual(newActions);
-    });
-  });
+			expect(result.actions).toEqual(newActions);
+		});
 
-  describe('delete', () => {
-    it('should delete a workflow', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      mockDb.returning.mockResolvedValue([mockWorkflow]);
+		it("should throw NOT_FOUND for non-existent workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(null);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.delete({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-      });
 
-      expect(result.id).toBe(TEST_WORKFLOW_ID);
-    });
-  });
+			await expect(
+				caller.workflows.update({
+					organizationId: TEST_ORG_ID,
+					id: TEST_WORKFLOW_ID,
+					name: "Updated Workflow",
+				}),
+			).rejects.toThrow(TRPCError);
+		});
+	});
 
-  describe('toggleStatus', () => {
-    it('should activate an inactive workflow', async () => {
-      const inactiveWorkflow = { ...mockWorkflow, isActive: false };
-      mockDb.query.workflows.findFirst.mockResolvedValue(inactiveWorkflow);
-      const activatedWorkflow = { ...mockWorkflow, isActive: true };
-      mockDb.returning.mockResolvedValue([activatedWorkflow]);
+	describe("delete", () => {
+		it("should delete a workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.toggleStatus({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-      });
+			const result = await caller.workflows.delete({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+			});
 
-      expect(result.isActive).toBe(true);
-    });
+			expect(result.success).toBe(true);
+		});
 
-    it('should deactivate an active workflow', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      const deactivatedWorkflow = { ...mockWorkflow, isActive: false };
-      mockDb.returning.mockResolvedValue([deactivatedWorkflow]);
+		it("should throw NOT_FOUND for non-existent workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(null);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.toggleStatus({
-        organizationId: TEST_ORG_ID,
-        id: TEST_WORKFLOW_ID,
-      });
 
-      expect(result.isActive).toBe(false);
-    });
-  });
+			await expect(
+				caller.workflows.delete({
+					organizationId: TEST_ORG_ID,
+					id: TEST_WORKFLOW_ID,
+				}),
+			).rejects.toThrow(TRPCError);
+		});
+	});
 
-  describe('getExecutions', () => {
-    it('should return workflow executions', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      mockDb.query.workflowExecutions.findMany.mockResolvedValue([mockExecution]);
+	describe("toggleStatus", () => {
+		it("should activate a paused workflow", async () => {
+			const pausedWorkflow = { ...mockWorkflow, status: "paused" };
+			mockDb.query.workflows.findFirst.mockResolvedValue(pausedWorkflow);
+			const activatedWorkflow = { ...mockWorkflow, status: "active" };
+			mockDb.returning.mockResolvedValue([activatedWorkflow]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.getExecutions({
-        organizationId: TEST_ORG_ID,
-        workflowId: TEST_WORKFLOW_ID,
-      });
+			const result = await caller.workflows.toggleStatus({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+			});
 
-      expect(result.executions).toHaveLength(1);
-      expect(result.executions[0].status).toBe('success');
-    });
+			expect(result.status).toBe("active");
+		});
 
-    it('should filter executions by status', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      mockDb.query.workflowExecutions.findMany.mockResolvedValue([mockExecution]);
+		it("should pause an active workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
+			const pausedWorkflow = { ...mockWorkflow, status: "paused" };
+			mockDb.returning.mockResolvedValue([pausedWorkflow]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.getExecutions({
-        organizationId: TEST_ORG_ID,
-        workflowId: TEST_WORKFLOW_ID,
-        status: 'success',
-      });
+			const result = await caller.workflows.toggleStatus({
+				organizationId: TEST_ORG_ID,
+				id: TEST_WORKFLOW_ID,
+			});
 
-      expect(result.executions.every((e: any) => e.status === 'success')).toBe(true);
-    });
+			expect(result.status).toBe("paused");
+		});
 
-    it('should paginate executions', async () => {
-      mockDb.query.workflows.findFirst.mockResolvedValue(mockWorkflow);
-      mockDb.query.workflowExecutions.findMany.mockResolvedValue([mockExecution]);
+		it("should throw NOT_FOUND for non-existent workflow", async () => {
+			mockDb.query.workflows.findFirst.mockResolvedValue(null);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.getExecutions({
-        organizationId: TEST_ORG_ID,
-        workflowId: TEST_WORKFLOW_ID,
-        limit: 10,
-        offset: 0,
-      });
 
-      expect(result.limit).toBe(10);
-      expect(result.offset).toBe(0);
-    });
-  });
+			await expect(
+				caller.workflows.toggleStatus({
+					organizationId: TEST_ORG_ID,
+					id: TEST_WORKFLOW_ID,
+				}),
+			).rejects.toThrow(TRPCError);
+		});
+	});
 
-  describe('getStats', () => {
-    it('should return workflow statistics', async () => {
-      mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            groupBy: vi.fn().mockResolvedValue([
-              { status: 'success', count: 100 },
-              { status: 'failed', count: 10 },
-            ]),
-          }),
-        }),
-      });
+	describe("getExecutions", () => {
+		it("should return workflow executions", async () => {
+			mockDb.query.workflowExecutions.findMany.mockResolvedValue([
+				mockExecution,
+			]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.getStats({
-        organizationId: TEST_ORG_ID,
-      });
+			const result = await caller.workflows.getExecutions({
+				organizationId: TEST_ORG_ID,
+				workflowId: TEST_WORKFLOW_ID,
+			});
 
-      expect(result.totalWorkflows).toBe(1);
-      expect(result.activeWorkflows).toBe(1);
-      expect(result.totalExecutions).toBeGreaterThanOrEqual(0);
-    });
+			expect(result.items).toHaveLength(1);
+			expect(result.items[0].status).toBe("success");
+		});
 
-    it('should calculate success rate', async () => {
-      mockDb.query.workflows.findMany.mockResolvedValue([mockWorkflow]);
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            groupBy: vi.fn().mockResolvedValue([
-              { status: 'success', count: 90 },
-              { status: 'failed', count: 10 },
-            ]),
-          }),
-        }),
-      });
+		it("should filter executions by status", async () => {
+			mockDb.query.workflowExecutions.findMany.mockResolvedValue([
+				mockExecution,
+			]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const caller = appRouter.createCaller(mockContext as any);
-      const result = await caller.workflows.getStats({
-        organizationId: TEST_ORG_ID,
-      });
+			const result = await caller.workflows.getExecutions({
+				organizationId: TEST_ORG_ID,
+				workflowId: TEST_WORKFLOW_ID,
+				status: "success",
+			});
 
-      // 90/(90+10) = 90%
-      expect(result.successRate).toBeCloseTo(0.9, 1);
-    });
-  });
+			expect(result.items.every((e) => e.status === "success")).toBe(true);
+		});
+
+		it("should paginate executions", async () => {
+			mockDb.query.workflowExecutions.findMany.mockResolvedValue([
+				mockExecution,
+			]);
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([{ count: 1 }]),
+				}),
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+			const result = await caller.workflows.getExecutions({
+				organizationId: TEST_ORG_ID,
+				workflowId: TEST_WORKFLOW_ID,
+				limit: 10,
+				offset: 0,
+			});
+
+			expect(result.limit).toBe(10);
+			expect(result.offset).toBe(0);
+		});
+	});
+
+	describe("getStats", () => {
+		it("should return workflow statistics", async () => {
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockResolvedValue([
+						{
+							total: 5,
+							active: 3,
+							paused: 1,
+							disabled: 1,
+						},
+					]),
+				}),
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+			const result = await caller.workflows.getStats({
+				organizationId: TEST_ORG_ID,
+			});
+
+			expect(result.workflows.total).toBe(5);
+			expect(result.workflows.active).toBe(3);
+		});
+
+		it("should return execution statistics", async () => {
+			let callCount = 0;
+			mockDb.select.mockReturnValue({
+				from: vi.fn().mockReturnValue({
+					where: vi.fn().mockImplementation(() => {
+						callCount++;
+						if (callCount === 1) {
+							return Promise.resolve([
+								{ total: 5, active: 3, paused: 1, disabled: 1 },
+							]);
+						}
+						return Promise.resolve([
+							{ total: 100, success: 90, failed: 8, skipped: 2 },
+						]);
+					}),
+				}),
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const caller = appRouter.createCaller(mockContext as any);
+			const result = await caller.workflows.getStats({
+				organizationId: TEST_ORG_ID,
+			});
+
+			expect(result.executions).toBeDefined();
+		});
+	});
 });

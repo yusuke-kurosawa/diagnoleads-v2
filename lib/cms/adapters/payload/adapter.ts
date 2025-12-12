@@ -9,7 +9,8 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { getPayload, type Payload } from 'payload';
+import { type Payload, getPayload } from 'payload';
+import type { Where } from 'payload';
 import {
   CMSConnectionError,
   CMSNotFoundError,
@@ -35,7 +36,6 @@ import type {
   UpdateParams,
   WhereCondition,
 } from '../../core/interfaces';
-import type { Where } from 'payload';
 
 export class PayloadCMSAdapter implements CMSAdapter {
   readonly name = 'PayloadCMS';

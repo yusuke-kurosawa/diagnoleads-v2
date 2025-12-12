@@ -1,10 +1,10 @@
 import { DiagnosticForm } from '@/components/features/diagnostic/diagnostic-form';
 import { DynamicDiagnosticForm } from '@/components/features/diagnostic/dynamic-diagnostic-form';
 import { DiagnosticFormRepository, type DiagnosticForm as DiagnosticFormType } from '@/lib/cms';
+import { ArrowRight, FileText } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { FileText, ArrowRight } from 'lucide-react';
 
 /**
  * Diagnostic Page Metadata

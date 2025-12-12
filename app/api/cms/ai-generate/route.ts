@@ -5,8 +5,8 @@
  * Generates content using AI for various CMS fields
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { getAIContentGenerator } from '@/lib/cms/ai/content-generator';
+import { type NextRequest, NextResponse } from 'next/server';
 
 interface GenerateRequest {
   type: 'blog-idea' | 'faq' | 'seo' | 'translate' | 'diagnostic-questions';

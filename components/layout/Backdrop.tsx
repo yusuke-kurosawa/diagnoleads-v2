@@ -1,7 +1,7 @@
 'use client';
 
 import { useSidebar } from '@/context/SidebarContext';
-import React from 'react';
+import type React from 'react';
 
 const Backdrop: React.FC = () => {
   const { isMobileOpen, toggleMobileSidebar } = useSidebar();

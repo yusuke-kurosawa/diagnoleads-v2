@@ -105,7 +105,11 @@ describe('Organizations Router', () => {
       const caller = appRouter.createCaller(mockContext);
       const result = await caller.organizations.getById({ id: TEST_ORG_ID });
 
-      expect(result).toEqual(mockOrganization);
+      expect(result).toEqual({
+        ...mockOrganization,
+        role: mockMembership.role,
+        membershipId: mockMembership.id,
+      });
       expect(mockDb.query.organizationMembers.findFirst).toHaveBeenCalled();
     });
 

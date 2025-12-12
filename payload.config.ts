@@ -1,11 +1,11 @@
-import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import { buildConfig } from 'payload';
-import { ja } from '@payloadcms/translations/languages/ja';
+import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { en } from '@payloadcms/translations/languages/en';
+import { ja } from '@payloadcms/translations/languages/ja';
+import { buildConfig } from 'payload';
 import sharp from 'sharp';
 
-import { Users, Media, DiagnosticForms, BlogPosts, FAQs, LandingPages } from './cms/collections';
+import { BlogPosts, DiagnosticForms, FAQs, LandingPages, Media, Users } from './cms/collections';
 
 /**
  * Payload CMS Configuration

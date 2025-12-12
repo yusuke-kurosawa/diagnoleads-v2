@@ -5,13 +5,13 @@
  * POST /api/cms/figma - Sync content from Figma
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import {
   figmaClient,
   figmaSitesManager,
   getAllComponentMappings,
   getAllDesignTokens,
 } from '@/lib/cms/integrations/figma';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * GET: Get Figma integration status and configuration

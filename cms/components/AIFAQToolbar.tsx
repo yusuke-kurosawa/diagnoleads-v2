@@ -6,8 +6,8 @@
  * Provides AI-assisted FAQ generation within the admin UI
  */
 
-import { useCallback, useState } from 'react';
 import { useForm } from '@payloadcms/ui';
+import { useCallback, useState } from 'react';
 
 interface GeneratedFAQ {
   question: { ja: string; en: string };

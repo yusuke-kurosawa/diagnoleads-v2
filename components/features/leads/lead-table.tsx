@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -29,7 +30,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Lead, Tag } from '@/lib/db/schema';
-import { TagBadgeList } from '../tags/tag-badge';
+import {
+  downloadPDF,
+  exportLeadsToPDF,
+  generatePDFFilename,
+} from '@/lib/features/reports/pdf-export-service';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -43,15 +48,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { BulkActions } from './bulk-actions';
-import { Checkbox } from '@/components/ui/checkbox';
 import { formatDistance } from 'date-fns';
 import { enUS, ja } from 'date-fns/locale';
-import {
-  downloadPDF,
-  exportLeadsToPDF,
-  generatePDFFilename,
-} from '@/lib/features/reports/pdf-export-service';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -73,6 +71,8 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
+import { TagBadgeList } from '../tags/tag-badge';
+import { BulkActions } from './bulk-actions';
 
 // Extended lead type with tags
 type LeadWithTags = Lead & { tags?: Tag[] };

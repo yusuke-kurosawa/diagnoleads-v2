@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { authClient } from '@/lib/auth/client';
+import { RiArrowDownSLine, RiLogoutBoxRLine, RiSettings4Line, RiUserLine } from '@remixicon/react';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { RiUserLine, RiSettings4Line, RiLogoutBoxRLine, RiArrowDownSLine } from '@remixicon/react';
-import { authClient } from '@/lib/auth/client';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function UserDropdown() {

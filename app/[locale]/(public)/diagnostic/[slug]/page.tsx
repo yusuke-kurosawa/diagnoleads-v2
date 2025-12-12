@@ -1,5 +1,5 @@
 import { DynamicDiagnosticForm } from '@/components/features/diagnostic/dynamic-diagnostic-form';
-import { DiagnosticFormRepository, type DiagnosticForm } from '@/lib/cms';
+import { type DiagnosticForm, DiagnosticFormRepository } from '@/lib/cms';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 

@@ -11,10 +11,10 @@
  * @see https://www.figma.com/developers/api#webhooks_v2
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { figmaSitesManager, figmaClient } from '@/lib/cms/integrations/figma';
+import crypto from 'node:crypto';
 import { cmsEventEmitter, createCMSEvent } from '@/lib/cms/core/realtime';
-import crypto from 'crypto';
+import { figmaClient, figmaSitesManager } from '@/lib/cms/integrations/figma';
+import { type NextRequest, NextResponse } from 'next/server';
 
 // Figma webhook event types
 type FigmaWebhookEvent = 'FILE_UPDATE' | 'FILE_DELETE' | 'FILE_COMMENT' | 'LIBRARY_PUBLISH';

@@ -15,8 +15,8 @@
  * };
  */
 
-import { NextRequest } from 'next/server';
 import { sseConnectionManager } from '@/lib/cms/core/realtime';
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       // キープアライブのためのハートビート
       const heartbeatInterval = setInterval(() => {
         try {
-          const heartbeat = encoder.encode(`: heartbeat\n\n`);
+          const heartbeat = encoder.encode(': heartbeat\n\n');
           controller.enqueue(heartbeat);
         } catch {
           clearInterval(heartbeatInterval);

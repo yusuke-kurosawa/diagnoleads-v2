@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth';
 /**
  * REST API v2 - Analytics Endpoint
  *
@@ -5,10 +6,9 @@
  */
 import { db } from '@/lib/db';
 import { leads } from '@/lib/db/schema';
-import { auth } from '@/lib/auth';
+import { and, avg, count, eq, gte, lte, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
-import { and, count, eq, gte, lte, sql, avg } from 'drizzle-orm';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 // ============================================================================

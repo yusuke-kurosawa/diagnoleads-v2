@@ -511,7 +511,7 @@ export const abTestsRouter = router({
     // Determine winner based on goal type
     const variants = existing.variants as AbTestVariant[];
     let winnerId: string | null = null;
-    let highestScore = -Infinity;
+    let highestScore = Number.NEGATIVE_INFINITY;
 
     for (const variant of variants) {
       let score = 0;

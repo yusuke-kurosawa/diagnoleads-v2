@@ -2,11 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import type {
   DiagnosticForm,
   DiagnosticQuestion,
@@ -14,25 +14,25 @@ import type {
   ScoreCalculationResult,
   ScoringThreshold,
 } from '@/lib/cms';
+import { cn } from '@/lib/utils';
 import {
+  Briefcase,
   Building2,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  FileText,
   Loader2,
+  type LucideIcon,
   Mail,
   Phone,
   Target,
-  User,
-  Briefcase,
   TrendingUp,
-  Clock,
-  FileText,
-  type LucideIcon,
+  User,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState, useCallback, useMemo } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useCallback, useMemo, useState } from 'react';
 
 // =============================================================================
 // Icon Mapping
@@ -281,10 +281,6 @@ function QuestionRenderer(props: QuestionRendererProps) {
       return <TextareaQuestion {...props} />;
     case 'scale':
       return <ScaleQuestion {...props} />;
-    case 'text':
-    case 'email':
-    case 'phone':
-    case 'number':
     default:
       return <TextQuestion {...props} />;
   }
