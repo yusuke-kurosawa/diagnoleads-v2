@@ -6,6 +6,8 @@ import { contentRouter } from '@/lib/features/content/api/router';
 import { customFieldsRouter } from '@/lib/features/custom-fields/api/router';
 import { customReportsRouter } from '@/lib/features/custom-reports/api/router';
 import { diagnosticTemplatesRouter } from '@/lib/features/diagnostic-templates/api/router';
+import { distributionRouter } from '@/lib/features/distribution/router';
+import { embedRouter } from '@/lib/features/embed/router';
 import { filtersRouter } from '@/lib/features/filters/api/router';
 import { hierarchyRouter } from '@/lib/features/hierarchy/api/router';
 import { leadsRouter } from '@/lib/features/leads/api/router';
@@ -45,6 +47,8 @@ export const appRouter = router({
   diagnosticTemplates: diagnosticTemplatesRouter, // Phase 9 P3: 診断テンプレート管理
   abTests: abTestsRouter, // Phase 9 P3: A/Bテスト機能
   scoringRules: scoringRulesRouter, // Phase 9 P3: リードスコアリングルール
+  embed: embedRouter, // Embed widget configuration management
+  distribution: distributionRouter, // QR code and offline distribution
 });
 
 export type AppRouter = typeof appRouter;

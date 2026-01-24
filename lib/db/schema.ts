@@ -1679,3 +1679,239 @@ export const leadScoringRulesetsRelations = relations(leadScoringRulesets, ({ on
 
 export type LeadScoringRuleset = typeof leadScoringRulesets.$inferSelect;
 export type NewLeadScoringRuleset = typeof leadScoringRulesets.$inferInsert;
+
+// ============================================================================
+// Embed Widget Configuration (External Site Integration)
+// ============================================================================
+
+/**
+ * Embed Configs Table
+ * Stores configuration for embedding widgets on external sites
+ * Security: API key authentication + origin whitelist
+ */
+export const embedConfigs = pgTable('embed_configs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Configuration name for identification */
+  name: text('name').notNull(),
+  /** Description */
+  description: text('description'),
+  /** API Key for widget authentication (shown once, stored hashed) */
+  apiKey: text('api_key').notNull().unique(),
+  /** bcrypt hash of API key for verification */
+  apiKeyHash: text('api_key_hash').notNull(),
+  /** Allowed origins (e.g., ['https://example.com', 'https://*.example.com']) */
+  allowedOrigins: jsonb('allowed_origins').$type<string[]>().default([]).notNull(),
+  /** Rate limit per minute */
+  rateLimitPerMinute: integer('rate_limit_per_minute').default(60).notNull(),
+  /** Rate limit per day */
+  rateLimitPerDay: integer('rate_limit_per_day').default(10000).notNull(),
+  /** Diagnostic template ID to use (optional, defaults to organization default) */
+  diagnosticTemplateId: uuid('diagnostic_template_id').references(() => diagnosticTemplates.id, {
+    onDelete: 'set null',
+  }),
+  /** Theme overrides for the widget */
+  themeOverrides: jsonb('theme_overrides').$type<{
+    primaryColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    borderRadius?: string;
+  }>(),
+  /** Custom CSS for advanced styling */
+  customCss: text('custom_css'),
+  /** Lead source to use for submissions from this widget */
+  leadSource: text('lead_source').default('embed').notNull(),
+  /** Expiration date (optional) */
+  expiresAt: timestamp('expires_at'),
+  /** Is this config active? */
+  isActive: boolean('is_active').default(true).notNull(),
+  /** Last used timestamp */
+  lastUsedAt: timestamp('last_used_at'),
+  /** Total usage count */
+  usageCount: integer('usage_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Embed Access Logs Table
+ * Audit log for all embed API access (security monitoring)
+ */
+export const embedAccessLogs = pgTable('embed_access_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  embedConfigId: uuid('embed_config_id').references(() => embedConfigs.id, {
+    onDelete: 'set null',
+  }),
+  organizationId: uuid('organization_id').references(() => organizations.id, {
+    onDelete: 'cascade',
+  }),
+  /** Request origin header */
+  origin: text('origin'),
+  /** Client IP address (hashed for privacy) */
+  ipAddressHash: text('ip_address_hash'),
+  /** User agent string */
+  userAgent: text('user_agent'),
+  /** API endpoint accessed */
+  endpoint: text('endpoint').notNull(),
+  /** HTTP method */
+  method: text('method').notNull(),
+  /** HTTP status code returned */
+  statusCode: integer('status_code').notNull(),
+  /** Error code if request failed */
+  errorCode: text('error_code'),
+  /** Error message if request failed */
+  errorMessage: text('error_message'),
+  /** Lead ID if a lead was created */
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  /** Request duration in milliseconds */
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Embed Configs Relations
+ */
+export const embedConfigsRelations = relations(embedConfigs, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [embedConfigs.organizationId],
+    references: [organizations.id],
+  }),
+  diagnosticTemplate: one(diagnosticTemplates, {
+    fields: [embedConfigs.diagnosticTemplateId],
+    references: [diagnosticTemplates.id],
+  }),
+  accessLogs: many(embedAccessLogs),
+}));
+
+/**
+ * Embed Access Logs Relations
+ */
+export const embedAccessLogsRelations = relations(embedAccessLogs, ({ one }) => ({
+  embedConfig: one(embedConfigs, {
+    fields: [embedAccessLogs.embedConfigId],
+    references: [embedConfigs.id],
+  }),
+  organization: one(organizations, {
+    fields: [embedAccessLogs.organizationId],
+    references: [organizations.id],
+  }),
+  lead: one(leads, {
+    fields: [embedAccessLogs.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export type EmbedConfig = typeof embedConfigs.$inferSelect;
+export type NewEmbedConfig = typeof embedConfigs.$inferInsert;
+export type EmbedAccessLog = typeof embedAccessLogs.$inferSelect;
+export type NewEmbedAccessLog = typeof embedAccessLogs.$inferInsert;
+
+// ============================================================================
+// QR Code Distribution (Offline Event Integration)
+// ============================================================================
+
+/**
+ * QR Campaigns Table
+ * Stores QR code campaigns for offline event lead capture
+ */
+export const qrCampaigns = pgTable('qr_campaigns', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  diagnosticTemplateId: uuid('diagnostic_template_id')
+    .notNull()
+    .references(() => diagnosticTemplates.id, { onDelete: 'cascade' }),
+  /** Campaign name for identification */
+  name: text('name').notNull(),
+  /** Description */
+  description: text('description'),
+  /** Short code for URL (e.g., abc123) */
+  shortCode: text('short_code').notNull().unique(),
+  /** Full tracking URL */
+  trackingUrl: text('tracking_url').notNull(),
+  /** UTM parameters */
+  utmSource: text('utm_source').default('qrcode').notNull(),
+  utmMedium: text('utm_medium').default('offline').notNull(),
+  utmCampaign: text('utm_campaign'),
+  utmContent: text('utm_content'),
+  /** Scan count */
+  scanCount: integer('scan_count').default(0).notNull(),
+  /** Completion count (leads created) */
+  completionCount: integer('completion_count').default(0).notNull(),
+  /** Is campaign active? */
+  isActive: boolean('is_active').default(true).notNull(),
+  /** Expiration date (optional) */
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * QR Scans Table
+ * Tracks individual QR code scans for analytics
+ */
+export const qrScans = pgTable('qr_scans', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  campaignId: uuid('campaign_id')
+    .notNull()
+    .references(() => qrCampaigns.id, { onDelete: 'cascade' }),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Hashed IP address for privacy */
+  ipAddressHash: text('ip_address_hash'),
+  /** User agent string */
+  userAgent: text('user_agent'),
+  /** Device type */
+  deviceType: text('device_type'), // mobile, tablet, desktop
+  /** Location data (from IP geolocation) */
+  location: jsonb('location').$type<{ country?: string; city?: string }>(),
+  /** Session ID to track conversions */
+  sessionId: uuid('session_id'),
+  /** Did this scan result in a lead? */
+  converted: boolean('converted').default(false).notNull(),
+  /** Lead ID if converted */
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  scannedAt: timestamp('scanned_at').defaultNow().notNull(),
+});
+
+/**
+ * QR Campaigns Relations
+ */
+export const qrCampaignsRelations = relations(qrCampaigns, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [qrCampaigns.organizationId],
+    references: [organizations.id],
+  }),
+  diagnosticTemplate: one(diagnosticTemplates, {
+    fields: [qrCampaigns.diagnosticTemplateId],
+    references: [diagnosticTemplates.id],
+  }),
+  scans: many(qrScans),
+}));
+
+/**
+ * QR Scans Relations
+ */
+export const qrScansRelations = relations(qrScans, ({ one }) => ({
+  campaign: one(qrCampaigns, {
+    fields: [qrScans.campaignId],
+    references: [qrCampaigns.id],
+  }),
+  organization: one(organizations, {
+    fields: [qrScans.organizationId],
+    references: [organizations.id],
+  }),
+  lead: one(leads, {
+    fields: [qrScans.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export type QRCampaign = typeof qrCampaigns.$inferSelect;
+export type NewQRCampaign = typeof qrCampaigns.$inferInsert;
+export type QRScan = typeof qrScans.$inferSelect;
+export type NewQRScan = typeof qrScans.$inferInsert;

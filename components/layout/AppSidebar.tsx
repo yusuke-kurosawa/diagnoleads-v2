@@ -75,6 +75,13 @@ const AppSidebar: React.FC = () => {
             path: `/${locale}/settings/organization`,
           },
           { name: t('members'), nameKey: 'members', path: `/${locale}/settings/members` },
+          { name: t('webhooks'), nameKey: 'webhooks', path: `/${locale}/settings/webhooks` },
+          { name: t('embed'), nameKey: 'embed', path: `/${locale}/settings/embed` },
+          {
+            name: t('qrCampaigns'),
+            nameKey: 'qrCampaigns',
+            path: `/${locale}/settings/qr-campaigns`,
+          },
         ],
       },
       {

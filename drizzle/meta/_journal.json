@@ -8,6 +8,20 @@
       "when": 1763948119004,
       "tag": "0000_keen_wonder_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769137910429,
+      "tag": "0001_rare_orphan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769138107005,
+      "tag": "0002_quick_prowler",
+      "breakpoints": true
     }
   ]
 }
