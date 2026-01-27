@@ -1,12 +1,12 @@
+import { createStyles } from './styles';
 import type {
-  DiagnosticTemplate,
   DiagnosticQuestion,
-  LeadSubmissionData,
   DiagnosticResult,
+  DiagnosticTemplate,
+  LeadSubmissionData,
   WidgetError,
   WidgetState,
 } from './types';
-import { createStyles } from './styles';
 
 /**
  * DiagnoLeads Web Component

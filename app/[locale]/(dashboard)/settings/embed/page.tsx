@@ -44,8 +44,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -273,7 +273,7 @@ export default function EmbedSettingsPage() {
     });
   };
 
-  const copyToClipboard = (text: string, label: string = 'Copied') => {
+  const copyToClipboard = (text: string, label = 'Copied') => {
     navigator.clipboard.writeText(text);
     toast.success(label);
   };

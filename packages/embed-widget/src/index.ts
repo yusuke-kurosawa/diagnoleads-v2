@@ -3,8 +3,8 @@
  * A lightweight Web Component for embedding diagnostic forms on external websites
  */
 
-import { DiagnoLeadsWidget } from './widget';
 import type { DiagnoLeadsWidgetConfig } from './types';
+import { DiagnoLeadsWidget } from './widget';
 
 // Register the custom element
 if (!customElements.get('diagnoleads-widget')) {
