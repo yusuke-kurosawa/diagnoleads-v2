@@ -1,10 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-
 /**
  * Global Error Boundary (Root Level)
  * Catches errors in the root layout
+ * Note: Cannot use useTranslations here as it's outside IntlProvider context
  */
 export default function GlobalError({
   error,
@@ -13,25 +12,23 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = useTranslations('settings.errorPages.globalError');
-
   return (
-    <html>
-      <body>
+    <html lang="ja">
+      <body className="bg-white dark:bg-gray-900">
         <div className="flex min-h-screen flex-col items-center justify-center">
           <div className="max-w-md text-center">
-            <h2 className="mb-4 text-2xl font-bold">{t('title')}</h2>
-            <p className="mb-6 text-gray-600">
-              {t('message')}
+            <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
+              システムエラー
+            </h2>
+            <p className="mb-6 text-gray-600 dark:text-gray-400">
+              システムエラーが発生しました。ページを再読み込みしてください。
             </p>
-            {error.digest && (
-              <p className="mb-4 text-sm text-gray-500">{t('errorId', { digest: error.digest })}</p>
-            )}
+            {error.digest && <p className="mb-4 text-sm text-gray-500">エラーID: {error.digest}</p>}
             <button
               onClick={reset}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-700 transition-colors"
             >
-              {t('retry')}
+              再試行
             </button>
           </div>
         </div>

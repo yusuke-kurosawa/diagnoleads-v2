@@ -1,6 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { locales, type Locale } from './config';
+import { type Locale, locales } from './config';
 
 /**
  * next-intl Request Configuration
@@ -10,11 +9,12 @@ import { locales, type Locale } from './config';
  */
 export default getRequestConfig(async ({ requestLocale }) => {
   // リクエストから取得したロケールをLocale型に変換
-  const locale = (await requestLocale) as Locale;
+  // requestLocaleがundefinedの場合はデフォルトロケールを使用
+  let locale = (await requestLocale) as Locale | undefined;
 
-  // サポートされていないロケールの場合は404
+  // サポートされていないロケールの場合はデフォルトにフォールバック
   if (!locale || !locales.includes(locale)) {
-    notFound();
+    locale = 'ja'; // デフォルトロケール
   }
 
   return {
@@ -51,9 +51,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
      */
     getMessageFallback: ({ key, namespace }) => {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(
-          `[next-intl] Missing message: ${namespace ? `${namespace}.` : ''}${key}`
-        );
+        console.warn(`[next-intl] Missing message: ${namespace ? `${namespace}.` : ''}${key}`);
       }
       return `[Missing: ${key}]`;
     },

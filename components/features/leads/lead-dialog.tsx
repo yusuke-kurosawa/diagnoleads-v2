@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -8,16 +7,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { LeadForm } from './lead-form';
 import type { Lead } from '@/lib/db/schema';
 import type { CreateLeadInput, UpdateLeadInput } from '@/lib/features/leads/types';
+import { useTranslations } from 'next-intl';
+import { LeadForm } from './lead-form';
 
 interface LeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead?: Lead | null;
   organizationId: string;
-  onSubmit: (data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>) => void | Promise<void>;
+  onSubmit: (
+    data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>
+  ) => void | Promise<void>;
   isLoading?: boolean;
 }
 
@@ -44,21 +46,13 @@ export function LeadDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {lead ? t('editLead') : t('createLeadTitle')}
-          </DialogTitle>
+          <DialogTitle>{lead ? t('editLead') : t('createLeadTitle')}</DialogTitle>
           <DialogDescription>
-            {lead
-              ? t('editLeadDescription')
-              : t('createLeadDescription')}
+            {lead ? t('editLeadDescription') : t('createLeadDescription')}
           </DialogDescription>
         </DialogHeader>
 
-        <LeadForm
-          lead={lead || undefined}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
+        <LeadForm lead={lead || undefined} onSubmit={handleSubmit} isLoading={isLoading} />
       </DialogContent>
     </Dialog>
   );

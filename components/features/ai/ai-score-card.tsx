@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import type { LeadScore } from '@/lib/features/ai';
+import { AlertCircle, Brain, Loader2, TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 interface AIScoreCardProps {
   score?: number | null;
@@ -32,12 +32,7 @@ const confidenceColors = {
  * AI Score Card Component
  * Displays AI-generated lead score with confidence, reasoning, and recommendations
  */
-export function AIScoreCard({
-  score,
-  aiScore,
-  onGenerateScore,
-  isGenerating,
-}: AIScoreCardProps) {
+export function AIScoreCard({ score, aiScore, onGenerateScore, isGenerating }: AIScoreCardProps) {
   const t = useTranslations('ai');
   const [showDetails, setShowDetails] = useState(false);
 
@@ -51,12 +46,7 @@ export function AIScoreCard({
             {t('leadScore')}
           </h3>
           {onGenerateScore && (
-            <Button
-              onClick={onGenerateScore}
-              disabled={isGenerating}
-              size="sm"
-              variant="outline"
-            >
+            <Button onClick={onGenerateScore} disabled={isGenerating} size="sm" variant="outline">
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -103,12 +93,7 @@ export function AIScoreCard({
               {t(`priority.${aiScore.priority}`)}
             </Badge>
             {onGenerateScore && (
-              <Button
-                onClick={onGenerateScore}
-                disabled={isGenerating}
-                size="sm"
-                variant="ghost"
-              >
+              <Button onClick={onGenerateScore} disabled={isGenerating} size="sm" variant="ghost">
                 {isGenerating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -121,15 +106,9 @@ export function AIScoreCard({
 
         {/* Score display */}
         <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-4xl font-bold text-blue-600">
-            {aiScore.score}
-          </span>
+          <span className="text-4xl font-bold text-blue-600">{aiScore.score}</span>
           <span className="text-xl text-gray-500">/ 100</span>
-          <span
-            className={`text-sm font-medium ml-2 ${
-              confidenceColors[aiScore.confidence]
-            }`}
-          >
+          <span className={`text-sm font-medium ml-2 ${confidenceColors[aiScore.confidence]}`}>
             {t(`confidence.${aiScore.confidence}`)}
           </span>
         </div>
@@ -158,9 +137,7 @@ export function AIScoreCard({
             {/* Recommended actions */}
             {aiScore.recommendedActions.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold mb-2">
-                  {t('recommendedActions')}
-                </h4>
+                <h4 className="text-sm font-semibold mb-2">{t('recommendedActions')}</h4>
                 <ul className="space-y-2">
                   {aiScore.recommendedActions.map((action, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
@@ -196,11 +173,7 @@ export function AIScoreCard({
           {t('leadScore')}
         </h3>
         {onGenerateScore && (
-          <Button
-            onClick={onGenerateScore}
-            disabled={isGenerating}
-            size="sm"
-          >
+          <Button onClick={onGenerateScore} disabled={isGenerating} size="sm">
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

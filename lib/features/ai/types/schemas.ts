@@ -56,3 +56,21 @@ export const batchScoreLeadsSchema = z.object({
   leadIds: z.array(z.string().uuid()).min(1).max(50),
 });
 export type BatchScoreLeadsInput = z.infer<typeof batchScoreLeadsSchema>;
+
+/**
+ * Predict conversion schema
+ */
+export const predictConversionSchema = z.object({
+  organizationId: z.string().uuid(),
+  leadId: z.string().uuid(),
+});
+export type PredictConversionInput = z.infer<typeof predictConversionSchema>;
+
+/**
+ * Batch predict conversion schema
+ */
+export const batchPredictConversionSchema = z.object({
+  organizationId: z.string().uuid(),
+  leadIds: z.array(z.string().uuid()).min(1).max(20),
+});
+export type BatchPredictConversionInput = z.infer<typeof batchPredictConversionSchema>;

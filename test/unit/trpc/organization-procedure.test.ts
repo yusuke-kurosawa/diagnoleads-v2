@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
-import { router, organizationProcedure } from '@/lib/trpc/init';
-import { z } from 'zod';
 import type { Organization, OrganizationMember, User } from '@/lib/db/schema';
+import { organizationProcedure, router } from '@/lib/trpc/init';
+import { TRPCError } from '@trpc/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 // Mock dependencies
 vi.mock('@/lib/db/rls', () => ({
@@ -37,6 +37,12 @@ describe('organizationProcedure', () => {
     name: 'Test Organization',
     slug: 'test-org',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -165,13 +171,9 @@ describe('organizationProcedure', () => {
       const caller = testRouter.createCaller(mockContext);
 
       // Expect the procedure to throw a FORBIDDEN error
-      await expect(
-        caller.test({ organizationId: TEST_OTHER_ORG_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.test({ organizationId: TEST_OTHER_ORG_ID })).rejects.toThrow(TRPCError);
 
-      await expect(
-        caller.test({ organizationId: TEST_OTHER_ORG_ID })
-      ).rejects.toMatchObject({
+      await expect(caller.test({ organizationId: TEST_OTHER_ORG_ID })).rejects.toMatchObject({
         code: 'FORBIDDEN',
         message: 'この組織にアクセスする権限がありません',
       });
@@ -227,9 +229,7 @@ describe('organizationProcedure', () => {
 
       const caller = testRouter.createCaller(mockContext);
 
-      await expect(
-        caller.test({ organizationId: 'not-a-uuid' } as any)
-      ).rejects.toThrow();
+      await expect(caller.test({ organizationId: 'not-a-uuid' } as any)).rejects.toThrow();
     });
 
     it('should pass through additional input fields', async () => {

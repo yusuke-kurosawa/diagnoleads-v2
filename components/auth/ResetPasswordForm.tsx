@@ -1,11 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useTranslations } from 'next-intl';
-import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,7 +11,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authClient } from '@/lib/auth/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 type ResetPasswordFormValues = {
   email: string;
@@ -43,7 +43,7 @@ export function ResetPasswordForm() {
   async function onSubmit(data: ResetPasswordFormValues) {
     setIsLoading(true);
     try {
-      await authClient.forgetPassword({
+      await (authClient as any).forgetPassword({
         email: data.email,
         redirectTo: '/reset-password/confirm',
       });
@@ -61,15 +61,9 @@ export function ResetPasswordForm() {
   if (isSuccess) {
     return (
       <div className="text-center space-y-4">
-        <div className="text-green-600 text-lg font-semibold">
-          {t('successTitle')}
-        </div>
-        <p className="text-sm text-gray-600">
-          {t('successMessage')}
-        </p>
-        <p className="text-xs text-gray-500">
-          {t('successNote')}
-        </p>
+        <div className="text-green-600 text-lg font-semibold">{t('successTitle')}</div>
+        <p className="text-sm text-gray-600">{t('successMessage')}</p>
+        <p className="text-xs text-gray-500">{t('successNote')}</p>
       </div>
     );
   }
@@ -91,9 +85,7 @@ export function ResetPasswordForm() {
                   disabled={isLoading}
                 />
               </FormControl>
-              <FormDescription>
-                {t('description')}
-              </FormDescription>
+              <FormDescription>{t('description')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

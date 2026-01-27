@@ -1,10 +1,11 @@
 'use client';
 
+import { AreaChart } from '@/components/charts/area-chart';
 import { Card } from '@/components/ui/card';
-import { AreaChart } from '@tremor/react';
-import { format, parseISO } from 'date-fns';
-import { ja } from 'date-fns/locale';
 import type { TrendDataPoint } from '@/lib/features/analytics/types/schemas';
+import { format, parseISO } from 'date-fns';
+import { enUS, ja } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface LeadChartProps {
   data: TrendDataPoint[];
@@ -15,30 +16,52 @@ interface LeadChartProps {
 }
 
 /**
- * LeadChart component using Tremor AreaChart
+ * LeadChart component using recharts AreaChart
  * Displays lead trends over time with total and converted leads
  */
 export function LeadChart({
   data,
   isLoading = false,
-  title = 'リード推移',
-  description = 'リードの獲得数と成約数の推移',
+  title,
+  description,
   granularity = 'daily',
 }: LeadChartProps) {
-  // Format data for Tremor chart
+  const locale = useLocale();
+  const t = useTranslations('dashboard');
+  const tAnalytics = useTranslations('settings.analytics');
+
+  const dateLocale = locale === 'ja' ? ja : enUS;
+  const chartTitle = title ?? t('leadTrend');
+  const chartDescription = description ?? tAnalytics('charts.leadTrend');
+
+  // Localized labels for chart categories
+  const totalLeadsLabel = t('totalLeads');
+  const convertedLabel = t('convertedLeads');
+
+  // Format data for chart
   const chartData = data.map((point) => {
     const date = parseISO(point.date);
     const formattedDate =
       granularity === 'monthly'
-        ? format(date, 'yyyy年M月', { locale: ja })
-        : format(date, 'M/d', { locale: ja });
+        ? locale === 'ja'
+          ? format(date, 'yyyy年M月', { locale: dateLocale })
+          : format(date, 'MMM yyyy', { locale: dateLocale })
+        : format(date, 'M/d', { locale: dateLocale });
 
     return {
-      日付: formattedDate,
-      総リード数: point.count,
-      成約数: point.converted,
+      date: formattedDate,
+      [totalLeadsLabel]: point.count,
+      [convertedLabel]: point.converted,
     };
   });
+
+  // Value formatter based on locale
+  const valueFormatter = (value: number) => {
+    if (locale === 'ja') {
+      return `${value.toLocaleString()}件`;
+    }
+    return value.toLocaleString();
+  };
 
   if (isLoading) {
     return (
@@ -58,15 +81,12 @@ export function LeadChart({
     return (
       <Card className="p-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-          <p className="text-sm text-gray-600 mb-6">{description}</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">{chartTitle}</h3>
+          <p className="text-sm text-gray-600 mb-6">{chartDescription}</p>
         </div>
         <div className="h-64 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-gray-500 text-sm">データがありません</p>
-            <p className="text-gray-400 text-xs mt-1">
-              リードが追加されるとグラフが表示されます
-            </p>
+            <p className="text-gray-500 text-sm">{tAnalytics('noData')}</p>
           </div>
         </div>
       </Card>
@@ -76,23 +96,21 @@ export function LeadChart({
   return (
     <Card className="p-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-        <p className="text-sm text-gray-600 mb-6">{description}</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">{chartTitle}</h3>
+        <p className="text-sm text-gray-600 mb-6">{chartDescription}</p>
       </div>
 
       <AreaChart
         className="h-64"
         data={chartData}
-        index="日付"
-        categories={['総リード数', '成約数']}
+        index="date"
+        categories={[totalLeadsLabel, convertedLabel]}
         colors={['blue', 'green']}
-        valueFormatter={(value) => `${value.toLocaleString()}件`}
+        valueFormatter={valueFormatter}
         showLegend={true}
         showGridLines={true}
-        showXAxis={true}
-        showYAxis={true}
-        startEndOnly={false}
-        curveType="monotone"
+        showAnimation={true}
+        curveType="smooth"
       />
     </Card>
   );

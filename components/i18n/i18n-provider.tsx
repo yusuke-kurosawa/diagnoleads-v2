@@ -1,7 +1,7 @@
 'use client';
 
 import { NextIntlClientProvider } from 'next-intl';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 /**
  * I18n Provider Component
@@ -16,7 +16,12 @@ interface I18nProviderProps {
   timeZone?: string;
 }
 
-export function I18nProvider({ children, locale, messages, timeZone = 'Asia/Tokyo' }: I18nProviderProps) {
+export function I18nProvider({
+  children,
+  locale,
+  messages,
+  timeZone = 'Asia/Tokyo',
+}: I18nProviderProps) {
   return (
     <NextIntlClientProvider
       locale={locale}

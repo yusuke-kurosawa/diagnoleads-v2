@@ -1,3 +1,4 @@
+import { withPayload } from '@payloadcms/next/withPayload';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -16,9 +17,12 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   compiler: {
     // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
 
   // Image optimization
@@ -38,6 +42,12 @@ const nextConfig: NextConfig = {
       };
     }
 
+    // SVG handling with @svgr/webpack
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
     return config;
   },
 
@@ -49,9 +59,10 @@ const nextConfig: NextConfig = {
 };
 
 // Bundle Analyzer (run with ANALYZE=true npm run build)
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({ enabled: true })
-  : (config: NextConfig) => config;
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({ enabled: true })
+    : (config: NextConfig) => config;
 
-// Apply plugins: next-intl -> bundle analyzer
-export default withNextIntl(withBundleAnalyzer(nextConfig));
+// Apply plugins: next-intl -> bundle analyzer -> payload
+export default withPayload(withNextIntl(withBundleAnalyzer(nextConfig)));

@@ -1,11 +1,11 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import type { SemanticSearchResult } from '@/lib/features/ai';
+import { ExternalLink, Loader2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Users, ExternalLink, Loader2 } from 'lucide-react';
-import type { SemanticSearchResult } from '@/lib/features/ai';
 
 interface SimilarLeadsCardProps {
   similarLeads?: SemanticSearchResult[];
@@ -66,13 +66,9 @@ export function SimilarLeadsCard({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 truncate">
-                  {lead.name || lead.email}
-                </div>
+                <div className="font-medium text-gray-900 truncate">{lead.name || lead.email}</div>
                 {lead.company && (
-                  <div className="text-sm text-gray-500 truncate mt-1">
-                    {lead.company}
-                  </div>
+                  <div className="text-sm text-gray-500 truncate mt-1">{lead.company}</div>
                 )}
                 {lead.industry && (
                   <Badge variant="secondary" className="mt-2">
@@ -87,9 +83,7 @@ export function SimilarLeadsCard({
                   <div className="text-sm font-medium text-blue-600">
                     {Math.round(lead.similarity * 100)}%
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {t('similarity')}
-                  </div>
+                  <div className="text-xs text-gray-500">{t('similarity')}</div>
                 </div>
                 <ExternalLink className="h-4 w-4 text-gray-400" />
               </div>

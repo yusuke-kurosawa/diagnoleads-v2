@@ -533,6 +533,63 @@ refactor(multi-tenant): extract middleware to dedicated module
 
 ---
 
-**更新日**: 2025-11-24
+## 📦 CMS統合 (PayloadCMS 3.0)
+
+### バージョン情報
+
+```yaml
+PayloadCMS: 3.0.x
+Database: PostgreSQL (shared with Drizzle, separate schema: "payload")
+Rich Text: Lexical Editor
+Localization: ja, en (fallback: true)
+```
+
+### Context7 MCP使用ガイド
+
+Context7 MCPサーバーを使用してPayloadCMSドキュメントを参照する際は、以下のバージョン指定を使用：
+
+```
+# PayloadCMS 3.0のドキュメントを取得
+PayloadCMS v3.0 schema
+PayloadCMS 3.0 configuration
+PayloadCMS 3.0 collections
+PayloadCMS 3.0 Local API
+```
+
+**重要**: PayloadCMS 2.xとは大きく異なるため、必ず3.0のドキュメントを参照すること。
+
+### CMS抽象化パターン
+
+```typescript
+// ✅ 推奨: Adapterパターンを使用
+import { getCMSAdapter } from '@/lib/cms/adapters/factory';
+
+const adapter = getCMSAdapter();
+const posts = await adapter.find('blog', {
+  where: { status: 'published' },
+  locale: 'ja',
+});
+
+// ❌ 避ける: PayloadCMS直接使用
+import { getPayload } from 'payload';
+const payload = await getPayload({ config });
+await payload.find({ collection: 'blog-posts' });
+```
+
+### コレクション一覧
+
+```
+lib/cms/collections/
+├── FAQs.ts              # よくある質問
+├── BlogPosts.ts         # ブログ記事
+├── AssessmentTemplates.ts # 診断テンプレート
+├── Media.ts             # メディアファイル
+├── Authors.ts           # 著者
+└── Categories.ts        # カテゴリ
+```
+
+---
+
+**更新日**: 2025-11-26
 **対象**: Claude Code, Cursor, その他AIアシスタント
 **優先度**: 🔥 最高 - すべてのAI生成コードはこのコンテキストに従うこと

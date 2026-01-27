@@ -1,6 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
-import { localeConfig, locales, defaultLocale, getLocaleFromPathname } from './config';
 import type { NextRequest } from 'next/server';
+import { defaultLocale, getLocaleFromPathname, localeConfig, locales } from './config';
 
 /**
  * next-intl Middleware Factory
@@ -28,7 +28,7 @@ export const intlMiddleware = createMiddleware({
  * Check if a path should skip i18n middleware
  */
 export function shouldSkipI18nMiddleware(pathname: string): boolean {
-  // APIルート、静的ファイル、Next.js内部ファイルはスキップ
+  // APIルート、静的ファイル、Next.js内部ファイル、PayloadCMS管理画面はスキップ
   const skipPaths = [
     '/api',
     '/_next',
@@ -37,6 +37,7 @@ export function shouldSkipI18nMiddleware(pathname: string): boolean {
     '/robots.txt',
     '/sitemap.xml',
     '/manifest.json',
+    '/admin', // PayloadCMS admin panel
   ];
 
   // ファイル拡張子を持つパスをスキップ
@@ -60,7 +61,7 @@ export function getLocaleFromRequest(request: NextRequest): string {
 
   // 2. Cookieからロケールを取得
   const localeCookie = request.cookies.get(localeConfig.cookie.name);
-  if (localeCookie && locales.includes(localeCookie.value as typeof locales[number])) {
+  if (localeCookie && locales.includes(localeCookie.value as (typeof locales)[number])) {
     return localeCookie.value;
   }
 
@@ -75,7 +76,7 @@ export function getLocaleFromRequest(request: NextRequest): string {
     });
 
     for (const lang of languages) {
-      if (locales.includes(lang as typeof locales[number])) {
+      if (locales.includes(lang as (typeof locales)[number])) {
         return lang;
       }
     }

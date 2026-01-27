@@ -1,12 +1,12 @@
-import { trpc } from '@/lib/trpc/client';
-import { toast } from 'sonner';
 import type {
   CreateLeadInput,
-  UpdateLeadInput,
+  DeleteLeadInput,
   GetLeadInput,
   ListLeadsInput,
-  DeleteLeadInput,
+  UpdateLeadInput,
 } from '@/lib/features/leads/types';
+import { trpc } from '@/lib/trpc/client';
+import { toast } from 'sonner';
 
 /**
  * Hook to create a new lead with optimistic updates
@@ -37,10 +37,23 @@ export function useGetLead(input: GetLeadInput) {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Hook to list leads with pagination and filtering
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useListLeads(input: ListLeadsInput) {
-  return trpc.leads.list.useQuery(input);
+  const isValidOrg = isValidUUID(input.organizationId);
+
+  return trpc.leads.list.useQuery(input, {
+    enabled: isValidOrg,
+  });
 }
 
 /**
@@ -57,7 +70,7 @@ export function useUpdateLead() {
       // Invalidate the specific lead and the list
       utils.leads.get.invalidate({
         id: variables.id,
-        organizationId: variables.organizationId
+        organizationId: variables.organizationId,
       });
       utils.leads.list.invalidate();
       toast.success('リードを更新しました', { id: 'update-lead' });
@@ -107,7 +120,6 @@ export function useLeads(organizationId: string) {
       createLead.mutate({ ...input, organizationId }),
     update: (input: Omit<UpdateLeadInput, 'organizationId'>) =>
       updateLead.mutate({ ...input, organizationId }),
-    delete: (id: string) =>
-      deleteLead.mutate({ id, organizationId }),
+    delete: (id: string) => deleteLead.mutate({ id, organizationId }),
   };
 }

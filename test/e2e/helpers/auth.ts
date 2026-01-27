@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * E2E test authentication helper
@@ -73,10 +73,7 @@ export async function logout(page: Page): Promise<void> {
 /**
  * Navigate to a specific organization's dashboard
  */
-export async function switchOrganization(
-  page: Page,
-  organizationSlug: string
-): Promise<void> {
+export async function switchOrganization(page: Page, organizationSlug: string): Promise<void> {
   // Click organization switcher
   await page.click('[data-testid="organization-switcher"]');
 

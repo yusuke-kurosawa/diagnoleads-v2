@@ -7,16 +7,16 @@
  * - Lead summaries and insights
  */
 
-import { trpc } from '@/lib/trpc/client';
-import { toast } from 'sonner';
 import type {
-  ScoreLeadInput,
-  SemanticSearchInput,
+  BatchScoreLeadsInput,
   FindSimilarLeadsInput,
   GenerateSummaryInput,
+  ScoreLeadInput,
+  SemanticSearchInput,
   UpdateEmbeddingInput,
-  BatchScoreLeadsInput,
 } from '@/lib/features/ai/types/schemas';
+import { trpc } from '@/lib/trpc/client';
+import { toast } from 'sonner';
 
 /**
  * Hook to score a single lead with AI
@@ -70,27 +70,48 @@ export function useBatchScoreLeads() {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Hook for semantic search
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useSemanticSearch(input: SemanticSearchInput) {
+  const isValidOrg = isValidUUID(input.organizationId);
+
   return trpc.ai.semanticSearch.useQuery(input, {
-    // Only fetch when query is provided
-    enabled: input.query.length > 0,
+    // Only fetch when query is provided and org is valid
+    enabled: input.query.length > 0 && isValidOrg,
   });
 }
 
 /**
  * Hook to find similar leads
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useFindSimilarLeads(input: FindSimilarLeadsInput) {
-  return trpc.ai.findSimilar.useQuery(input);
+  const isValidOrg = isValidUUID(input.organizationId);
+
+  return trpc.ai.findSimilar.useQuery(input, {
+    enabled: isValidOrg,
+  });
 }
 
 /**
  * Hook to generate lead summary
+ * Automatically disabled for invalid organization IDs (demo mode)
  */
 export function useGenerateSummary(input: GenerateSummaryInput) {
-  return trpc.ai.generateSummary.useQuery(input);
+  const isValidOrg = isValidUUID(input.organizationId);
+
+  return trpc.ai.generateSummary.useQuery(input, {
+    enabled: isValidOrg,
+  });
 }
 
 /**
@@ -130,11 +151,8 @@ export function useAI(organizationId: string) {
     batchScoreLeads,
     updateEmbedding,
     // Helper methods for common operations
-    score: (leadId: string) =>
-      scoreLead.mutate({ leadId, organizationId }),
-    batchScore: (leadIds: string[]) =>
-      batchScoreLeads.mutate({ leadIds, organizationId }),
-    updateLeadEmbedding: (leadId: string) =>
-      updateEmbedding.mutate({ leadId, organizationId }),
+    score: (leadId: string) => scoreLead.mutate({ leadId, organizationId }),
+    batchScore: (leadIds: string[]) => batchScoreLeads.mutate({ leadIds, organizationId }),
+    updateLeadEmbedding: (leadId: string) => updateEmbedding.mutate({ leadId, organizationId }),
   };
 }

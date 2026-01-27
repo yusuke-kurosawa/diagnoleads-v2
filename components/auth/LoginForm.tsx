@@ -1,12 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,7 +10,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authClient } from '@/lib/auth/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 type LoginFormValues = {
   email: string;
@@ -46,11 +46,34 @@ export function LoginForm() {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
-      await authClient.signIn.email({
+      const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
         callbackURL: '/dashboard',
       });
+
+      if (result.error) {
+        // Handle specific error codes/messages from BetterAuth
+        const errorCode = result.error.code;
+        const errorMessage = result.error.message?.toLowerCase() || '';
+
+        if (
+          errorCode === 'INVALID_EMAIL_OR_PASSWORD' ||
+          errorMessage.includes('invalid email or password') ||
+          errorMessage.includes('invalid password')
+        ) {
+          toast.error(t('invalidCredentials'));
+        } else if (
+          errorCode === 'USER_NOT_FOUND' ||
+          errorMessage.includes('user not found') ||
+          errorMessage.includes('no user found')
+        ) {
+          toast.error(t('userNotFound'));
+        } else {
+          toast.error(t('errorToast'));
+        }
+        return;
+      }
 
       toast.success(t('successToast'));
       router.push('/dashboard');

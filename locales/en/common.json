@@ -1,11 +1,252 @@
 {
+  "public": {
+    "meta": {
+      "title": "DiagnoLeads - AI-Powered B2B Diagnostic Platform",
+      "description": "Maximize lead generation with AI-powered diagnostic forms. Smart lead scoring, semantic search, and advanced analytics at your fingertips.",
+      "keywords": "B2B, diagnostic, AI, lead generation, lead scoring, marketing, sales",
+      "ogTitle": "DiagnoLeads - AI-Powered B2B Diagnostic Platform",
+      "ogDescription": "Engage with diagnostic content, qualify with AI scoring. Zero cold outreach lead generation."
+    },
+    "landing": {
+      "meta": {
+        "title": "Home",
+        "description": "DiagnoLeads is an AI-powered B2B diagnostic platform. Efficient lead generation and advanced analytics for your business."
+      },
+      "nav": {
+        "features": "Features",
+        "benefits": "Benefits",
+        "diagnostic": "Try Diagnostic",
+        "login": "Log In",
+        "signup": "Get Started Free"
+      },
+      "hero": {
+        "badge": "Next-Gen AI-Powered Platform",
+        "title": "Deliver Insights, Build Trust",
+        "subtitle": "Engage with diagnostic content, qualify with AI scoring. Zero cold outreach lead generation.",
+        "cta": {
+          "primary": "Try Free Diagnostic",
+          "secondary": "Create Account"
+        }
+      },
+      "features": {
+        "title": "Key Features",
+        "subtitle": "Discover the powerful capabilities DiagnoLeads offers",
+        "aiScoring": {
+          "title": "AI Lead Scoring",
+          "description": "Machine learning models automatically evaluate prospects. Focus on high-priority leads that matter."
+        },
+        "semanticSearch": {
+          "title": "Semantic Search",
+          "description": "Search leads using natural language. Find \"tech companies in San Francisco\" with intuitive queries."
+        },
+        "analytics": {
+          "title": "Advanced Analytics",
+          "description": "Real-time insights on lead trends, conversion rates, and source analysis at your fingertips."
+        },
+        "multiTenant": {
+          "title": "Multi-Tenant Support",
+          "description": "Manage data independently across multiple organizations and teams. Secure environment guaranteed."
+        }
+      },
+      "benefits": {
+        "title": "Why Choose DiagnoLeads",
+        "subtitle": "What you can achieve with our platform",
+        "item1": "Increase lead generation by an average of 40%",
+        "item2": "Double your sales team productivity",
+        "item3": "Reduce lead response time by 75%",
+        "item4": "Improve conversion rates by 25% on average",
+        "item5": "Enable data-driven decision making"
+      },
+      "trust": {
+        "title": "A Platform You Can Trust",
+        "security": {
+          "title": "Enterprise Security",
+          "description": "SOC2 compliant, encrypted data, and secure authentication to protect your valuable information."
+        },
+        "global": {
+          "title": "Global Ready",
+          "description": "Support for English and Japanese. Available for teams worldwide."
+        },
+        "performance": {
+          "title": "High Performance",
+          "description": "Edge computing and optimized infrastructure deliver fast response times, always."
+        }
+      },
+      "cta": {
+        "title": "Get Started Today",
+        "subtitle": "Create your free diagnostic form and accelerate lead generation with the power of AI.",
+        "button": "Start Free"
+      },
+      "footer": {
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "contact": "Contact Us",
+        "copyright": "© {year} DiagnoLeads. All rights reserved."
+      }
+    },
+    "blog": {
+      "meta": {
+        "title": "Blog",
+        "description": "Get the latest news, use cases, and industry insights from DiagnoLeads."
+      },
+      "title": "Blog",
+      "subtitle": "Latest lead generation tips, use cases, and industry trends",
+      "noPosts": "No posts yet",
+      "noPostsDescription": "There are no published posts at the moment. Please check back later.",
+      "previous": "Previous",
+      "next": "Next",
+      "backToList": "Back to Blog",
+      "cta": {
+        "title": "Ready to try our free diagnostic?",
+        "description": "Let AI analyze the best lead generation strategy for your business.",
+        "button": "Take Free Diagnostic"
+      }
+    },
+    "faq": {
+      "meta": {
+        "title": "Frequently Asked Questions",
+        "description": "Find answers to common questions about DiagnoLeads."
+      },
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to your questions about DiagnoLeads",
+      "categories": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "technical": "Technical",
+        "general": "General"
+      },
+      "contact": {
+        "title": "Can't find what you're looking for?",
+        "description": "Feel free to contact us. Our team will be happy to assist you.",
+        "button": "Contact Us"
+      }
+    },
+    "diagnostic": {
+      "meta": {
+        "title": "Free Diagnostic",
+        "description": "Discover the optimal lead generation strategy for your business. Complete in about 3 minutes and receive AI-powered analysis."
+      },
+      "title": "Business Diagnostic",
+      "subtitle": "Answer a few simple questions and let our AI analyze the best lead generation strategy for your business.",
+      "progress": "Step {current} of {total}",
+      "step1": {
+        "title": "Company Information",
+        "description": "Tell us about your company"
+      },
+      "step2": {
+        "title": "Contact Information",
+        "description": "Enter your contact details to receive the diagnostic results"
+      },
+      "step3": {
+        "title": "Business Challenges",
+        "description": "Tell us about your current challenges and goals"
+      },
+      "step4": {
+        "title": "Final Review",
+        "description": "Any additional information you'd like to share"
+      },
+      "fields": {
+        "companyName": "Company Name",
+        "companyNamePlaceholder": "Acme Corporation",
+        "industry": "Industry",
+        "employeeCount": "Number of Employees",
+        "name": "Your Name",
+        "namePlaceholder": "John Smith",
+        "email": "Email Address",
+        "emailPlaceholder": "your@company.com",
+        "phone": "Phone Number",
+        "phonePlaceholder": "+1 (555) 123-4567",
+        "position": "Job Title",
+        "positionPlaceholder": "Sales Director",
+        "optional": "optional",
+        "currentChallenge": "What is your biggest challenge right now?",
+        "primaryGoal": "Primary Goal",
+        "timeline": "Implementation Timeline",
+        "budget": "Budget Range",
+        "additionalInfo": "Additional Information",
+        "additionalInfoPlaceholder": "Tell us about your current tools or specific concerns",
+        "marketingConsent": "I agree to receive updates and useful information from DiagnoLeads"
+      },
+      "industries": {
+        "technology": "Technology",
+        "finance": "Finance & Insurance",
+        "healthcare": "Healthcare",
+        "manufacturing": "Manufacturing",
+        "retail": "Retail & E-commerce",
+        "other": "Other"
+      },
+      "employeeCount": {
+        "1-10": "1-10",
+        "11-50": "11-50",
+        "51-200": "51-200",
+        "201-500": "201-500",
+        "501-1000": "501-1000",
+        "1000+": "1000+"
+      },
+      "challenges": {
+        "leadGeneration": "Not generating enough leads",
+        "conversion": "Low conversion rate from leads",
+        "efficiency": "Poor sales efficiency",
+        "dataManagement": "Complex customer data management",
+        "scaling": "Unable to scale with business growth"
+      },
+      "goals": {
+        "increaseLeads": "Increase lead volume",
+        "improveConversion": "Improve conversion rates",
+        "reduceTime": "Reduce response time",
+        "betterInsights": "Better data insights"
+      },
+      "timelines": {
+        "immediate": "Immediately",
+        "1-3months": "1-3 months",
+        "3-6months": "3-6 months",
+        "6months+": "6+ months"
+      },
+      "budgets": {
+        "under10k": "Under $10,000",
+        "10k-50k": "$10,000 - $50,000",
+        "50k-100k": "$50,000 - $100,000",
+        "100k+": "$100,000+"
+      },
+      "validation": {
+        "required": "This field is required",
+        "invalidEmail": "Please enter a valid email address"
+      },
+      "navigation": {
+        "previous": "Back",
+        "next": "Next",
+        "submit": "Get Diagnosis",
+        "submitting": "Submitting..."
+      },
+      "summary": {
+        "title": "About Your Results",
+        "description": "Based on your responses, our AI will analyze the best lead generation strategy for your business. Results will be sent to your email."
+      },
+      "complete": {
+        "title": "Diagnostic Complete!",
+        "message": "Thank you for your responses. We'll send you a detailed AI analysis shortly via email.",
+        "scoreLabel": "Your Lead Generation Potential Score",
+        "scoreMax": "/ 100",
+        "followUp": "A team member will contact you with specific recommendations based on your results."
+      }
+    }
+  },
   "navigation": {
+    "menu": "Menu",
+    "management": "Management",
     "dashboard": "Dashboard",
     "leads": "Lead Management",
+    "content": "Content",
+    "faqs": "FAQ",
+    "blog": "Blog",
     "analytics": "Analytics",
     "settings": "Settings",
+    "organization": "Organization",
     "organizations": "Organizations",
     "members": "Members",
+    "webhooks": "Webhooks",
+    "embed": "Embed Widget",
+    "qrCampaigns": "QR Campaigns",
     "profile": "Profile",
     "logout": "Logout"
   },
@@ -51,7 +292,9 @@
     "download": "Download",
     "upload": "Upload",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "columns": "Columns",
+    "openMenu": "Open menu"
   },
   "status": {
     "new": "New",
@@ -132,18 +375,49 @@
     "overview": "Overview",
     "statistics": "Statistics",
     "recentActivity": "Recent Activity",
+    "recentLeads": "Recent Leads",
+    "noRecentActivity": "No recent activity",
+    "noRecentActivityHint": "New leads will appear here",
+    "viewAll": "View All",
+    "nameNotSet": "Name not set",
+    "points": "pts",
+    "vsLastPeriod": "vs. last period",
     "totalLeads": "Total Leads",
+    "convertedLeads": "Converted",
     "newLeadsThisMonth": "New Leads This Month",
     "conversionRate": "Conversion Rate",
     "averageScore": "Average Score",
     "leadTrend": "Lead Trend",
     "leadStatusBreakdown": "Lead Status Breakdown",
     "count": "",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "converted": "Converted",
+    "widgets": {
+      "customize": "Customize",
+      "title": "Customize Dashboard",
+      "description": "Show, hide, or reorder widgets on your dashboard",
+      "reset": "Reset to Default",
+      "kpiCards": "KPI Cards",
+      "kpiCardsDesc": "Key performance indicators",
+      "statusBreakdown": "Status Breakdown",
+      "statusBreakdownDesc": "Lead status distribution",
+      "leadTrend": "Lead Trend",
+      "leadTrendDesc": "Lead acquisition trend chart",
+      "statusDonut": "Status Chart",
+      "statusDonutDesc": "Donut chart of lead status",
+      "conversionRadial": "Conversion & Score",
+      "conversionRadialDesc": "Radial progress charts",
+      "recentActivity": "Recent Activity",
+      "recentActivityDesc": "Latest lead activity"
+    }
   },
   "leads": {
     "title": "Lead Management",
     "description": "Manage leads captured from diagnostic forms",
+    "totalLeads": "Total Leads",
+    "activeLeads": "Active Leads",
+    "conversionRate": "Conversion Rate",
+    "averageScore": "Average Score",
     "createLead": "Add New Lead",
     "createLeadTitle": "Create New Lead",
     "createLeadDescription": "Enter information for the new lead.",
@@ -184,7 +458,51 @@
     "timestamps": "Timestamps",
     "deleteConfirmTitle": "Delete this lead?",
     "deleteConfirmMessage": "This action cannot be undone. All data for {name} will be permanently deleted.",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "rowsPerPage": "Rows per page",
+    "addFirstLead": "Add your first lead",
+    "bulk": {
+      "selected": "{count} selected",
+      "updateStatus": "Update Status",
+      "deleteSelected": "Delete Selected",
+      "exportSelected": "Export Selected",
+      "clearSelection": "Clear Selection",
+      "deleteConfirmTitle": "Delete {count} leads?",
+      "deleteConfirmMessage": "This action cannot be undone. All selected leads will be permanently deleted.",
+      "updateStatusTitle": "Update Status",
+      "updateStatusDescription": "Change the status of {count} selected leads",
+      "selectStatus": "Select new status",
+      "updating": "Updating...",
+      "deleting": "Deleting...",
+      "updateSuccess": "{count} leads updated successfully",
+      "deleteSuccess": "{count} leads deleted successfully",
+      "updateError": "Failed to update leads",
+      "deleteError": "Failed to delete leads"
+    },
+    "import": {
+      "title": "Import Leads",
+      "description": "Upload a CSV or Excel file to import leads in bulk",
+      "selectFile": "Select File",
+      "dragDrop": "Drag and drop a file here, or click to browse",
+      "supportedFormats": "Supported formats: CSV, XLS, XLSX",
+      "downloadTemplate": "Download Template",
+      "preview": "Preview",
+      "previewDescription": "Review the data before importing",
+      "columnMapping": "Column Mapping",
+      "detected": "Detected",
+      "mapTo": "Map to",
+      "validation": "Validation",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "errors": "errors",
+      "importing": "Importing...",
+      "importButton": "Import {count} Leads",
+      "importSuccess": "{count} leads imported successfully",
+      "importError": "Failed to import leads",
+      "noData": "No data found in file",
+      "emailRequired": "Email column is required",
+      "duplicateEmails": "{count} duplicate emails found"
+    }
   },
   "settings": {
     "organization": {
@@ -225,14 +543,150 @@
       "emailPlaceholder": "your@email.com",
       "emailHelp": "Email address cannot be changed",
       "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Profile updated successfully",
+      "saveError": "Failed to update profile",
+      "nameRequired": "Please enter your name",
+      "accountInfo": "Account Information",
+      "emailVerified": "Email Verification",
+      "verified": "Verified",
+      "notVerified": "Not Verified",
+      "createdAt": "Created At",
       "passwordSection": "Change Password",
       "currentPasswordLabel": "Current Password",
       "newPasswordLabel": "New Password",
       "confirmPasswordLabel": "Confirm New Password",
       "changePassword": "Change Password",
+      "changingPassword": "Changing...",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordRequired": "Please enter a new password",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordMismatch": "New passwords do not match",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "passwordChangeSuccess": "Password changed successfully",
+      "passwordChangeError": "Failed to change password",
       "deleteAccountSection": "Delete Account",
       "deleteAccountWarning": "Deleting your account will remove all your data. This action cannot be undone.",
       "deleteAccount": "Delete Account"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Configure webhooks to receive real-time notifications when events occur",
+      "create": "Create Webhook",
+      "createTitle": "Create New Webhook",
+      "createDescription": "Configure a new webhook endpoint to receive event notifications",
+      "createFirst": "Create Your First Webhook",
+      "name": "Webhook Name",
+      "namePlaceholder": "e.g., Slack Notifications",
+      "url": "Endpoint URL",
+      "events": "Events to Subscribe",
+      "secret": "Signing Secret",
+      "subscribedEvents": "Subscribed Events",
+      "lastTriggered": "Last triggered",
+      "failures": "Failures",
+      "cancel": "Cancel",
+      "created": "Webhook created successfully",
+      "updated": "Webhook updated successfully",
+      "deleted": "Webhook deleted successfully",
+      "copied": "Copied to clipboard",
+      "confirmDelete": "Are you sure you want to delete this webhook?",
+      "noWebhooks": "No webhooks configured",
+      "noWebhooksDescription": "Create a webhook to receive real-time notifications when leads are created, updated, or when other important events occur."
+    },
+    "embed": {
+      "title": "Embed Widget Settings",
+      "description": "Configure widgets to embed diagnostic forms on external websites",
+      "newConfig": "New Configuration",
+      "createTitle": "Create Embed Configuration",
+      "createDescription": "Create a configuration to embed diagnostic forms on external websites",
+      "name": "Configuration Name",
+      "namePlaceholder": "e.g., Main Site Widget",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe this configuration...",
+      "allowedOrigins": "Allowed Origins",
+      "allowedOriginsHelp": "Specify domains where the widget can be embedded",
+      "addOrigin": "Add",
+      "originPlaceholder": "https://example.com",
+      "rateLimit": "Rate Limit",
+      "rateLimitPerMinute": "Requests per minute",
+      "rateLimitPerDay": "Requests per day",
+      "diagnosticTemplate": "Diagnostic Template",
+      "selectTemplate": "Select a template",
+      "leadSource": "Lead Source",
+      "theme": "Theme Settings",
+      "primaryColor": "Primary Color",
+      "backgroundColor": "Background Color",
+      "textColor": "Text Color",
+      "borderRadius": "Border Radius",
+      "customCss": "Custom CSS",
+      "apiKey": "API Key",
+      "regenerateKey": "Regenerate Key",
+      "regenerateConfirm": "Regenerating the API key will invalidate the current key. Continue?",
+      "embedCode": "Embed Code",
+      "copyCode": "Copy Code",
+      "viewLogs": "View Logs",
+      "active": "Active",
+      "inactive": "Inactive",
+      "usageCount": "Usage Count",
+      "lastUsed": "Last Used",
+      "created": "Embed configuration created",
+      "updated": "Embed configuration updated",
+      "deleted": "Embed configuration deleted",
+      "copied": "Copied to clipboard",
+      "confirmDelete": "Are you sure you want to delete this embed configuration?",
+      "noConfigs": "No embed configurations",
+      "noConfigsDescription": "Create a configuration to embed diagnostic forms on external websites.",
+      "logs": {
+        "title": "Access Logs",
+        "description": "View API access logs for embed widgets",
+        "selectConfig": "Select Configuration",
+        "totalRequests": "Total Requests",
+        "successful": "Successful",
+        "failed": "Failed",
+        "leadsCreated": "Leads Created",
+        "timestamp": "Timestamp",
+        "method": "Method",
+        "endpoint": "Endpoint",
+        "status": "Status",
+        "origin": "Origin",
+        "duration": "Duration",
+        "error": "Error",
+        "noLogs": "No logs found"
+      }
+    },
+    "qrCampaigns": {
+      "title": "QR Code Campaigns",
+      "description": "Create and manage QR code campaigns for offline distribution",
+      "newCampaign": "New Campaign",
+      "createTitle": "Create QR Campaign",
+      "createDescription": "Create a new QR code campaign for offline distribution",
+      "name": "Campaign Name",
+      "namePlaceholder": "e.g., Trade Show 2024",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe the campaign purpose...",
+      "diagnosticTemplate": "Diagnostic Template",
+      "selectTemplate": "Select a template",
+      "utmParameters": "UTM Parameters",
+      "utmSource": "Source",
+      "utmMedium": "Medium",
+      "utmCampaign": "Campaign",
+      "utmContent": "Content",
+      "shortCode": "Short Code",
+      "trackingUrl": "Tracking URL",
+      "scanCount": "Scans",
+      "conversionCount": "Conversions",
+      "conversionRate": "Conversion Rate",
+      "downloadQR": "Download QR Code",
+      "copyUrl": "Copy URL",
+      "active": "Active",
+      "inactive": "Inactive",
+      "created": "QR campaign created",
+      "updated": "QR campaign updated",
+      "deleted": "QR campaign deleted",
+      "copied": "Copied to clipboard",
+      "confirmDelete": "Are you sure you want to delete this QR campaign?",
+      "noCampaigns": "No QR campaigns",
+      "noCampaignsDescription": "Create a QR code campaign for offline distribution."
     },
     "members": {
       "title": "Member Management",
@@ -292,7 +746,7 @@
       },
       "branding": {
         "title": "DiagnoLeads",
-        "subtitle": "AI-powered B2B diagnostic platform"
+        "subtitle": "Deliver Insights, Build Trust"
       },
       "login": {
         "title": "Log In",
@@ -306,7 +760,9 @@
         "divider": "or",
         "signupLink": "Sign Up",
         "successToast": "Successfully logged in",
-        "errorToast": "Login failed. Please check your email and password."
+        "errorToast": "Login failed.",
+        "invalidCredentials": "Invalid email or password.",
+        "userNotFound": "No account found with this email."
       },
       "signup": {
         "title": "Create Account",
@@ -320,7 +776,8 @@
         "submitButton": "Create Account",
         "submittingButton": "Creating account...",
         "successToast": "Account created successfully",
-        "errorToast": "Failed to create account. This email may already be in use."
+        "errorToast": "Failed to create account.",
+        "emailAlreadyExists": "This email is already registered. Please log in instead."
       },
       "resetPassword": {
         "emailLabel": "Email Address",
@@ -381,7 +838,14 @@
       "exampleQueries": "Examples",
       "exampleQuery1": "Tech companies in San Francisco",
       "exampleQuery2": "Decision makers at enterprise companies",
-      "exampleQuery3": "Companies interested in SaaS"
+      "exampleQuery3": "Companies interested in SaaS",
+      "chat": {
+        "title": "AI Assistant",
+        "welcomeMessage": "Hello! I'm here to help with lead management.",
+        "suggestionHint": "Ask me about lead analysis or recommended actions",
+        "inputPlaceholder": "Type a message...",
+        "errorMessage": "Sorry, an error occurred. Please try again."
+      }
     },
     "errorPages": {
       "error": {
@@ -401,6 +865,679 @@
         "message": "The page you're looking for doesn't exist or may have been moved.",
         "backHome": "Back to Home"
       }
+    },
+    "content": {
+      "title": "Content Management",
+      "description": "Manage FAQs, blog posts, and announcements",
+      "faqs": {
+        "title": "FAQ Management",
+        "description": "Manage frequently asked questions",
+        "createNew": "Create New FAQ",
+        "editFaq": "Edit FAQ",
+        "deleteFaq": "Delete FAQ",
+        "deleteConfirmTitle": "Delete FAQ?",
+        "deleteConfirmMessage": "This action cannot be undone. The FAQ will be permanently deleted.",
+        "question": "Question",
+        "questionPlaceholder": "Enter question...",
+        "answer": "Answer",
+        "answerPlaceholder": "Enter answer...",
+        "category": "Category",
+        "order": "Display Order",
+        "orderHelp": "Lower numbers appear first",
+        "status": "Status",
+        "published": "Published",
+        "draft": "Draft",
+        "noFaqs": "No FAQs",
+        "noFaqsDescription": "Create your first FAQ",
+        "categories": {
+          "general": "General",
+          "diagnostic": "Diagnostics",
+          "pricing": "Pricing",
+          "account": "Account",
+          "security": "Security",
+          "technical": "Technical"
+        },
+        "saving": "Saving...",
+        "saveSuccess": "FAQ saved successfully",
+        "saveError": "Failed to save FAQ",
+        "deleteSuccess": "FAQ deleted successfully",
+        "deleteError": "Failed to delete FAQ"
+      },
+      "blog": {
+        "title": "Blog Management",
+        "description": "Manage blog posts",
+        "createNew": "Create New Post",
+        "editPost": "Edit Post",
+        "deletePost": "Delete Post",
+        "deleteConfirmTitle": "Delete Post?",
+        "deleteConfirmMessage": "This action cannot be undone. The post will be permanently deleted.",
+        "postTitle": "Title",
+        "titlePlaceholder": "Enter post title...",
+        "slug": "Slug",
+        "slugPlaceholder": "url-friendly-slug",
+        "slugHelp": "URL identifier (lowercase letters, numbers, and hyphens)",
+        "content": "Content",
+        "contentPlaceholder": "Enter post content...",
+        "excerpt": "Excerpt",
+        "excerptPlaceholder": "Enter post excerpt...",
+        "author": "Author",
+        "category": "Category",
+        "tags": "Tags",
+        "tagsPlaceholder": "Enter tags...",
+        "coverImage": "Cover Image",
+        "selectImage": "Select Image",
+        "removeImage": "Remove Image",
+        "status": "Status",
+        "published": "Published",
+        "draft": "Draft",
+        "publishedAt": "Published Date",
+        "noPosts": "No Posts",
+        "noPostsDescription": "Create your first post",
+        "preview": "Preview",
+        "seo": {
+          "title": "SEO Settings",
+          "metaTitle": "Meta Title",
+          "metaTitlePlaceholder": "Title shown in search results",
+          "metaDescription": "Meta Description",
+          "metaDescriptionPlaceholder": "Description shown in search results",
+          "keywords": "Keywords",
+          "keywordsPlaceholder": "Enter keywords separated by commas",
+          "noIndex": "Hide from search engines"
+        },
+        "saving": "Saving...",
+        "saveSuccess": "Post saved successfully",
+        "saveError": "Failed to save post",
+        "deleteConfirmation": "Are you sure you want to delete this post?",
+        "deleteWarning": "This action cannot be undone. The post and all associated data will be permanently deleted.",
+        "deleting": "Deleting...",
+        "deleteSuccess": "Post deleted successfully",
+        "deleteError": "Failed to delete post"
+      }
+    },
+    "analytics": {
+      "title": "Analytics Dashboard",
+      "description": "Analyze lead acquisition and conversion performance in detail",
+      "export": "Export",
+      "dateRange": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days",
+        "all": "All time"
+      },
+      "granularity": {
+        "daily": "Daily",
+        "monthly": "Monthly"
+      },
+      "stats": {
+        "totalLeads": "Total Leads",
+        "newLeadsThisMonth": "New Leads This Month",
+        "conversionRate": "Conversion Rate",
+        "averageScore": "Average Score",
+        "vsLastPeriod": "vs. last period"
+      },
+      "tabs": {
+        "overview": "Overview",
+        "sources": "Sources",
+        "funnel": "Funnel",
+        "performance": "Performance"
+      },
+      "charts": {
+        "leadTrend": "Lead Trend",
+        "totalLeads": "Total Leads",
+        "convertedLeads": "Converted",
+        "statusBreakdown": "Status Breakdown",
+        "sourceBreakdown": "Source Breakdown",
+        "sourceTable": "Source Details",
+        "conversionFunnel": "Conversion Funnel",
+        "scoreDistribution": "Score Distribution",
+        "responseTime": "Response Time"
+      },
+      "funnel": {
+        "total": "Total",
+        "conversionRate": "Conversion Rate",
+        "overallConversion": "Overall Conversion Rate",
+        "fromInitial": "From initial lead to conversion"
+      },
+      "noData": "No data available",
+      "comingSoon": "Coming soon"
     }
+  },
+  "content": {
+    "title": "Content Management",
+    "description": "Manage FAQs, blog posts, and announcements",
+    "faqs": {
+      "title": "FAQ Management",
+      "description": "Manage frequently asked questions",
+      "createNew": "Create New FAQ",
+      "editFaq": "Edit FAQ",
+      "deleteFaq": "Delete FAQ",
+      "deleteConfirmTitle": "Delete FAQ?",
+      "deleteConfirmMessage": "This action cannot be undone. The FAQ will be permanently deleted.",
+      "question": "Question",
+      "questionPlaceholder": "Enter question...",
+      "answer": "Answer",
+      "answerPlaceholder": "Enter answer...",
+      "category": "Category",
+      "order": "Display Order",
+      "orderHelp": "Lower numbers appear first",
+      "status": "Status",
+      "published": "Published",
+      "draft": "Draft",
+      "noFaqs": "No FAQs",
+      "noFaqsDescription": "Create your first FAQ",
+      "categories": {
+        "general": "General",
+        "diagnostic": "Diagnostics",
+        "pricing": "Pricing",
+        "account": "Account",
+        "security": "Security",
+        "technical": "Technical"
+      },
+      "saving": "Saving...",
+      "saveSuccess": "FAQ saved successfully",
+      "saveError": "Failed to save FAQ",
+      "deleteSuccess": "FAQ deleted successfully",
+      "deleteError": "Failed to delete FAQ"
+    },
+    "blog": {
+      "title": "Blog Management",
+      "description": "Manage blog posts",
+      "createNew": "Create New Post",
+      "editPost": "Edit Post",
+      "deletePost": "Delete Post",
+      "deleteConfirmTitle": "Delete Post?",
+      "deleteConfirmMessage": "This action cannot be undone. The post will be permanently deleted.",
+      "postTitle": "Title",
+      "titlePlaceholder": "Enter post title...",
+      "slug": "Slug",
+      "slugPlaceholder": "url-friendly-slug",
+      "slugHelp": "URL identifier (lowercase letters, numbers, and hyphens)",
+      "content": "Content",
+      "contentPlaceholder": "Enter post content...",
+      "excerpt": "Excerpt",
+      "excerptPlaceholder": "Enter post excerpt...",
+      "author": "Author",
+      "category": "Category",
+      "tags": "Tags",
+      "tagsPlaceholder": "Enter tags...",
+      "coverImage": "Cover Image",
+      "selectImage": "Select Image",
+      "removeImage": "Remove Image",
+      "status": "Status",
+      "published": "Published",
+      "draft": "Draft",
+      "publishedAt": "Published Date",
+      "noPosts": "No Posts",
+      "noPostsDescription": "Create your first post",
+      "preview": "Preview",
+      "seo": {
+        "title": "SEO Settings",
+        "metaTitle": "Meta Title",
+        "metaTitlePlaceholder": "Title shown in search results",
+        "metaDescription": "Meta Description",
+        "metaDescriptionPlaceholder": "Description shown in search results",
+        "keywords": "Keywords",
+        "keywordsPlaceholder": "Enter keywords separated by commas",
+        "noIndex": "Hide from search engines"
+      },
+      "saving": "Saving...",
+      "saveSuccess": "Post saved successfully",
+      "saveError": "Failed to save post",
+      "deleteConfirmation": "Are you sure you want to delete this post?",
+      "deleteWarning": "This action cannot be undone. The post and all associated data will be permanently deleted.",
+      "deleting": "Deleting...",
+      "deleteSuccess": "Post deleted successfully",
+      "deleteError": "Failed to delete post"
+    }
+  },
+  "header": {
+    "userDropdown": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "logoutError": "Failed to log out."
+    }
+  },
+  "tags": {
+    "manageTags": "Manage Tags",
+    "manageTitle": "Tag Management",
+    "manageDescription": "Create, edit, and delete tags for organizing your leads",
+    "tagName": "Tag Name",
+    "tagNamePlaceholder": "e.g., Hot Lead, VIP",
+    "tagColor": "Tag Color",
+    "tagDescription": "Description",
+    "tagDescriptionPlaceholder": "Optional description for this tag",
+    "preview": "Preview",
+    "createTag": "Create \"{name}\"",
+    "existingTags": "Existing Tags",
+    "noTagsYet": "No tags created yet",
+    "selectTags": "Select Tags",
+    "searchTags": "Search tags...",
+    "selectedCount": "{count} tag(s) selected",
+    "noTags": "No tags found",
+    "createSuccess": "Tag created successfully",
+    "createError": "Failed to create tag",
+    "updateSuccess": "Tag updated successfully",
+    "updateError": "Failed to update tag",
+    "deleteSuccess": "Tag deleted successfully",
+    "deleteError": "Failed to delete tag",
+    "deleteConfirm": "Are you sure you want to delete this tag? This action cannot be undone."
+  },
+  "comments": {
+    "title": "Comments & Notes",
+    "typeComment": "Comment",
+    "typeNote": "Note",
+    "typeActivity": "Activity",
+    "filterAll": "All",
+    "filterComments": "Comments",
+    "filterNotes": "Notes",
+    "filterActivity": "Activity",
+    "commentPlaceholder": "Add a comment...",
+    "notePlaceholder": "Add a private note...",
+    "replyPlaceholder": "Write a reply...",
+    "noComments": "No comments yet",
+    "noCommentsHint": "Be the first to add a comment or note",
+    "reply": "Reply",
+    "edit": "Edit",
+    "delete": "Delete",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edited": "edited",
+    "createSuccess": "Comment added successfully",
+    "createError": "Failed to add comment",
+    "updateSuccess": "Comment updated successfully",
+    "updateError": "Failed to update comment",
+    "deleteSuccess": "Comment deleted successfully",
+    "deleteError": "Failed to delete comment",
+    "deleteConfirm": "Are you sure you want to delete this comment? This action cannot be undone.",
+    "pinSuccess": "Comment pinned",
+    "unpinSuccess": "Comment unpinned",
+    "pinError": "Failed to update pin status"
+  },
+  "reports": {
+    "title": "Scheduled Reports",
+    "description": "Set up automated reports to be delivered on a schedule",
+    "createReport": "Create Report",
+    "editReport": "Edit Report",
+    "noReports": "No scheduled reports",
+    "noReportsHint": "Create your first scheduled report",
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly"
+    },
+    "types": {
+      "leadSummary": "Lead Summary",
+      "conversionAnalysis": "Conversion Analysis",
+      "sourcePerformance": "Source Performance",
+      "teamPerformance": "Team Performance",
+      "custom": "Custom Report"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "scheduleDaily": "Every day at {time}",
+    "scheduleWeekly": "Every {day} at {time}",
+    "scheduleMonthly": "Day {day} of each month at {time}",
+    "scheduleQuarterly": "Day {day} of each quarter at {time}",
+    "recipientCount": "{count} recipient(s)",
+    "lastRun": "Last run: {date}",
+    "nextRun": "Next run: {date}",
+    "runNow": "Run Now",
+    "pause": "Pause",
+    "resume": "Resume",
+    "form": {
+      "name": "Report Name",
+      "namePlaceholder": "Weekly Lead Summary",
+      "reportType": "Report Type",
+      "frequency": "Frequency",
+      "format": "Format",
+      "dayOfWeek": "Day of Week",
+      "dayOfMonth": "Day of Month",
+      "sendHour": "Send Time",
+      "timezone": "Timezone",
+      "recipients": "Recipients",
+      "recipientsPlaceholder": "user@example.com, another@example.com",
+      "recipientsHint": "Enter email addresses separated by commas"
+    },
+    "historyTitle": "Report History: {name}",
+    "noHistory": "No report history yet",
+    "history": {
+      "executedAt": "Executed At",
+      "status": "Status",
+      "triggeredBy": "Triggered By",
+      "recipients": "Recipients Sent",
+      "scheduled": "Scheduled",
+      "manual": "Manual",
+      "statuses": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "failed": "Failed"
+      }
+    },
+    "createSuccess": "Report created successfully",
+    "createError": "Failed to create report",
+    "updateSuccess": "Report updated successfully",
+    "updateError": "Failed to update report",
+    "deleteSuccess": "Report deleted successfully",
+    "deleteError": "Failed to delete report",
+    "runSuccess": "Report is being generated",
+    "runError": "Failed to run report",
+    "deleteConfirm": "Are you sure you want to delete this report? This action cannot be undone."
+  },
+  "common": {
+    "weekdays": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "saving": "Saving..."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadCount": "{count} unread",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "noNotifications": "No notifications",
+    "noNotificationsDescription": "New notifications will appear here",
+    "viewSettings": "Notification Settings",
+    "types": {
+      "lead_created": "New Lead",
+      "lead_status_changed": "Status Changed",
+      "lead_scored": "Lead Scored",
+      "import_completed": "Import Completed",
+      "export_completed": "Export Completed",
+      "member_invited": "Member Invited",
+      "member_removed": "Member Removed",
+      "system": "System Notification"
+    },
+    "settings": {
+      "title": "Notification Settings",
+      "description": "Configure how you receive notifications",
+      "inApp": {
+        "title": "In-App Notifications",
+        "description": "Notifications shown in the app",
+        "leadCreated": "New lead created",
+        "leadStatusChanged": "Lead status changed",
+        "leadScored": "Lead scored by AI",
+        "importExport": "Import/Export completed",
+        "memberChanges": "Team member changes"
+      },
+      "email": {
+        "title": "Email Notifications",
+        "description": "Notifications sent to your email",
+        "leadCreated": "New lead created",
+        "leadStatusChanged": "Lead status changed",
+        "leadScored": "Lead scored by AI",
+        "dailyDigest": "Daily digest",
+        "weeklyReport": "Weekly report"
+      },
+      "saved": "Notification settings saved",
+      "saveError": "Failed to save notification settings"
+    }
+  },
+  "workflows": {
+    "title": "Workflow Automation",
+    "description": "Automate lead management with rules and triggers",
+    "create": "Create Workflow",
+    "edit": "Edit Workflow",
+    "delete": "Delete Workflow",
+    "name": "Workflow Name",
+    "namePlaceholder": "e.g., Auto-qualify high-score leads",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe what this workflow does",
+    "trigger": "Trigger",
+    "triggers": {
+      "lead_created": "Lead Created",
+      "lead_updated": "Lead Updated",
+      "status_changed": "Status Changed",
+      "score_changed": "Score Changed",
+      "tag_added": "Tag Added",
+      "tag_removed": "Tag Removed",
+      "scheduled": "Scheduled"
+    },
+    "conditions": "Conditions",
+    "addCondition": "Add Condition",
+    "actions": "Actions",
+    "addAction": "Add Action",
+    "actionTypes": {
+      "update_status": "Update Status",
+      "update_score": "Update Score",
+      "add_tag": "Add Tag",
+      "remove_tag": "Remove Tag",
+      "send_notification": "Send Notification",
+      "send_email": "Send Email",
+      "webhook": "Call Webhook"
+    },
+    "operators": {
+      "equals": "Equals",
+      "not_equals": "Not Equals",
+      "contains": "Contains",
+      "not_contains": "Does Not Contain",
+      "greater_than": "Greater Than",
+      "less_than": "Less Than",
+      "greater_or_equal": "Greater or Equal",
+      "less_or_equal": "Less or Equal",
+      "is_empty": "Is Empty",
+      "is_not_empty": "Is Not Empty",
+      "in": "In List",
+      "not_in": "Not In List"
+    },
+    "status": "Status",
+    "statuses": {
+      "active": "Active",
+      "paused": "Paused",
+      "disabled": "Disabled"
+    },
+    "priority": "Priority",
+    "executions": "Executions",
+    "lastExecuted": "Last Executed",
+    "noWorkflows": "No workflows",
+    "noWorkflowsDescription": "Create your first workflow to automate lead management",
+    "createSuccess": "Workflow created successfully",
+    "updateSuccess": "Workflow updated successfully",
+    "deleteSuccess": "Workflow deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this workflow?"
+  },
+  "customFields": {
+    "title": "Custom Fields",
+    "description": "Define custom fields for your leads",
+    "create": "Create Field",
+    "edit": "Edit Field",
+    "delete": "Delete Field",
+    "key": "Field Key",
+    "keyPlaceholder": "e.g., company_size",
+    "keyHelp": "Lowercase letters, numbers, and underscores only",
+    "name": "Display Name",
+    "namePlaceholder": "e.g., Company Size",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe what this field is for",
+    "fieldType": "Field Type",
+    "fieldTypes": {
+      "text": "Text",
+      "number": "Number",
+      "date": "Date",
+      "datetime": "Date & Time",
+      "boolean": "Yes/No",
+      "select": "Single Select",
+      "multiselect": "Multi Select",
+      "url": "URL",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "options": "Options",
+    "addOption": "Add Option",
+    "optionValue": "Value",
+    "optionLabel": "Label",
+    "isRequired": "Required Field",
+    "defaultValue": "Default Value",
+    "showInTable": "Show in Table",
+    "showInForm": "Show in Form",
+    "active": "Active",
+    "inactive": "Inactive",
+    "noFields": "No custom fields",
+    "noFieldsDescription": "Create custom fields to collect additional lead information",
+    "createSuccess": "Custom field created successfully",
+    "updateSuccess": "Custom field updated successfully",
+    "deleteSuccess": "Custom field deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this field? Lead data for this field will be preserved."
+  },
+  "filters": {
+    "title": "Saved Filters",
+    "description": "Create and manage reusable filters for leads",
+    "create": "Create Filter",
+    "edit": "Edit Filter",
+    "delete": "Delete Filter",
+    "apply": "Apply Filter",
+    "clear": "Clear Filter",
+    "save": "Save Filter",
+    "name": "Filter Name",
+    "namePlaceholder": "e.g., High-value leads",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe what this filter shows",
+    "isPublic": "Share with team",
+    "isPublicHelp": "Allow other team members to use this filter",
+    "color": "Color",
+    "icon": "Icon",
+    "conditions": "Conditions",
+    "addCondition": "Add Condition",
+    "addGroup": "Add Group",
+    "removeCondition": "Remove",
+    "logic": {
+      "and": "AND",
+      "or": "OR"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "company": "Company",
+      "phone": "Phone",
+      "status": "Status",
+      "source": "Source",
+      "score": "Score",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "operators": {
+      "equals": "equals",
+      "not_equals": "does not equal",
+      "contains": "contains",
+      "not_contains": "does not contain",
+      "starts_with": "starts with",
+      "ends_with": "ends with",
+      "greater_than": "greater than",
+      "less_than": "less than",
+      "greater_or_equal": "greater than or equal",
+      "less_or_equal": "less than or equal",
+      "between": "between",
+      "is_empty": "is empty",
+      "is_not_empty": "is not empty",
+      "in": "is any of",
+      "not_in": "is none of"
+    },
+    "noFilters": "No saved filters",
+    "noFiltersDescription": "Create filters to quickly find leads that match specific criteria",
+    "createSuccess": "Filter created successfully",
+    "updateSuccess": "Filter updated successfully",
+    "deleteSuccess": "Filter deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this filter?",
+    "applySuccess": "Filter applied",
+    "advancedFilter": "Advanced Filter",
+    "quickFilters": "Quick Filters",
+    "dateRange": "Date Range",
+    "scoreRange": "Score Range",
+    "from": "From",
+    "to": "To",
+    "min": "Min",
+    "max": "Max",
+    "sortBy": "Sort By",
+    "sortOrder": "Sort Order",
+    "ascending": "Ascending",
+    "descending": "Descending"
+  },
+  "prediction": {
+    "title": "Conversion Prediction",
+    "description": "AI-powered prediction of lead conversion probability",
+    "probability": "Conversion Probability",
+    "confidence": "Confidence",
+    "confidenceLevels": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "estimatedDays": "Estimated Days to Conversion",
+    "factors": "Key Factors",
+    "factorImpact": {
+      "positive": "Positive",
+      "negative": "Negative",
+      "neutral": "Neutral"
+    },
+    "recommendations": "Recommended Actions",
+    "risks": "Risk Factors",
+    "predict": "Predict Conversion",
+    "predicting": "Predicting...",
+    "noPrediction": "No prediction available",
+    "highProbability": "High likelihood of conversion",
+    "mediumProbability": "Moderate conversion potential",
+    "lowProbability": "Low conversion likelihood",
+    "refreshPrediction": "Refresh Prediction"
+  },
+  "roi": {
+    "title": "ROI Analysis",
+    "description": "Return on investment analysis by lead source",
+    "totalLeads": "Total Leads",
+    "totalConverted": "Total Converted",
+    "totalCost": "Total Cost",
+    "totalRevenue": "Total Revenue",
+    "overallROI": "Overall ROI",
+    "conversionRate": "Conversion Rate",
+    "avgCostPerLead": "Avg Cost per Lead",
+    "avgCostPerAcquisition": "Avg Cost per Acquisition",
+    "avgRevenuePerLead": "Avg Revenue per Lead",
+    "bySource": "By Source",
+    "source": "Source",
+    "leadCount": "Leads",
+    "converted": "Converted",
+    "cost": "Cost",
+    "revenue": "Revenue",
+    "roiPercent": "ROI %",
+    "costPerAcquisition": "CPA",
+    "revenuePerLead": "Rev/Lead",
+    "bestPerforming": "Best Performing",
+    "worstPerforming": "Worst Performing",
+    "settings": "ROI Settings",
+    "costPerLeadBySource": "Cost per Lead by Source",
+    "averageDealValue": "Average Deal Value",
+    "calculate": "Calculate ROI"
+  },
+  "comparison": {
+    "title": "Comparison Analysis",
+    "description": "Compare metrics between time periods",
+    "currentPeriod": "Current Period",
+    "previousPeriod": "Previous Period",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "compare": "Compare",
+    "changes": "Changes",
+    "insights": "Insights",
+    "noInsights": "No significant changes detected",
+    "increase": "increase",
+    "decrease": "decrease",
+    "metrics": {
+      "totalLeads": "Total Leads",
+      "convertedLeads": "Converted Leads",
+      "conversionRate": "Conversion Rate",
+      "averageScore": "Average Score"
+    },
+    "bySource": "By Source",
+    "byStatus": "By Status"
   }
 }

@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { setupAuthenticatedTest, TEST_USERS } from './helpers/auth';
+import { expect, test } from '@playwright/test';
+import { TEST_USERS, setupAuthenticatedTest } from './helpers/auth';
 
 /**
  * E2E Test: Dashboard Analytics
@@ -131,7 +131,16 @@ test.describe('Dashboard Analytics', () => {
     await expect(statusSection).toBeVisible();
 
     // Check for status categories
-    const statuses = ['新規', 'New', '連絡済み', 'Contacted', '見込み', 'Qualified', '成約', 'Converted'];
+    const statuses = [
+      '新規',
+      'New',
+      '連絡済み',
+      'Contacted',
+      '見込み',
+      'Qualified',
+      '成約',
+      'Converted',
+    ];
 
     // At least some status should be visible
     let foundStatus = false;
@@ -194,7 +203,9 @@ test.describe('Dashboard Analytics', () => {
     await page.waitForSelector('[data-testid="stats-card"]');
 
     // Get initial total leads count
-    const initialValue = await page.locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]').textContent();
+    const initialValue = await page
+      .locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]')
+      .textContent();
 
     // Click refresh button if available
     const refreshButton = page.locator('[data-testid="refresh-dashboard"]');
@@ -205,7 +216,9 @@ test.describe('Dashboard Analytics', () => {
       await page.waitForTimeout(1000);
 
       // Verify data is still displayed (may or may not change)
-      const newValue = await page.locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]').textContent();
+      const newValue = await page
+        .locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]')
+        .textContent();
       expect(newValue).not.toBe('');
     }
   });
@@ -239,7 +252,9 @@ test.describe('Dashboard Analytics', () => {
     await page.goto(`/dashboard/${TEST_USERS.owner.organizationId}`);
 
     // Check for loading skeletons or spinners
-    const loadingIndicator = page.locator('[data-testid="loading-skeleton"], [data-testid="loading-spinner"]');
+    const loadingIndicator = page.locator(
+      '[data-testid="loading-skeleton"], [data-testid="loading-spinner"]'
+    );
 
     // Loading indicator should appear briefly
     // (This might be too fast to catch, so we'll just verify the test doesn't fail)
@@ -294,19 +309,25 @@ test.describe('Dashboard Analytics', () => {
     await page.waitForSelector('[data-testid="stats-card"]');
 
     // Get total leads
-    const totalLeadsText = await page.locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]').textContent();
-    const totalLeads = parseInt(totalLeadsText || '0');
+    const totalLeadsText = await page
+      .locator('[data-testid="stat-total-leads"] [data-testid="stat-value"]')
+      .textContent();
+    const totalLeads = Number.parseInt(totalLeadsText || '0');
 
     // Get converted leads (if displayed separately)
-    const convertedLeadsElement = page.locator('[data-testid="stat-converted-leads"] [data-testid="stat-value"]');
+    const convertedLeadsElement = page.locator(
+      '[data-testid="stat-converted-leads"] [data-testid="stat-value"]'
+    );
 
     if (await convertedLeadsElement.isVisible()) {
       const convertedLeadsText = await convertedLeadsElement.textContent();
-      const convertedLeads = parseInt(convertedLeadsText || '0');
+      const convertedLeads = Number.parseInt(convertedLeadsText || '0');
 
       // Get conversion rate
-      const conversionRateText = await page.locator('[data-testid="stat-conversion-rate"] [data-testid="stat-value"]').textContent();
-      const conversionRate = parseFloat(conversionRateText?.replace('%', '') || '0');
+      const conversionRateText = await page
+        .locator('[data-testid="stat-conversion-rate"] [data-testid="stat-value"]')
+        .textContent();
+      const conversionRate = Number.parseFloat(conversionRateText?.replace('%', '') || '0');
 
       // Verify calculation (with rounding tolerance)
       if (totalLeads > 0) {

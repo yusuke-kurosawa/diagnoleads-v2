@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { intlMiddleware, shouldSkipI18nMiddleware, stripLocalePrefix } from './lib/i18n/middleware';
 // import { auth } from './lib/auth/config'; // TODO: Edge Runtimeで動作しないため一時的にコメントアウト
 import {
   checkRateLimit,
   getRateLimitConfig,
   setRateLimitHeaders,
 } from './lib/middleware/rate-limit';
-import {
-  intlMiddleware,
-  shouldSkipI18nMiddleware,
-  stripLocalePrefix,
-} from './lib/i18n/middleware';
 
 /**
  * Public routes that don't require authentication
@@ -21,6 +17,30 @@ const publicRoutes = ['/', '/api/auth'];
  * API routes that should always be accessible
  */
 const publicApiRoutes = ['/api/auth', '/api/trpc'];
+
+/**
+ * Cache control headers for static assets
+ */
+function getCacheHeaders(pathname: string): Record<string, string> {
+  // Static assets - cache for 1 year
+  if (pathname.match(/\.(js|css|woff|woff2|ttf|eot|ico|png|jpg|jpeg|gif|svg|webp|avif)$/)) {
+    return {
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    };
+  }
+
+  // API routes - no cache
+  if (pathname.startsWith('/api/')) {
+    return {
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    };
+  }
+
+  // HTML pages - short cache with revalidation
+  return {
+    'Cache-Control': 'public, max-age=0, must-revalidate',
+  };
+}
 
 /**
  * Security headers including CSP
@@ -38,12 +58,12 @@ function getSecurityHeaders(request: NextRequest) {
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
-    font-src 'self';
+    font-src 'self' data:;
+    connect-src 'self' ws: wss:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    upgrade-insecure-requests;
   `
     : // Production: 厳格な CSP
       `
@@ -51,7 +71,7 @@ function getSecurityHeaders(request: NextRequest) {
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
     style-src 'self' 'nonce-${nonce}';
     img-src 'self' blob: data: https:;
-    font-src 'self';
+    font-src 'self' data:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -176,6 +196,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set(key, value);
   });
 
+  // 7. Add cache control headers
+  const cacheHeaders = getCacheHeaders(pathname);
+  Object.entries(cacheHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
   return response;
 }
 
@@ -190,7 +216,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files
+     * - admin (PayloadCMS admin panel)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|admin|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

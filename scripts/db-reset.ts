@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
+import { env } from '@/lib/env';
+import { sql } from 'drizzle-orm';
 /**
  * Reset database (DROP ALL TABLES and re-migrate)
  * ⚠️ WARNING: This will delete all data!
  * Usage: npm run db:reset
  */
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
-import { env } from '@/lib/env';
 
 async function resetDatabase() {
   console.log('⚠️  WARNING: This will delete all data!');

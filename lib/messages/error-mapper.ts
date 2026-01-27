@@ -4,7 +4,7 @@
  * APIエラーコードを多言語対応のエラーメッセージにマッピング
  * エラーハンドリングを一元管理し、ユーザーフレンドリーなメッセージを提供
  *
- * エラーメッセージは locales/*/errors.json で定義
+ * エラーメッセージは locales/{locale}/errors.json で定義
  */
 
 /**
@@ -64,7 +64,7 @@ export type ErrorCode =
 
 /**
  * エラーメッセージのマッピング
- * i18nキーを返す（実際のメッセージはlocales/*/errors.jsonで定義）
+ * i18nキーを返す（実際のメッセージはlocalesフォルダのerrors.jsonで定義）
  */
 export const errorMessageMap: Record<ErrorCode, string> = {
   // 認証エラー
@@ -274,6 +274,12 @@ export function getToastMessageKey(
   resource: 'lead' | 'organization' | 'member' | 'settings',
   isError: boolean
 ): string {
-  const action = isError ? `${operation}Error` : operation === 'create' ? 'created' : operation === 'update' ? 'updated' : 'deleted';
+  const action = isError
+    ? `${operation}Error`
+    : operation === 'create'
+      ? 'created'
+      : operation === 'update'
+        ? 'updated'
+        : 'deleted';
   return `toast.${resource}.${action}`;
 }

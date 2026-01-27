@@ -3,8 +3,9 @@
 import { Card } from '@/components/ui/card';
 import type { Lead } from '@/lib/db/schema';
 import { formatDistance } from 'date-fns';
-import { ja } from 'date-fns/locale';
-import { Mail, Phone, Building2, TrendingUp } from 'lucide-react';
+import { enUS, ja } from 'date-fns/locale';
+import { Building2, Mail, Phone, TrendingUp } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 interface RecentActivityProps {
@@ -17,16 +18,17 @@ interface RecentActivityProps {
  * RecentActivity component
  * Displays a list of recent leads with their key information
  */
-export function RecentActivity({
-  leads,
-  isLoading = false,
-  maxItems = 5,
-}: RecentActivityProps) {
+export function RecentActivity({ leads, isLoading = false, maxItems = 5 }: RecentActivityProps) {
+  const t = useTranslations('dashboard');
+  const tStatus = useTranslations('status');
+  const locale = useLocale();
+  const dateLocale = locale === 'ja' ? ja : enUS;
+
   const statusLabels = {
-    new: '新規',
-    contacted: '連絡済',
-    qualified: '見込',
-    converted: '成約',
+    new: tStatus('new'),
+    contacted: tStatus('contacted'),
+    qualified: tStatus('qualified'),
+    converted: tStatus('converted'),
   };
 
   const statusColors = {
@@ -39,9 +41,7 @@ export function RecentActivity({
   if (isLoading) {
     return (
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          最近のリード
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('recentLeads')}</h3>
         <div className="space-y-4">
           {[...Array(maxItems)].map((_, i) => (
             <div key={i} className="flex items-start gap-3 pb-4 border-b last:border-b-0">
@@ -63,14 +63,10 @@ export function RecentActivity({
   if (recentLeads.length === 0) {
     return (
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          最近のリード
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('recentLeads')}</h3>
         <div className="py-8 text-center">
-          <p className="text-gray-500 text-sm">最近のアクティビティはありません</p>
-          <p className="text-gray-400 text-xs mt-1">
-            新しいリードが追加されるとここに表示されます
-          </p>
+          <p className="text-gray-500 text-sm">{t('noRecentActivity')}</p>
+          <p className="text-gray-400 text-xs mt-1">{t('noRecentActivityHint')}</p>
         </div>
       </Card>
     );
@@ -79,12 +75,9 @@ export function RecentActivity({
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">最近のリード</h3>
-        <Link
-          href="/leads"
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-        >
-          すべて表示
+        <h3 className="text-lg font-semibold text-gray-900">{t('recentLeads')}</h3>
+        <Link href="/leads" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          {t('viewAll')}
         </Link>
       </div>
 
@@ -106,7 +99,7 @@ export function RecentActivity({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-medium text-gray-900 truncate">
-                  {lead.name || '名前未設定'}
+                  {lead.name || t('nameNotSet')}
                 </h4>
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
@@ -143,7 +136,8 @@ export function RecentActivity({
                   <div className="flex items-center gap-1">
                     <TrendingUp className="h-3 w-3 text-blue-600" />
                     <span className="text-xs font-medium text-blue-600">
-                      {lead.score}点
+                      {lead.score}
+                      {t('points')}
                     </span>
                   </div>
                 )}
@@ -151,7 +145,7 @@ export function RecentActivity({
                 <span className="text-xs text-gray-500">
                   {formatDistance(new Date(lead.createdAt), new Date(), {
                     addSuffix: true,
-                    locale: ja,
+                    locale: dateLocale,
                   })}
                 </span>
               </div>

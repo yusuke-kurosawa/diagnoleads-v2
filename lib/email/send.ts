@@ -1,8 +1,9 @@
-import {
-  ResetPasswordEmail,
-  OrganizationInviteEmail,
-  WelcomeEmail,
-} from '@/emails';
+// TODO: Re-enable after fixing react-email build issue
+// import {
+//   ResetPasswordEmail,
+//   OrganizationInviteEmail,
+//   WelcomeEmail,
+// } from '@/emails';
 import { sendEmail } from './client';
 
 /**
@@ -19,14 +20,11 @@ export async function sendPasswordResetEmail({
   resetLink: string;
   expiresIn?: string;
 }) {
+  // TODO: Re-enable react-email templates after fixing build issue
   return sendEmail({
     to,
     subject: 'パスワードのリセット - DiagnoLeads',
-    react: ResetPasswordEmail({
-      userName,
-      resetLink,
-      expiresIn,
-    }),
+    text: `${userName}様\n\nパスワードリセットのリクエストを受け付けました。\n\n以下のリンクからパスワードをリセットしてください：\n${resetLink}\n\nこのリンクは${expiresIn}で期限切れとなります。\n\n- DiagnoLeads`,
   });
 }
 
@@ -48,16 +46,11 @@ export async function sendOrganizationInviteEmail({
   role?: string;
   expiresIn?: string;
 }) {
+  // TODO: Re-enable react-email templates after fixing build issue
   return sendEmail({
     to,
     subject: `${organizationName}への招待 - DiagnoLeads`,
-    react: OrganizationInviteEmail({
-      inviterName,
-      organizationName,
-      inviteLink,
-      role,
-      expiresIn,
-    }),
+    text: `${inviterName}さんから${organizationName}への招待が届いています。\n\nロール: ${role}\n\n以下のリンクから招待を承認してください：\n${inviteLink}\n\nこの招待は${expiresIn}で期限切れとなります。\n\n- DiagnoLeads`,
   });
 }
 
@@ -73,12 +66,10 @@ export async function sendWelcomeEmail({
   userName: string;
   dashboardLink: string;
 }) {
+  // TODO: Re-enable react-email templates after fixing build issue
   return sendEmail({
     to,
     subject: 'DiagnoLeadsへようこそ！',
-    react: WelcomeEmail({
-      userName,
-      dashboardLink,
-    }),
+    text: `${userName}様\n\nDiagnoLeadsへようこそ！\n\n以下のリンクからダッシュボードにアクセスできます：\n${dashboardLink}\n\n- DiagnoLeads`,
   });
 }

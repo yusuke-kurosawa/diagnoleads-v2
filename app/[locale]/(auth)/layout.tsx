@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
-  const t = await getTranslations({ locale: params.locale, namespace: 'settings.auth.metadata' });
+export async function generateMetadata({
+  params,
+}: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'settings.auth.metadata' });
 
   return {
     title: t('title'),
@@ -19,18 +22,17 @@ export default async function AuthLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const t = await getTranslations({ locale: params.locale, namespace: 'settings.auth.branding' });
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'settings.auth.branding' });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            {t('subtitle')}
-          </p>
+          <p className="mt-2 text-sm text-gray-600">{t('subtitle')}</p>
         </div>
         {children}
       </div>

@@ -1,12 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,7 +10,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authClient } from '@/lib/auth/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 type SignupFormValues = {
   name: string;
@@ -39,10 +39,7 @@ export function SignupForm() {
       password: z
         .string()
         .min(8, tv('passwordMin'))
-        .regex(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-          tv('passwordComplexity')
-        ),
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, tv('passwordComplexity')),
       confirmPassword: z.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -63,12 +60,25 @@ export function SignupForm() {
   async function onSubmit(data: SignupFormValues) {
     setIsLoading(true);
     try {
-      await authClient.signUp.email({
+      const result = await authClient.signUp.email({
         email: data.email,
         password: data.password,
         name: data.name,
         callbackURL: '/dashboard',
       });
+
+      if (result.error) {
+        // Handle specific error codes/messages from BetterAuth
+        const errorCode = result.error.code;
+        const errorMessage = result.error.message?.toLowerCase() || '';
+
+        if (errorCode === 'USER_ALREADY_EXISTS' || errorMessage.includes('user already exists')) {
+          toast.error(t('emailAlreadyExists'));
+        } else {
+          toast.error(t('errorToast'));
+        }
+        return;
+      }
 
       toast.success(t('successToast'));
       router.push('/dashboard');

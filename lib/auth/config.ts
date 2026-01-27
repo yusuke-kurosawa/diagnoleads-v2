@@ -1,8 +1,9 @@
+import { db } from '@/lib/db/client';
+import * as schema from '@/lib/db/schema';
+import { env } from '@/lib/env';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization } from 'better-auth/plugins';
-import { db } from '@/lib/db/client';
-import { env } from '@/lib/env';
 
 /**
  * BetterAuth Configuration
@@ -11,6 +12,12 @@ import { env } from '@/lib/env';
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
+    schema: {
+      user: schema.users,
+      session: schema.sessions,
+      account: schema.accounts,
+      verification: schema.verification,
+    },
   }),
 
   emailAndPassword: {
@@ -42,6 +49,10 @@ export const auth = betterAuth({
     // Security settings
     useSecureCookies: env.NODE_ENV === 'production',
     cookieDomain: env.NODE_ENV === 'production' ? env.BETTER_AUTH_URL : undefined,
+    // Use UUID for ID generation to match PostgreSQL schema
+    database: {
+      generateId: 'uuid',
+    },
   },
 
   trustedOrigins: [env.NEXT_PUBLIC_APP_URL],

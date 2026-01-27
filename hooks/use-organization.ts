@@ -1,8 +1,8 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useOrganizationContext } from '@/lib/context/organization-context';
 import { trpc } from '@/lib/trpc/client';
+import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 /**
@@ -73,6 +73,14 @@ export function useOrganization() {
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Hook to get current organization with data
  *
  * Automatically fetches organization data if not already loaded
@@ -80,13 +88,21 @@ export function useOrganization() {
  * @returns Organization with loading state
  */
 export function useCurrentOrganization() {
-  const { organizationId, organization, setOrganization, isLoading: contextLoading } = useOrganization();
+  const {
+    organizationId,
+    organization,
+    setOrganization,
+    isLoading: contextLoading,
+  } = useOrganization();
 
-  // Fetch organization data if we have an ID but no data
+  // Validate UUID format before making API call
+  const isValidOrg = organizationId ? isValidUUID(organizationId) : false;
+
+  // Fetch organization data if we have a valid ID but no data
   const { data, isLoading: queryLoading } = trpc.organizations.getById.useQuery(
     { id: organizationId! },
     {
-      enabled: !!organizationId && !organization,
+      enabled: isValidOrg && !organization,
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );

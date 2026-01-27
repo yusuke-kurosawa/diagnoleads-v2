@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
-import { appRouter } from '@/server/routers/_app';
 import type { Organization, OrganizationMember, User } from '@/lib/db/schema';
+import { appRouter } from '@/server/routers/_app';
+import { TRPCError } from '@trpc/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('@/lib/db/rls', () => ({
@@ -30,6 +30,12 @@ describe('Organizations Router', () => {
     name: 'Test Organization',
     slug: 'test-org',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -39,6 +45,12 @@ describe('Organizations Router', () => {
     name: 'Test Organization 2',
     slug: 'test-org-2',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID_2,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -93,7 +105,11 @@ describe('Organizations Router', () => {
       const caller = appRouter.createCaller(mockContext);
       const result = await caller.organizations.getById({ id: TEST_ORG_ID });
 
-      expect(result).toEqual(mockOrganization);
+      expect(result).toEqual({
+        ...mockOrganization,
+        role: mockMembership.role,
+        membershipId: mockMembership.id,
+      });
       expect(mockDb.query.organizationMembers.findFirst).toHaveBeenCalled();
     });
 
@@ -102,9 +118,7 @@ describe('Organizations Router', () => {
 
       const caller = appRouter.createCaller(mockContext);
 
-      await expect(
-        caller.organizations.getById({ id: TEST_ORG_ID })
-      ).rejects.toMatchObject({
+      await expect(caller.organizations.getById({ id: TEST_ORG_ID })).rejects.toMatchObject({
         code: 'NOT_FOUND',
         message: '組織が見つからないか、アクセス権限がありません',
       });

@@ -23,7 +23,12 @@ export type ListOrganizationsInput = z.infer<typeof listOrganizationsSchema>;
 export const updateOrganizationSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(255).optional(),
-  slug: z.string().min(1).max(255).regex(/^[a-z0-9-]+$/).optional(),
+  slug: z
+    .string()
+    .min(1)
+    .max(255)
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   settings: z.record(z.unknown()).optional(),
 });
 export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
@@ -33,7 +38,11 @@ export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
  */
 export const createOrganizationSchema = z.object({
   name: z.string().min(1).max(255),
-  slug: z.string().min(1).max(255).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .min(1)
+    .max(255)
+    .regex(/^[a-z0-9-]+$/),
   settings: z.record(z.unknown()).default({}).optional(),
 });
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;

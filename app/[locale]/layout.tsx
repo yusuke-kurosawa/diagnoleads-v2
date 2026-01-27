@@ -1,10 +1,23 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { locales } from '@/lib/i18n/config';
+import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import { locales } from '@/lib/i18n/config';
+import { notFound } from 'next/navigation';
 import { Providers } from '../providers';
 import '../globals.css';
+
+/**
+ * Viewport configuration for performance
+ */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+};
 
 /**
  * Generate metadata for locale pages
@@ -18,7 +31,10 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'metadata.root' });
 
   return {
-    title: t('title'),
+    title: {
+      default: t('title'),
+      template: `%s | ${t('title')}`,
+    },
     description: t('description'),
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
     alternates: {
@@ -27,6 +43,22 @@ export async function generateMetadata({
         ja: '/ja',
         en: '/en',
       },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      locale: locale === 'ja' ? 'ja_JP' : 'en_US',
+      siteName: t('title'),
     },
   };
 }

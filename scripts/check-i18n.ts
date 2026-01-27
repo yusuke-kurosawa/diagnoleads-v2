@@ -9,8 +9,8 @@
  * Usage: pnpm tsx scripts/check-i18n.ts
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const LOCALES_DIR = path.join(process.cwd(), 'locales');
 const LOCALES = ['ja', 'en'];
@@ -60,7 +60,10 @@ function loadLocaleFile(locale: string, filename: string): TranslationObject | n
 /**
  * 2つのキーセットを比較
  */
-function compareKeys(keys1: string[], keys2: string[]): {
+function compareKeys(
+  keys1: string[],
+  keys2: string[]
+): {
   missing: string[];
   extra: string[];
 } {
@@ -86,9 +89,7 @@ function checkTranslations(): CheckResult[] {
     process.exit(1);
   }
 
-  const files = fs
-    .readdirSync(jaDir)
-    .filter((file) => file.endsWith('.json'));
+  const files = fs.readdirSync(jaDir).filter((file) => file.endsWith('.json'));
 
   console.log(`📁 Found ${files.length} translation files: ${files.join(', ')}\n`);
 
@@ -142,7 +143,7 @@ function checkTranslations(): CheckResult[] {
     }
 
     if (missingInEn.length === 0 && extraInEn.length === 0) {
-      console.log(`   ✅ All keys match!\n`);
+      console.log('   ✅ All keys match!\n');
     } else {
       console.log('');
     }
@@ -164,9 +165,7 @@ function displayResults(results: CheckResult[]): boolean {
 
   for (const result of results) {
     if (result.missingKeys.length > 0) {
-      console.log(
-        `❌ Missing keys in locales/${result.locale}/${result.file}:`
-      );
+      console.log(`❌ Missing keys in locales/${result.locale}/${result.file}:`);
       result.missingKeys.forEach((key) => {
         console.log(`   - ${key}`);
       });
@@ -184,13 +183,10 @@ function displayResults(results: CheckResult[]): boolean {
     }
   }
 
-  const totalMissing = results.reduce(
-    (sum, r) => sum + r.missingKeys.length,
-    0
-  );
+  const totalMissing = results.reduce((sum, r) => sum + r.missingKeys.length, 0);
   const totalExtra = results.reduce((sum, r) => sum + r.extraKeys.length, 0);
 
-  console.log(`\n📊 Summary:`);
+  console.log('\n📊 Summary:');
   console.log(`   - Missing translations: ${totalMissing}`);
   console.log(`   - Extra keys: ${totalExtra}`);
   console.log(`   - Total issues: ${totalMissing + totalExtra}\n`);

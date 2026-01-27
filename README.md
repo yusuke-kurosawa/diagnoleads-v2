@@ -27,16 +27,29 @@ AI-Powered B2B Diagnostic Platform for **Holdings, Group Companies & Enterprise 
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start Docker services
 docker-compose up -d
 
 # Run development server
-npm run dev
+bun run dev
 ```
 
 Visit http://localhost:3000
+
+## Production Deployment
+
+For production deployment instructions, see [docs/deployment-guide.md](./docs/deployment-guide.md).
+
+### Quick Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/diagnoleads-v2)
+
+```bash
+# Using Vercel CLI
+vercel --prod
+```
 
 ## Tech Stack
 
@@ -48,29 +61,35 @@ Visit http://localhost:3000
 - **State Management**: Zustand + nuqs
 - **Testing**: Vitest + Playwright
 - **Code Quality**: Biome + lefthook
-- **Package Manager**: npm (via Node.js 20.11.0)
+- **Package Manager**: Bun (recommended) or npm
+- **Deployment**: Vercel
+- **Monitoring**: Sentry
 
 ## Available Scripts
 
 ```bash
 # Development
-npm run dev              # Start dev server with Turbopack
-npm run build            # Build for production
-npm start               # Start production server
+bun run dev              # Start dev server with Turbopack
+bun run build            # Build for production
+bun start               # Start production server
 
 # Code Quality
-npm run lint            # Run Biome linter
-npm run format          # Format code with Biome
-npm run typecheck       # TypeScript type checking
+bun run lint            # Run Biome linter
+bun run format          # Format code with Biome
+bun run typecheck       # TypeScript type checking
 
 # Testing
-npm test               # Run unit tests (Vitest)
-npm run test:e2e        # Run E2E tests (Playwright)
+bun test               # Run unit tests (Vitest)
+bun run test:e2e        # Run E2E tests (Playwright)
 
 # Database
-npm run db:generate     # Generate Drizzle migrations
-npm run db:migrate      # Run migrations
-npm run db:studio       # Open Drizzle Studio GUI
+bun run db:generate     # Generate Drizzle migrations
+bun run db:push         # Push schema to database
+bun run db:studio       # Open Drizzle Studio GUI
+
+# Backup (Production)
+./scripts/backup-database.sh   # Backup database
+./scripts/restore-database.sh  # Restore from backup
 ```
 
 ## Development Services
@@ -325,6 +344,13 @@ docs(readme): update setup instructions
 ```
 
 **Available scopes**: auth, leads, assessments, analytics, ai, db, api, ui, embed, integrations, email, jobs, i18n, seo, ci, deps, config, docs, test
+
+## Documentation
+
+- [Deployment Guide](./docs/deployment-guide.md) - Production deployment instructions
+- [Backup Strategy](./docs/backup-strategy.md) - Database backup and recovery
+- [Multi-Tenant Strategy](./docs/MULTI_TENANT_STRATEGY.md) - Holdings/Group architecture
+- [Implementation Checklist](./IMPLEMENTATION_CHECKLIST.md) - Development progress
 
 ## License
 

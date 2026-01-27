@@ -1,0 +1,955 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DiagnoLeads v2 API",
+    "version": "1.0.0",
+    "description": "AI-Powered B2B Diagnostic Platform API\n\n## Overview\n\nDiagnoLeads is an enterprise-grade SaaS platform for lead generation and scoring using AI.\n\n## Authentication\n\nMost endpoints require authentication via session cookie or Bearer token.\n\n## Rate Limiting\n\n- Standard: 100 requests/minute\n- AI endpoints: 20 requests/minute",
+    "contact": {
+      "name": "DiagnoLeads Support",
+      "email": "support@diagnoleads.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://diagnoleads.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    { "name": "System", "description": "System health and status endpoints" },
+    { "name": "Diagnostic", "description": "Public diagnostic form endpoints" },
+    { "name": "Leads", "description": "Lead management operations" },
+    { "name": "Organizations", "description": "Organization management" },
+    { "name": "Members", "description": "Organization member management" },
+    { "name": "Analytics", "description": "Analytics and reporting" },
+    { "name": "AI", "description": "AI-powered features" },
+    { "name": "Webhooks", "description": "Webhook configuration" }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check if the API is running",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["ok"] },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/diagnostic": {
+      "post": {
+        "summary": "Submit diagnostic form",
+        "description": "Submit a public diagnostic form and receive an AI-generated lead score",
+        "tags": ["Diagnostic"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DiagnosticSubmission" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Diagnostic submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DiagnosticResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/leads.create": {
+      "post": {
+        "summary": "Create a new lead",
+        "description": "Create a new lead in the organization",
+        "tags": ["Leads"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateLeadInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Lead" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/api/trpc/leads.list": {
+      "get": {
+        "summary": "List leads",
+        "description": "List leads with pagination and filtering",
+        "tags": ["Leads"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/LeadStatus" }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/LeadSource" }
+          },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of leads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leads": { "type": "array", "items": { "$ref": "#/components/schemas/Lead" } },
+                    "total": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/leads.get": {
+      "get": {
+        "summary": "Get lead by ID",
+        "description": "Retrieve a single lead by its ID",
+        "tags": ["Leads"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Lead" }
+              }
+            }
+          },
+          "404": { "description": "Lead not found" }
+        }
+      }
+    },
+    "/api/trpc/leads.update": {
+      "post": {
+        "summary": "Update a lead",
+        "description": "Update an existing lead",
+        "tags": ["Leads"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateLeadInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Lead" }
+              }
+            }
+          },
+          "404": { "description": "Lead not found" }
+        }
+      }
+    },
+    "/api/trpc/leads.delete": {
+      "post": {
+        "summary": "Delete a lead",
+        "description": "Delete a lead by ID",
+        "tags": ["Leads"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": { "type": "string", "format": "uuid" },
+                  "id": { "type": "string", "format": "uuid" }
+                },
+                "required": ["organizationId", "id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Lead not found" }
+        }
+      }
+    },
+    "/api/trpc/analytics.getOverview": {
+      "get": {
+        "summary": "Get analytics overview",
+        "description": "Get overview statistics for leads",
+        "tags": ["Analytics"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics overview",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OverviewStats" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/analytics.getConversionFunnel": {
+      "get": {
+        "summary": "Get conversion funnel",
+        "description": "Get conversion funnel data for leads",
+        "tags": ["Analytics"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "dateFrom", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "dateTo", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversion funnel data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConversionFunnel" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/ai.scoreLead": {
+      "post": {
+        "summary": "Score a lead with AI",
+        "description": "Use Claude AI to analyze and score a lead",
+        "tags": ["AI"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": { "type": "string", "format": "uuid" },
+                  "leadId": { "type": "string", "format": "uuid" }
+                },
+                "required": ["organizationId", "leadId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI score result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AIScoreResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/ai.semanticSearch": {
+      "post": {
+        "summary": "Semantic search for leads",
+        "description": "Search leads using natural language with AI embeddings",
+        "tags": ["AI"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": { "type": "string", "format": "uuid" },
+                  "query": { "type": "string" },
+                  "limit": { "type": "integer", "default": 10 }
+                },
+                "required": ["organizationId", "query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SemanticSearchResult" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/organizations.list": {
+      "get": {
+        "summary": "List organizations",
+        "description": "List organizations the user is a member of",
+        "tags": ["Organizations"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of organizations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Organization" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/organizations.create": {
+      "post": {
+        "summary": "Create organization",
+        "description": "Create a new organization",
+        "tags": ["Organizations"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Organization" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/members.list": {
+      "get": {
+        "summary": "List organization members",
+        "description": "List members of an organization",
+        "tags": ["Members"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/OrganizationMember" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/members.invite": {
+      "post": {
+        "summary": "Invite member",
+        "description": "Invite a new member to the organization",
+        "tags": ["Members"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": { "type": "string", "format": "uuid" },
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "$ref": "#/components/schemas/MemberRole" }
+                },
+                "required": ["organizationId", "email", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/webhooks.list": {
+      "get": {
+        "summary": "List webhooks",
+        "description": "List webhooks configured for an organization",
+        "tags": ["Webhooks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Webhook" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trpc/webhooks.create": {
+      "post": {
+        "summary": "Create webhook",
+        "description": "Create a new webhook",
+        "tags": ["Webhooks"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organizationId": { "type": "string", "format": "uuid" },
+                  "name": { "type": "string" },
+                  "url": { "type": "string", "format": "uri" },
+                  "events": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/WebhookEventType" }
+                  }
+                },
+                "required": ["organizationId", "name", "url", "events"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Webhook" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Chat with AI assistant",
+        "description": "Send a message to the AI assistant and receive a streaming response",
+        "tags": ["AI"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+                        "content": { "type": "string" }
+                      },
+                      "required": ["role", "content"]
+                    }
+                  }
+                },
+                "required": ["messages"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Streaming AI response",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Session token from authentication"
+      }
+    },
+    "schemas": {
+      "LeadStatus": {
+        "type": "string",
+        "enum": ["new", "contacted", "qualified", "converted"],
+        "description": "Lead status in the sales pipeline"
+      },
+      "LeadSource": {
+        "type": "string",
+        "enum": ["website", "embed", "api"],
+        "description": "Source of the lead"
+      },
+      "Lead": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "organizationId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string", "nullable": true },
+          "company": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100, "nullable": true },
+          "source": { "$ref": "#/components/schemas/LeadSource" },
+          "responses": { "type": "object", "additionalProperties": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "organizationId", "email", "status", "createdAt", "updatedAt"]
+      },
+      "CreateLeadInput": {
+        "type": "object",
+        "properties": {
+          "organizationId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "company": { "type": "string" },
+          "phone": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "source": { "$ref": "#/components/schemas/LeadSource" },
+          "responses": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["organizationId", "email"]
+      },
+      "UpdateLeadInput": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "organizationId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "company": { "type": "string" },
+          "phone": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "source": { "$ref": "#/components/schemas/LeadSource" },
+          "responses": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["id", "organizationId"]
+      },
+      "OrganizationType": {
+        "type": "string",
+        "enum": ["holding", "subsidiary", "independent"],
+        "description": "Organization type in hierarchy"
+      },
+      "DataSharingPolicy": {
+        "type": "object",
+        "properties": {
+          "allowParentAccess": { "type": "boolean" },
+          "allowChildAccess": { "type": "boolean" },
+          "allowSiblingAccess": { "type": "boolean" },
+          "sharedFields": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["allowParentAccess", "allowChildAccess", "allowSiblingAccess"]
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "settings": { "type": "object", "additionalProperties": true },
+          "parentOrganizationId": { "type": "string", "format": "uuid", "nullable": true },
+          "organizationType": { "$ref": "#/components/schemas/OrganizationType" },
+          "hierarchyPath": { "type": "string", "nullable": true },
+          "hierarchyLevel": { "type": "integer" },
+          "groupId": { "type": "string", "format": "uuid", "nullable": true },
+          "dataSharingPolicy": { "$ref": "#/components/schemas/DataSharingPolicy" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "organizationType",
+          "hierarchyLevel",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MemberRole": {
+        "type": "string",
+        "enum": ["owner", "admin", "member", "group_owner", "group_admin", "parent_viewer"],
+        "description": "Member role in organization"
+      },
+      "OrganizationMember": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "organizationId": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "role": { "$ref": "#/components/schemas/MemberRole" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "email": { "type": "string", "format": "email" },
+              "name": { "type": "string", "nullable": true }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "organizationId", "userId", "role", "createdAt", "updatedAt"]
+      },
+      "OverviewStats": {
+        "type": "object",
+        "properties": {
+          "totalLeads": { "type": "integer" },
+          "newLeads": { "type": "integer" },
+          "contactedLeads": { "type": "integer" },
+          "qualifiedLeads": { "type": "integer" },
+          "convertedLeads": { "type": "integer" },
+          "conversionRate": { "type": "number" },
+          "averageScore": { "type": "number", "nullable": true }
+        },
+        "required": [
+          "totalLeads",
+          "newLeads",
+          "contactedLeads",
+          "qualifiedLeads",
+          "convertedLeads",
+          "conversionRate"
+        ]
+      },
+      "ConversionFunnel": {
+        "type": "object",
+        "properties": {
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "count": { "type": "integer" },
+                "cumulativeCount": { "type": "integer" },
+                "percentage": { "type": "number" },
+                "conversionRate": { "type": "number", "nullable": true }
+              }
+            }
+          },
+          "totalLeads": { "type": "integer" },
+          "overallConversionRate": { "type": "number" },
+          "averageConversionDays": { "type": "number", "nullable": true }
+        },
+        "required": ["stages", "totalLeads", "overallConversionRate"]
+      },
+      "AIScoreResult": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+          "reasoning": { "type": "string" },
+          "recommendedActions": { "type": "array", "items": { "type": "string" } },
+          "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] }
+        },
+        "required": ["score", "confidence", "reasoning", "recommendedActions", "priority"]
+      },
+      "SemanticSearchResult": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string", "nullable": true },
+          "company": { "type": "string", "nullable": true },
+          "score": { "type": "number", "nullable": true },
+          "similarity": { "type": "number" }
+        },
+        "required": ["id", "email", "similarity"]
+      },
+      "DiagnosticSubmission": {
+        "type": "object",
+        "properties": {
+          "companyName": { "type": "string" },
+          "industry": {
+            "type": "string",
+            "enum": ["technology", "finance", "healthcare", "manufacturing", "retail", "other"]
+          },
+          "employeeCount": {
+            "type": "string",
+            "enum": ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"]
+          },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "position": { "type": "string" },
+          "currentChallenge": {
+            "type": "string",
+            "enum": ["lead_generation", "conversion", "efficiency", "data_management", "scaling"]
+          },
+          "primaryGoal": {
+            "type": "string",
+            "enum": ["increase_leads", "improve_conversion", "reduce_time", "better_insights"]
+          },
+          "timeline": {
+            "type": "string",
+            "enum": ["immediate", "1-3months", "3-6months", "6months+"]
+          },
+          "budget": { "type": "string", "enum": ["under10k", "10k-50k", "50k-100k", "100k+"] },
+          "additionalInfo": { "type": "string" },
+          "marketingConsent": { "type": "boolean" },
+          "locale": { "type": "string" }
+        },
+        "required": [
+          "companyName",
+          "industry",
+          "employeeCount",
+          "name",
+          "email",
+          "currentChallenge",
+          "primaryGoal",
+          "timeline",
+          "budget"
+        ]
+      },
+      "DiagnosticResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "leadId": { "type": "string", "format": "uuid" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "email": { "type": "string", "format": "email" },
+              "company": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          }
+        },
+        "required": ["success", "message", "score", "leadId", "data"]
+      },
+      "WebhookEventType": {
+        "type": "string",
+        "enum": [
+          "lead.created",
+          "lead.updated",
+          "lead.deleted",
+          "lead.status_changed",
+          "lead.scored",
+          "diagnostic.submitted",
+          "diagnostic.completed",
+          "organization.member_added",
+          "organization.member_removed",
+          "blog.published",
+          "faq.published"
+        ],
+        "description": "Webhook event type"
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "organizationId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "events": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WebhookEventType" }
+          },
+          "status": { "type": "string", "enum": ["active", "inactive", "failed"] },
+          "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+          "retryConfig": {
+            "type": "object",
+            "properties": {
+              "maxRetries": { "type": "integer" },
+              "retryDelayMs": { "type": "integer" }
+            }
+          },
+          "lastTriggeredAt": { "type": "string", "format": "date-time", "nullable": true },
+          "failureCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "name",
+          "url",
+          "events",
+          "status",
+          "failureCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string" },
+              "code": { "type": "string" }
+            },
+            "required": ["message"]
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

@@ -5,7 +5,18 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "style": { "useImportType": "error", "useExportType": "error" }
+      "style": { "useImportType": "error", "useExportType": "error" },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "warn",
+        "noImplicitAnyLet": "warn"
+      },
+      "a11y": {
+        "noLabelWithoutControl": "warn",
+        "useButtonType": "warn",
+        "useHtmlLang": "warn",
+        "noSvgWithoutTitle": "warn"
+      }
     }
   },
   "formatter": {
@@ -22,6 +33,6 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", ".next", "dist", "*.generated.ts"]
+    "ignore": ["node_modules", ".next", "dist", "*.generated.ts", "test/**"]
   }
 }

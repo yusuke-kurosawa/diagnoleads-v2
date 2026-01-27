@@ -2,7 +2,7 @@
  * Zod Validation i18n Integration
  *
  * Zodバリデーションエラーメッセージの多言語化
- * locales/*/errors.jsonのvalidationセクションと連携
+ * localesフォルダのerrors.jsonのvalidationセクションと連携
  */
 
 import { z } from 'zod';
@@ -53,13 +53,14 @@ export interface ZodErrorParams {
  * next-intlのuseTranslations('errors')フックと組み合わせて使用
  */
 export function getZodErrorMessage(
-  issue: z.ZodIssue,
+  issue: z.ZodIssueOptionalMessage,
   t: (key: string, params?: Record<string, string | number>) => string,
   tFields?: (key: string) => string
 ): string {
-  const fieldName = tFields && issue.path.length > 0
-    ? tFields(fieldNameMap[String(issue.path[0])] || String(issue.path[0]))
-    : String(issue.path[0] || 'field');
+  const fieldName =
+    tFields && issue.path.length > 0
+      ? tFields(fieldNameMap[String(issue.path[0])] || String(issue.path[0]))
+      : String(issue.path[0] || 'field');
 
   switch (issue.code) {
     case z.ZodIssueCode.invalid_type:
@@ -72,13 +73,13 @@ export function getZodErrorMessage(
       if (issue.type === 'string') {
         return t('validation.min', {
           field: fieldName,
-          min: issue.minimum,
+          min: Number(issue.minimum),
         });
       }
       if (issue.type === 'number') {
         return t('validation.minNumber', {
           field: fieldName,
-          min: issue.minimum,
+          min: Number(issue.minimum),
         });
       }
       return t('validation.invalid', { field: fieldName });
@@ -87,13 +88,13 @@ export function getZodErrorMessage(
       if (issue.type === 'string') {
         return t('validation.max', {
           field: fieldName,
-          max: issue.maximum,
+          max: Number(issue.maximum),
         });
       }
       if (issue.type === 'number') {
         return t('validation.maxNumber', {
           field: fieldName,
-          max: issue.maximum,
+          max: Number(issue.maximum),
         });
       }
       return t('validation.invalid', { field: fieldName });

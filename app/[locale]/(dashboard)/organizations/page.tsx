@@ -10,14 +10,10 @@ export default function OrganizationsPage() {
       <div className="space-y-6">
         {/* 組織情報 */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            組織情報
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">組織情報</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                組織名
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">組織名</label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -26,9 +22,7 @@ export default function OrganizationsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                組織スラッグ
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">組織スラッグ</label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -77,10 +71,7 @@ export default function OrganizationsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-8 text-center text-sm text-gray-500"
-                  >
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
                     メンバーがいません
                   </td>
                 </tr>
@@ -91,9 +82,7 @@ export default function OrganizationsPage() {
 
         {/* 危険な操作 */}
         <div className="border-t pt-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-4">
-            組織を削除
-          </h2>
+          <h2 className="text-lg font-semibold text-red-900 mb-4">組織を削除</h2>
           <p className="text-sm text-gray-600 mb-4">
             組織を削除すると、すべてのデータとメンバーが削除されます。この操作は取り消せません。
           </p>

@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { setupAuthenticatedTest, TEST_USERS, switchOrganization } from './helpers/auth';
+import { expect, test } from '@playwright/test';
+import { TEST_USERS, setupAuthenticatedTest, switchOrganization } from './helpers/auth';
 
 /**
  * E2E Test: Organization Switching
@@ -102,7 +102,8 @@ test.describe('Organization Switching', () => {
     let firstLeadEmail = '';
 
     if (firstOrgLeads > 0) {
-      firstLeadEmail = (await page.locator('table tbody tr:first-child td:nth-child(2)').textContent()) || '';
+      firstLeadEmail =
+        (await page.locator('table tbody tr:first-child td:nth-child(2)').textContent()) || '';
     }
 
     // Click organization switcher
@@ -127,10 +128,12 @@ test.describe('Organization Switching', () => {
 
         // Verify data isolation: either different count or different leads
         if (secondOrgLeads > 0 && firstOrgLeads > 0) {
-          const secondLeadEmail = (await page.locator('table tbody tr:first-child td:nth-child(2)').textContent()) || '';
+          const secondLeadEmail =
+            (await page.locator('table tbody tr:first-child td:nth-child(2)').textContent()) || '';
 
           // Data should be different (either count or content)
-          const isDifferent = (secondOrgLeads !== firstOrgLeads) || (secondLeadEmail !== firstLeadEmail);
+          const isDifferent =
+            secondOrgLeads !== firstOrgLeads || secondLeadEmail !== firstLeadEmail;
           expect(isDifferent).toBe(true);
         }
       }
@@ -144,7 +147,9 @@ test.describe('Organization Switching', () => {
 
     // Get current organization name
     const orgSwitcher = page.locator('[data-testid="organization-switcher"]');
-    const initialOrgName = await orgSwitcher.locator('[data-testid="current-org-name"]').textContent();
+    const initialOrgName = await orgSwitcher
+      .locator('[data-testid="current-org-name"]')
+      .textContent();
 
     // Click organization switcher
     await page.click('[data-testid="organization-switcher"]');
@@ -161,7 +166,9 @@ test.describe('Organization Switching', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify organization switcher now shows new organization name
-      const updatedOrgName = await orgSwitcher.locator('[data-testid="current-org-name"]').textContent();
+      const updatedOrgName = await orgSwitcher
+        .locator('[data-testid="current-org-name"]')
+        .textContent();
       expect(updatedOrgName).toBe(secondOrgName);
       expect(updatedOrgName).not.toBe(initialOrgName);
     } else {
@@ -192,7 +199,9 @@ test.describe('Organization Switching', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify settings page is displayed
-      await expect(page.getByRole('heading', { name: /組織設定|Organization Settings/i })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /組織設定|Organization Settings/i })
+      ).toBeVisible();
 
       // Verify organization name field is visible
       const orgNameInput = page.locator('input[name="name"]');
@@ -287,7 +296,9 @@ test.describe('Organization Switching', () => {
       const clickPromise = orgItems[1].click();
 
       // Check for loading indicator (this might be too fast to catch)
-      const loadingIndicator = page.locator('[data-testid="loading-skeleton"], [data-testid="loading-spinner"]');
+      const loadingIndicator = page.locator(
+        '[data-testid="loading-skeleton"], [data-testid="loading-spinner"]'
+      );
       const isVisible = await loadingIndicator.isVisible().catch(() => false);
 
       await clickPromise;
@@ -353,7 +364,7 @@ test.describe('Organization Switching', () => {
         await page.waitForLoadState('networkidle');
 
         // Either data exists or empty state is shown
-        const hasData = await page.locator('table tbody tr').count() > 0;
+        const hasData = (await page.locator('table tbody tr').count()) > 0;
         const hasEmptyState = await page.locator('[data-testid="empty-state"]').isVisible();
 
         // One of these should be true
@@ -374,7 +385,9 @@ test.describe('Organization Switching', () => {
 
     // Get initial organization name
     const orgSwitcher = page.locator('[data-testid="organization-switcher"]');
-    const initialOrgName = await orgSwitcher.locator('[data-testid="current-org-name"]').textContent();
+    const initialOrgName = await orgSwitcher
+      .locator('[data-testid="current-org-name"]')
+      .textContent();
     const initialUrl = page.url();
 
     // Click organization switcher
@@ -405,7 +418,9 @@ test.describe('Organization Switching', () => {
       const finalUrl = page.url();
       expect(finalUrl).toContain(TEST_USERS.owner.organizationId);
 
-      const finalOrgName = await orgSwitcher.locator('[data-testid="current-org-name"]').textContent();
+      const finalOrgName = await orgSwitcher
+        .locator('[data-testid="current-org-name"]')
+        .textContent();
       expect(finalOrgName).toBe(initialOrgName);
     } else {
       test.skip();

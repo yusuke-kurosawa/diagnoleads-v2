@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
+import type { Organization, OrganizationMember, User } from '@/lib/db/schema';
 import { appRouter } from '@/server/routers/_app';
-import type { Organization, OrganizationMember, User, Lead } from '@/lib/db/schema';
+import { TRPCError } from '@trpc/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('@/lib/db/rls', () => ({
@@ -43,6 +43,12 @@ describe('Leads Router', () => {
     name: 'Test Organization',
     slug: 'test-org',
     settings: {},
+    parentOrganizationId: null,
+    organizationType: 'independent',
+    hierarchyPath: TEST_ORG_ID,
+    hierarchyLevel: 0,
+    groupId: null,
+    dataSharingPolicy: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -57,7 +63,7 @@ describe('Leads Router', () => {
     organization: mockOrganization,
   };
 
-  const mockLead: Lead = {
+  const mockLead = {
     id: TEST_LEAD_ID,
     organizationId: TEST_ORG_ID,
     email: 'lead@example.com',
@@ -68,8 +74,12 @@ describe('Leads Router', () => {
     score: 75,
     source: 'website',
     responses: {},
+    customFields: {},
+    embedding: null,
+    searchVector: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    leadTags: [], // Required by router - list of associated tags
   };
 
   let mockDb: any;
@@ -86,6 +96,7 @@ describe('Leads Router', () => {
         },
         leads: {
           findFirst: vi.fn(),
+          findMany: vi.fn().mockResolvedValue([mockLead]),
         },
       },
       insert: vi.fn().mockReturnThis(),
@@ -170,7 +181,11 @@ describe('Leads Router', () => {
         id: TEST_LEAD_ID,
       });
 
-      expect(result).toEqual(mockLead);
+      // Result includes the lead with tags extracted from leadTags
+      expect(result).toEqual({
+        ...mockLead,
+        tags: [], // Tags are mapped from leadTags
+      });
       expect(mockDb.query.leads.findFirst).toHaveBeenCalled();
     });
 
@@ -203,7 +218,8 @@ describe('Leads Router', () => {
         offset: 0,
       });
 
-      expect(result.items).toEqual(mockLeads);
+      // Result includes the leads with tags extracted from leadTags
+      expect(result.items).toEqual([{ ...mockLead, tags: [] }]);
       expect(result.limit).toBe(20);
       expect(result.offset).toBe(0);
     });

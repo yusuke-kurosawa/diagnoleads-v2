@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import { defineAbilitiesFor } from '@/lib/auth/permissions';
 import { setCurrentUser } from '@/lib/db/rls';
-import { verifyOrganizationMembership } from '../helpers/membership';
 import type { ProtectedContext } from '@/lib/trpc/context';
+import { z } from 'zod';
+import { verifyOrganizationMembership } from '../helpers/membership';
 import type { OrganizationContext } from '../types';
 
 /**
@@ -31,11 +31,7 @@ export async function createOrganizationContext(
   input: { organizationId: string }
 ): Promise<OrganizationContext> {
   // 1. Verify organization membership
-  const membership = await verifyOrganizationMembership(
-    ctx.db,
-    ctx.user.id,
-    input.organizationId
-  );
+  const membership = await verifyOrganizationMembership(ctx.db, ctx.user.id, input.organizationId);
 
   // 2. Calculate CASL permissions based on user and membership
   const ability = defineAbilitiesFor(ctx.user as any, membership);
