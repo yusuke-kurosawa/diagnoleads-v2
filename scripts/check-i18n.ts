@@ -166,9 +166,9 @@ function displayResults(results: CheckResult[]): boolean {
   for (const result of results) {
     if (result.missingKeys.length > 0) {
       console.log(`❌ Missing keys in locales/${result.locale}/${result.file}:`);
-      result.missingKeys.forEach((key) => {
+      for (const key of result.missingKeys) {
         console.log(`   - ${key}`);
-      });
+      }
       console.log('');
     }
 
@@ -176,9 +176,9 @@ function displayResults(results: CheckResult[]): boolean {
       console.log(
         `⚠️  Extra keys in locales/${result.locale}/${result.file} (not in other locales):`
       );
-      result.extraKeys.forEach((key) => {
+      for (const key of result.extraKeys) {
         console.log(`   - ${key}`);
-      });
+      }
       console.log('');
     }
   }

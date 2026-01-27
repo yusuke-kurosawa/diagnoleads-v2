@@ -13,8 +13,11 @@ export default function OrganizationsPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">組織情報</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">組織名</label>
+              <label htmlFor="org-name" className="block text-sm font-medium text-gray-700 mb-1">
+                組織名
+              </label>
               <input
+                id="org-name"
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="株式会社サンプル"
@@ -22,8 +25,11 @@ export default function OrganizationsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">組織スラッグ</label>
+              <label htmlFor="org-slug" className="block text-sm font-medium text-gray-700 mb-1">
+                組織スラッグ
+              </label>
               <input
+                id="org-slug"
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="sample-company"
@@ -33,7 +39,10 @@ export default function OrganizationsPage() {
               </p>
             </div>
 
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+            <button
+              type="button"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+            >
               保存
             </button>
           </div>
@@ -43,7 +52,10 @@ export default function OrganizationsPage() {
         <div className="border-t pt-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">メンバー</h2>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+            <button
+              type="button"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+            >
               メンバーを招待
             </button>
           </div>
@@ -86,7 +98,10 @@ export default function OrganizationsPage() {
           <p className="text-sm text-gray-600 mb-4">
             組織を削除すると、すべてのデータとメンバーが削除されます。この操作は取り消せません。
           </p>
-          <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+          <button
+            type="button"
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
+          >
             組織を削除
           </button>
         </div>

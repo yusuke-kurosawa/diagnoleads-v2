@@ -602,7 +602,7 @@ export default function AnalyticsPage() {
               {sourceLoading ? (
                 <div className="space-y-3 mt-4">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-10 bg-gray-200 animate-pulse rounded" />
+                    <div key={`skeleton-${i}`} className="h-10 bg-gray-200 animate-pulse rounded" />
                   ))}
                 </div>
               ) : sourceBreakdown && sourceBreakdown.length > 0 ? (
