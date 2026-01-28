@@ -23,7 +23,7 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "i18n:check": "tsx scripts/check-i18n.ts",
     "i18n:check-hardcoded": "tsx scripts/check-hardcoded-strings.ts",
-    "prepare": "lefthook install"
+    "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "1.2.12",
