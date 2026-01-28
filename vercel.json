@@ -17,7 +17,7 @@
     },
     {
       "path": "/api/cron/process-webhook-retries",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 */6 * * *"
     }
   ],
   "headers": [
