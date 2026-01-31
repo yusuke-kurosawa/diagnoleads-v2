@@ -18,22 +18,24 @@ export interface TestUser {
   organizationId?: string;
 }
 
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || 'e2e-test-pw';
+
 export const TEST_USERS = {
   owner: {
     email: 'test-owner@example.com',
-    password: 'TestPassword123!',
+    password: TEST_PASSWORD,
     name: 'Test Owner',
     organizationId: 'test-org-1',
   },
   admin: {
     email: 'test-admin@example.com',
-    password: 'TestPassword123!',
+    password: TEST_PASSWORD,
     name: 'Test Admin',
     organizationId: 'test-org-1',
   },
   member: {
     email: 'test-member@example.com',
-    password: 'TestPassword123!',
+    password: TEST_PASSWORD,
     name: 'Test Member',
     organizationId: 'test-org-1',
   },
