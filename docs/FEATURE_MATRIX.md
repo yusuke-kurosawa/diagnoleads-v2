@@ -2,7 +2,7 @@
 
 ## 概要
 
-本ドキュメントは、DiagnoLeads v2の全機能を「画面」「API」「バッチ」「外部IF」などのカテゴリでマトリクス形式で管理します。
+本ドキュメントは、DiagnoLeads v2の全機能を「画面」「API」「バッチ」「外部IF」「テスト」のカテゴリでマトリクス形式で管理します。
 
 ---
 
@@ -15,16 +15,65 @@
 | バッチ | 定期実行・バックグラウンド処理 |
 | 外部IF | 外部サービスとの連携インターフェース |
 | DB | データベーステーブル・スキーマ |
-| ライブラリ | 共通ライブラリ・ユーティリティ |
+| Unit | ユニットテスト (Vitest) |
+| E2E | E2Eテスト (Playwright) |
 
 ### ステータス
 
 | 記号 | 意味 |
 |------|------|
-| ✅ | 実装済み |
-| 🚧 | 実装中 |
+| ✅ | 実装済み / テスト済み |
+| 🚧 | 実装中 / テスト作成中 |
 | 📋 | 計画中 |
+| ⚠️ | テスト必要 |
 | - | 該当なし |
+
+---
+
+# テストサマリー
+
+## 現在のテスト状況
+
+| 種別 | ファイル数 | テスト数 | ステータス |
+|------|-----------|---------|-----------|
+| ユニットテスト | 20 | 339 | ✅ 全パス |
+| E2Eテスト | 5 | - | 📋 Playwright未セットアップ |
+
+## テストファイル一覧
+
+### ユニットテスト (test/unit/)
+
+| ファイル | テスト数 | 対象機能 |
+|----------|---------|---------|
+| auth.test.ts | 13 | 認証・ダッシュボードアクセス |
+| leads-router.test.ts | 19 | リードCRUD |
+| organizations-router.test.ts | 10 | 組織管理 |
+| members-router.test.ts | 19 | メンバー管理 |
+| analytics-router.test.ts | 13 | 分析API |
+| tags-router.test.ts | 17 | タグ管理 |
+| custom-fields-router.test.ts | 20 | カスタムフィールド |
+| workflows-router.test.ts | 20 | ワークフロー |
+| webhooks-router.test.ts | 13 | Webhook |
+| scoring-rules-router.test.ts | 17 | スコアリングルール |
+| ab-tests-router.test.ts | 17 | A/Bテスト |
+| diagnostic-templates-router.test.ts | 12 | 診断テンプレート |
+| embed-router.test.ts | 16 | 埋め込み設定 |
+| embed/security.test.ts | 34 | 埋め込みセキュリティ |
+| distribution.test.ts | 10 | トラフィック配分 |
+| pdf-export-service.test.ts | 16 | PDFエクスポート |
+| export-service.test.ts | 17 | CSV/JSONエクスポート |
+| organization-procedure.test.ts | 6 | tRPC組織プロシージャ |
+| example.test.ts | 4 | ユーティリティ |
+
+### E2Eテスト (test/e2e/)
+
+| ファイル | 対象機能 | ステータス |
+|----------|---------|-----------|
+| lead-management.spec.ts | リード管理画面 | 📋 |
+| dashboard-analytics.spec.ts | ダッシュボード・分析 | 📋 |
+| organization-switching.spec.ts | 組織切り替え | 📋 |
+| embed-settings.spec.ts | 埋め込み設定 | 📋 |
+| example.spec.ts | サンプル | 📋 |
 
 ---
 
@@ -32,51 +81,51 @@
 
 ## 1.1 認証機能
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 1.1.1 | ログイン | ✅ `/login` | ✅ Better Auth | - | - | ✅ sessions | メール/パスワード認証 |
-| 1.1.2 | ログアウト | ✅ ヘッダー | ✅ Better Auth | - | - | ✅ sessions | セッション削除 |
-| 1.1.3 | サインアップ | ✅ `/signup` | ✅ Better Auth | - | - | ✅ users | 新規ユーザー登録 |
-| 1.1.4 | パスワードリセット | ✅ `/reset-password` | ✅ Better Auth | - | ✅ Resend | ✅ verification | メール送信 |
-| 1.1.5 | メール確認 | 📋 | 📋 Better Auth | - | 📋 Resend | ✅ verification | オプション機能 |
-| 1.1.6 | セッション管理 | - | ✅ Better Auth | ✅ 期限切れ削除 | - | ✅ sessions | 7日間有効 |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 1.1.1 | ログイン | ✅ | ✅ | - | - | ✅ | ✅ auth.test.ts | ⚠️ | Better Auth |
+| 1.1.2 | ログアウト | ✅ | ✅ | - | - | ✅ | ✅ auth.test.ts | ⚠️ | |
+| 1.1.3 | サインアップ | ✅ | ✅ | - | - | ✅ | ✅ auth.test.ts | ⚠️ | バリデーション |
+| 1.1.4 | パスワードリセット | ✅ | ✅ | - | ✅ | ✅ | ⚠️ | ⚠️ | Resend |
+| 1.1.5 | メール確認 | 📋 | 📋 | - | 📋 | ✅ | - | - | オプション |
+| 1.1.6 | セッション管理 | - | ✅ | ✅ | - | ✅ | ✅ auth.test.ts | - | |
 
 ## 1.2 ユーザー管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 1.2.1 | プロフィール表示 | ✅ `/settings` | ✅ users.get | - | - | ✅ users | |
-| 1.2.2 | プロフィール編集 | ✅ `/settings` | ✅ users.update | - | - | ✅ users | 名前、アバター |
-| 1.2.3 | パスワード変更 | ✅ `/settings` | ✅ Better Auth | - | - | ✅ users | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 1.2.1 | プロフィール表示 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 1.2.2 | プロフィール編集 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 1.2.3 | パスワード変更 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ## 1.3 組織管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 1.3.1 | 組織一覧 | ✅ 組織切替UI | ✅ organizations.list | - | - | ✅ organizations | |
-| 1.3.2 | 組織作成 | ✅ モーダル | ✅ organizations.create | - | - | ✅ organizations | |
-| 1.3.3 | 組織編集 | ✅ `/settings/organization` | ✅ organizations.update | - | - | ✅ organizations | |
-| 1.3.4 | 組織削除 | ✅ `/settings/organization` | ✅ organizations.delete | - | - | ✅ organizations | 確認ダイアログ |
-| 1.3.5 | 組織切り替え | ✅ ヘッダー | ✅ context切替 | - | - | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 1.3.1 | 組織一覧 | ✅ | ✅ | - | - | ✅ | ✅ organizations-router | ✅ org-switching | |
+| 1.3.2 | 組織作成 | ✅ | ✅ | - | - | ✅ | ✅ organizations-router | ⚠️ | |
+| 1.3.3 | 組織編集 | ✅ | ✅ | - | - | ✅ | ✅ organizations-router | ⚠️ | |
+| 1.3.4 | 組織削除 | ✅ | ✅ | - | - | ✅ | ✅ organizations-router | ⚠️ | |
+| 1.3.5 | 組織切り替え | ✅ | ✅ | - | - | - | ✅ org-procedure | ✅ org-switching | |
 
 ## 1.4 メンバー管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 1.4.1 | メンバー一覧 | ✅ `/settings/members` | ✅ members.list | - | - | ✅ members | |
-| 1.4.2 | メンバー招待 | ✅ `/settings/members` | ✅ members.invite | - | ✅ Resend | ✅ invitations | メール送信 |
-| 1.4.3 | ロール変更 | ✅ `/settings/members` | ✅ members.updateRole | - | - | ✅ members | owner/admin/member/viewer |
-| 1.4.4 | メンバー削除 | ✅ `/settings/members` | ✅ members.remove | - | - | ✅ members | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 1.4.1 | メンバー一覧 | ✅ | ✅ | - | - | ✅ | ✅ members-router | ⚠️ | |
+| 1.4.2 | メンバー招待 | ✅ | ✅ | - | ✅ | ✅ | ✅ members-router | ⚠️ | |
+| 1.4.3 | ロール変更 | ✅ | ✅ | - | - | ✅ | ✅ members-router | ⚠️ | |
+| 1.4.4 | メンバー削除 | ✅ | ✅ | - | - | ✅ | ✅ members-router | ⚠️ | |
 
 ## 1.5 ホールディングス・階層管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 1.5.1 | 階層構造表示 | ✅ `/settings/organization` | ✅ hierarchy.getHierarchy | - | - | ✅ organizations | ltree |
-| 1.5.2 | 子組織一覧 | ✅ 階層ツリー | ✅ hierarchy.getChildren | - | - | ✅ organizations | |
-| 1.5.3 | 親組織設定 | ✅ 設定画面 | ✅ hierarchy.setParent | - | - | ✅ organizations | |
-| 1.5.4 | データ共有ポリシー | ✅ 設定画面 | ✅ hierarchy.updatePolicy | - | - | ✅ organizations | |
-| 1.5.5 | グループ統計 | ✅ ダッシュボード | ✅ hierarchy.getGroupStats | - | - | ✅ organizations | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 1.5.1 | 階層構造表示 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | ltree |
+| 1.5.2 | 子組織一覧 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 1.5.3 | 親組織設定 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 1.5.4 | データ共有ポリシー | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 1.5.5 | グループ統計 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ---
 
@@ -84,56 +133,56 @@
 
 ## 2.1 リード基本操作
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 2.1.1 | リード一覧 | ✅ `/leads` | ✅ leads.list | - | - | ✅ leads | ページネーション、フィルター |
-| 2.1.2 | リード詳細 | ✅ `/leads/[id]` | ✅ leads.get | - | - | ✅ leads | |
-| 2.1.3 | リード作成 | ✅ `/leads` モーダル | ✅ leads.create | - | - | ✅ leads | |
-| 2.1.4 | リード編集 | ✅ `/leads/[id]` | ✅ leads.update | - | - | ✅ leads | |
-| 2.1.5 | リード削除 | ✅ `/leads` | ✅ leads.delete | - | - | ✅ leads | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 2.1.1 | リード一覧 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ✅ lead-management | |
+| 2.1.2 | リード詳細 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ✅ lead-management | |
+| 2.1.3 | リード作成 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ✅ lead-management | |
+| 2.1.4 | リード編集 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ✅ lead-management | |
+| 2.1.5 | リード削除 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ✅ lead-management | |
 
 ## 2.2 リード一括操作
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 2.2.1 | 一括ステータス変更 | ✅ `/leads` | ✅ leads.bulkUpdateStatus | - | - | ✅ leads | |
-| 2.2.2 | 一括削除 | ✅ `/leads` | ✅ leads.bulkDelete | - | - | ✅ leads | |
-| 2.2.3 | CSVインポート | ✅ `/leads` モーダル | ✅ leads.import | - | - | ✅ leads | xlsx対応 |
-| 2.2.4 | CSVエクスポート | ✅ `/leads` | ✅ ライブラリ | - | - | - | |
-| 2.2.5 | JSONエクスポート | ✅ `/leads` | ✅ ライブラリ | - | - | - | |
-| 2.2.6 | PDFエクスポート | ✅ `/leads` | ✅ ライブラリ | - | - | - | jspdf |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 2.2.1 | 一括ステータス変更 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ⚠️ | |
+| 2.2.2 | 一括削除 | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ⚠️ | |
+| 2.2.3 | CSVインポート | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | xlsx対応 |
+| 2.2.4 | CSVエクスポート | ✅ | ✅ | - | - | - | ✅ export-service | ⚠️ | |
+| 2.2.5 | JSONエクスポート | ✅ | ✅ | - | - | - | ✅ export-service | ⚠️ | |
+| 2.2.6 | PDFエクスポート | ✅ | ✅ | - | - | - | ✅ pdf-export | ⚠️ | |
 
 ## 2.3 タグ管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 2.3.1 | タグ一覧 | ✅ タグセレクター | ✅ tags.list | - | - | ✅ tags | |
-| 2.3.2 | タグ作成 | ✅ タグセレクター | ✅ tags.create | - | - | ✅ tags | カラー設定 |
-| 2.3.3 | タグ編集 | ✅ タグ管理画面 | ✅ tags.update | - | - | ✅ tags | |
-| 2.3.4 | タグ削除 | ✅ タグ管理画面 | ✅ tags.delete | - | - | ✅ tags | |
-| 2.3.5 | リードへのタグ付け | ✅ リード詳細 | ✅ tags.addToLead | - | - | ✅ leadTags | |
-| 2.3.6 | タグでフィルター | ✅ `/leads` | ✅ leads.list | - | - | ✅ leadTags | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 2.3.1 | タグ一覧 | ✅ | ✅ | - | - | ✅ | ✅ tags-router | ⚠️ | |
+| 2.3.2 | タグ作成 | ✅ | ✅ | - | - | ✅ | ✅ tags-router | ⚠️ | |
+| 2.3.3 | タグ編集 | ✅ | ✅ | - | - | ✅ | ✅ tags-router | ⚠️ | |
+| 2.3.4 | タグ削除 | ✅ | ✅ | - | - | ✅ | ✅ tags-router | ⚠️ | |
+| 2.3.5 | リードへのタグ付け | ✅ | ✅ | - | - | ✅ | ✅ tags-router | ⚠️ | |
+| 2.3.6 | タグでフィルター | ✅ | ✅ | - | - | ✅ | ✅ leads-router | ⚠️ | |
 
 ## 2.4 コメント・メモ
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 2.4.1 | コメント一覧 | ✅ リード詳細 | ✅ comments.list | - | - | ✅ leadComments | |
-| 2.4.2 | コメント追加 | ✅ リード詳細 | ✅ comments.create | - | - | ✅ leadComments | |
-| 2.4.3 | コメント編集 | ✅ リード詳細 | ✅ comments.update | - | - | ✅ leadComments | |
-| 2.4.4 | コメント削除 | ✅ リード詳細 | ✅ comments.delete | - | - | ✅ leadComments | |
-| 2.4.5 | スレッド返信 | ✅ リード詳細 | ✅ comments.reply | - | - | ✅ leadComments | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 2.4.1 | コメント一覧 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 2.4.2 | コメント追加 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 2.4.3 | コメント編集 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 2.4.4 | コメント削除 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 2.4.5 | スレッド返信 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ## 2.5 カスタムフィールド
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 2.5.1 | フィールド一覧 | ✅ `/settings` | ✅ customFields.list | - | - | ✅ customFields | |
-| 2.5.2 | フィールド作成 | ✅ `/settings` | ✅ customFields.create | - | - | ✅ customFields | 10種類のタイプ |
-| 2.5.3 | フィールド編集 | ✅ `/settings` | ✅ customFields.update | - | - | ✅ customFields | |
-| 2.5.4 | フィールド削除 | ✅ `/settings` | ✅ customFields.delete | - | - | ✅ customFields | |
-| 2.5.5 | 並び替え | ✅ `/settings` | ✅ customFields.reorder | - | - | ✅ customFields | D&D |
-| 2.5.6 | 有効/無効切替 | ✅ `/settings` | ✅ customFields.toggleActive | - | - | ✅ customFields | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 2.5.1 | フィールド一覧 | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
+| 2.5.2 | フィールド作成 | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
+| 2.5.3 | フィールド編集 | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
+| 2.5.4 | フィールド削除 | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
+| 2.5.5 | 並び替え | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
+| 2.5.6 | 有効/無効切替 | ✅ | ✅ | - | - | ✅ | ✅ custom-fields | ⚠️ | |
 
 ---
 
@@ -141,38 +190,38 @@
 
 ## 3.1 AIスコアリング
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 3.1.1 | スコア計算 | ✅ リード詳細 | ✅ ai.scoreLead | - | ✅ Anthropic | ✅ leads.score | Claude 4.5 |
-| 3.1.2 | バッチスコアリング | ✅ `/leads` | ✅ ai.batchScoreLeads | ✅ | ✅ Anthropic | ✅ leads | |
-| 3.1.3 | スコア表示 | ✅ AIScoreCard | ✅ leads.get | - | - | ✅ leads | 信頼度・優先度 |
-| 3.1.4 | 推奨アクション | ✅ AIScoreCard | ✅ ai.scoreLead | - | ✅ Anthropic | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 3.1.1 | スコア計算 | ✅ | ✅ | - | ✅ | ✅ | ⚠️ | ⚠️ | Anthropic |
+| 3.1.2 | バッチスコアリング | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | |
+| 3.1.3 | スコア表示 | ✅ | ✅ | - | - | ✅ | ✅ auth.test.ts | ⚠️ | |
+| 3.1.4 | 推奨アクション | ✅ | ✅ | - | ✅ | - | ⚠️ | ⚠️ | |
 
 ## 3.2 セマンティック検索
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 3.2.1 | 自然言語検索 | ✅ 検索UI | ✅ ai.semanticSearch | - | ✅ OpenAI | ✅ leads.embedding | pgvector |
-| 3.2.2 | 類似リード検索 | ✅ リード詳細 | ✅ ai.findSimilar | - | ✅ OpenAI | ✅ leads.embedding | |
-| 3.2.3 | 埋め込み更新 | - | ✅ ai.updateEmbedding | ✅ | ✅ OpenAI | ✅ leads.embedding | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 3.2.1 | 自然言語検索 | ✅ | ✅ | - | ✅ | ✅ | ⚠️ | ⚠️ | OpenAI |
+| 3.2.2 | 類似リード検索 | ✅ | ✅ | - | ✅ | ✅ | ⚠️ | ⚠️ | pgvector |
+| 3.2.3 | 埋め込み更新 | - | ✅ | ✅ | ✅ | ✅ | ⚠️ | - | |
 
 ## 3.3 AI要約・アシスタント
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 3.3.1 | リード要約生成 | ✅ AISummaryCard | ✅ ai.generateSummary | - | ✅ Anthropic | - | |
-| 3.3.2 | AIチャット | ✅ ChatAssistant | ✅ /api/chat | - | ✅ Anthropic | - | ストリーミング |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 3.3.1 | リード要約生成 | ✅ | ✅ | - | ✅ | - | ⚠️ | ⚠️ | |
+| 3.3.2 | AIチャット | ✅ | ✅ | - | ✅ | - | ⚠️ | ⚠️ | ストリーミング |
 
 ## 3.4 スコアリングルール
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 3.4.1 | ルールセット一覧 | ✅ `/settings` | ✅ scoringRules.list | - | - | ✅ leadScoringRulesets | |
-| 3.4.2 | ルールセット作成 | ✅ `/settings` | ✅ scoringRules.create | - | - | ✅ leadScoringRulesets | |
-| 3.4.3 | ルールセット編集 | ✅ `/settings` | ✅ scoringRules.update | - | - | ✅ leadScoringRulesets | |
-| 3.4.4 | スコア計算 | - | ✅ scoringRules.calculateScore | - | - | ✅ leads | |
-| 3.4.5 | シミュレーション | ✅ `/settings` | ✅ scoringRules.simulateScore | - | - | - | |
-| 3.4.6 | 一括再計算 | ✅ `/settings` | ✅ scoringRules.recalculateAll | ✅ | - | ✅ leads | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 3.4.1 | ルールセット一覧 | ✅ | ✅ | - | - | ✅ | ✅ scoring-rules | ⚠️ | |
+| 3.4.2 | ルールセット作成 | ✅ | ✅ | - | - | ✅ | ✅ scoring-rules | ⚠️ | |
+| 3.4.3 | ルールセット編集 | ✅ | ✅ | - | - | ✅ | ✅ scoring-rules | ⚠️ | |
+| 3.4.4 | スコア計算 | - | ✅ | - | - | ✅ | ✅ scoring-rules | - | |
+| 3.4.5 | シミュレーション | ✅ | ✅ | - | - | - | ✅ scoring-rules | ⚠️ | |
+| 3.4.6 | 一括再計算 | ✅ | ✅ | ✅ | - | ✅ | ✅ scoring-rules | ⚠️ | |
 
 ---
 
@@ -180,39 +229,32 @@
 
 ## 4.1 ダッシュボード
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 4.1.1 | KPIカード | ✅ `/dashboard` | ✅ analytics.getOverview | - | - | ✅ leads | |
-| 4.1.2 | トレンドチャート | ✅ `/dashboard` | ✅ analytics.getTrend | - | - | ✅ leads | ApexCharts |
-| 4.1.3 | ステータス分布 | ✅ `/dashboard` | ✅ analytics.getStatusBreakdown | - | - | ✅ leads | |
-| 4.1.4 | ソース分布 | ✅ `/dashboard` | ✅ analytics.getSourceBreakdown | - | - | ✅ leads | |
-| 4.1.5 | アクティビティ | ✅ `/dashboard` | ✅ analytics.getRecentActivity | - | - | ✅ leads | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 4.1.1 | KPIカード | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ✅ dashboard | |
+| 4.1.2 | トレンドチャート | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ✅ dashboard | |
+| 4.1.3 | ステータス分布 | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ✅ dashboard | |
+| 4.1.4 | ソース分布 | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ✅ dashboard | |
+| 4.1.5 | アクティビティ | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ⚠️ | |
 
 ## 4.2 分析ページ
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 4.2.1 | 日付範囲フィルター | ✅ `/analytics` | ✅ analytics.* | - | - | - | 7日/30日/90日/全期間 |
-| 4.2.2 | コンバージョンファネル | ✅ `/analytics` | ✅ analytics.getConversionFunnel | - | - | ✅ leads | |
-| 4.2.3 | ソース別パフォーマンス | ✅ `/analytics` | ✅ analytics.getSourcePerformance | - | - | ✅ leads | |
-| 4.2.4 | ROI分析 | ✅ `/analytics` | ✅ analytics.getROI | - | - | ✅ leads | |
-| 4.2.5 | 期間比較 | ✅ `/analytics` | ✅ analytics.getComparison | - | - | ✅ leads | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 4.2.1 | 日付範囲フィルター | ✅ | ✅ | - | - | - | ✅ analytics-router | ✅ dashboard | |
+| 4.2.2 | コンバージョンファネル | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ⚠️ | |
+| 4.2.3 | ソース別パフォーマンス | ✅ | ✅ | - | - | ✅ | ✅ analytics-router | ⚠️ | |
+| 4.2.4 | ROI分析 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 4.2.5 | 期間比較 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ## 4.3 レポート
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 4.3.1 | CSVエクスポート | ✅ `/analytics` | ✅ ライブラリ | - | - | - | |
-| 4.3.2 | PDFレポート | ✅ `/analytics` | ✅ ライブラリ | - | - | - | jspdf |
-| 4.3.3 | スケジュールレポート | ✅ `/settings` | ✅ scheduledReports.* | ✅ Cron | ✅ Resend | ✅ scheduledReports | |
-| 4.3.4 | カスタムレポート | ✅ `/settings` | ✅ customReports.* | - | - | ✅ customReports | |
-
-## 4.4 ウィジェット設定
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 4.4.1 | ウィジェット表示設定 | ✅ `/dashboard` | - | - | - | - | LocalStorage |
-| 4.4.2 | ウィジェット並び替え | ✅ `/dashboard` | - | - | - | - | D&D |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 4.3.1 | CSVエクスポート | ✅ | ✅ | - | - | - | ✅ export-service | ⚠️ | |
+| 4.3.2 | PDFレポート | ✅ | ✅ | - | - | - | ✅ pdf-export | ⚠️ | |
+| 4.3.3 | スケジュールレポート | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | |
+| 4.3.4 | カスタムレポート | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ---
 
@@ -220,34 +262,34 @@
 
 ## 5.1 診断テンプレート
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 5.1.1 | テンプレート一覧 | ✅ `/settings` | ✅ diagnosticTemplates.list | - | - | ✅ diagnosticTemplates | |
-| 5.1.2 | テンプレート作成 | ✅ `/settings` | ✅ diagnosticTemplates.create | - | - | ✅ diagnosticTemplates | |
-| 5.1.3 | テンプレート編集 | ✅ `/settings` | ✅ diagnosticTemplates.update | - | - | ✅ diagnosticTemplates | |
-| 5.1.4 | テンプレート削除 | ✅ `/settings` | ✅ diagnosticTemplates.delete | - | - | ✅ diagnosticTemplates | |
-| 5.1.5 | テンプレート複製 | ✅ `/settings` | ✅ diagnosticTemplates.duplicate | - | - | ✅ diagnosticTemplates | |
-| 5.1.6 | 送信統計 | ✅ `/settings` | ✅ diagnosticTemplates.getStats | - | - | ✅ diagnosticTemplates | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 5.1.1 | テンプレート一覧 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
+| 5.1.2 | テンプレート作成 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
+| 5.1.3 | テンプレート編集 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
+| 5.1.4 | テンプレート削除 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
+| 5.1.5 | テンプレート複製 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
+| 5.1.6 | 送信統計 | ✅ | ✅ | - | - | ✅ | ✅ diagnostic-templates | ⚠️ | |
 
 ## 5.2 診断フォーム（公開）
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 5.2.1 | 診断フォーム表示 | ✅ `/diagnostic` | - | - | - | - | ステップウィザード |
-| 5.2.2 | 診断送信 | ✅ `/diagnostic` | ✅ /api/diagnostic | - | - | ✅ leads | |
-| 5.2.3 | 結果表示 | ✅ `/diagnostic` | - | - | - | - | スコア表示 |
-| 5.2.4 | 結果メール送信 | - | ✅ /api/diagnostic | - | ✅ Resend | - | 自動送信 |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 5.2.1 | 診断フォーム表示 | ✅ | - | - | - | - | ⚠️ | ⚠️ | |
+| 5.2.2 | 診断送信 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 5.2.3 | 結果表示 | ✅ | - | - | - | - | ⚠️ | ⚠️ | |
+| 5.2.4 | 結果メール送信 | - | ✅ | - | ✅ | - | ⚠️ | - | |
 
 ## 5.3 A/Bテスト
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 5.3.1 | A/Bテスト一覧 | ✅ `/settings` | ✅ abTests.list | - | - | ✅ diagnosticAbTests | |
-| 5.3.2 | A/Bテスト作成 | ✅ `/settings` | ✅ abTests.create | - | - | ✅ diagnosticAbTests | |
-| 5.3.3 | A/Bテスト開始/停止 | ✅ `/settings` | ✅ abTests.start/pause | - | - | ✅ diagnosticAbTests | |
-| 5.3.4 | イベント記録 | - | ✅ abTests.recordEvent | - | - | ✅ diagnosticAbTests | |
-| 5.3.5 | 結果分析 | ✅ `/settings` | ✅ abTests.getResults | - | - | ✅ diagnosticAbTests | 統計計算 |
-| 5.3.6 | バリアント選択 | - | ✅ abTests.selectVariant | - | - | - | トラフィック配分 |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 5.3.1 | A/Bテスト一覧 | ✅ | ✅ | - | - | ✅ | ✅ ab-tests-router | ⚠️ | |
+| 5.3.2 | A/Bテスト作成 | ✅ | ✅ | - | - | ✅ | ✅ ab-tests-router | ⚠️ | |
+| 5.3.3 | A/Bテスト開始/停止 | ✅ | ✅ | - | - | ✅ | ✅ ab-tests-router | ⚠️ | |
+| 5.3.4 | イベント記録 | - | ✅ | - | - | ✅ | ✅ ab-tests-router | - | |
+| 5.3.5 | 結果分析 | ✅ | ✅ | - | - | ✅ | ✅ ab-tests-router | ⚠️ | 統計 |
+| 5.3.6 | バリアント選択 | - | ✅ | - | - | - | ✅ distribution | - | |
 
 ---
 
@@ -255,53 +297,53 @@
 
 ## 6.1 Webhook
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 6.1.1 | Webhook一覧 | ✅ `/settings/webhooks` | ✅ webhooks.list | - | - | ✅ webhooks | |
-| 6.1.2 | Webhook作成 | ✅ `/settings/webhooks` | ✅ webhooks.create | - | - | ✅ webhooks | |
-| 6.1.3 | Webhook編集 | ✅ `/settings/webhooks` | ✅ webhooks.update | - | - | ✅ webhooks | |
-| 6.1.4 | Webhook削除 | ✅ `/settings/webhooks` | ✅ webhooks.delete | - | - | ✅ webhooks | |
-| 6.1.5 | テスト送信 | ✅ `/settings/webhooks` | ✅ webhooks.test | - | ✅ 外部URL | - | |
-| 6.1.6 | 配信ログ | ✅ `/settings/webhooks` | ✅ webhooks.getDeliveries | - | - | ✅ webhookDeliveries | |
-| 6.1.7 | リトライ処理 | - | - | ✅ Cron | ✅ 外部URL | ✅ webhookDeliveries | 指数バックオフ |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 6.1.1 | Webhook一覧 | ✅ | ✅ | - | - | ✅ | ✅ webhooks-router | ⚠️ | |
+| 6.1.2 | Webhook作成 | ✅ | ✅ | - | - | ✅ | ✅ webhooks-router | ⚠️ | |
+| 6.1.3 | Webhook編集 | ✅ | ✅ | - | - | ✅ | ✅ webhooks-router | ⚠️ | |
+| 6.1.4 | Webhook削除 | ✅ | ✅ | - | - | ✅ | ✅ webhooks-router | ⚠️ | |
+| 6.1.5 | テスト送信 | ✅ | ✅ | - | ✅ | - | ✅ webhooks-router | ⚠️ | |
+| 6.1.6 | 配信ログ | ✅ | ✅ | - | - | ✅ | ✅ webhooks-router | ⚠️ | |
+| 6.1.7 | リトライ処理 | - | - | ✅ | ✅ | ✅ | ⚠️ | - | |
 
 ## 6.2 メール統合 (Resend)
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 6.2.1 | リード通知メール | - | ✅ ライブラリ | - | ✅ Resend | - | |
-| 6.2.2 | 診断結果メール | - | ✅ ライブラリ | - | ✅ Resend | - | |
-| 6.2.3 | 招待メール | - | ✅ ライブラリ | - | ✅ Resend | - | |
-| 6.2.4 | ウェルカムメール | - | ✅ ライブラリ | - | ✅ Resend | - | |
-| 6.2.5 | パスワードリセット | - | ✅ Better Auth | - | ✅ Resend | - | |
-| 6.2.6 | 週次レポート | - | ✅ ライブラリ | ✅ Cron | ✅ Resend | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 6.2.1 | リード通知メール | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.2.2 | 診断結果メール | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.2.3 | 招待メール | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.2.4 | ウェルカムメール | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.2.5 | パスワードリセット | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.2.6 | 週次レポート | - | ✅ | ✅ | ✅ | - | ⚠️ | - | |
 
 ## 6.3 Slack統合
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 6.3.1 | リード通知 | - | ✅ ライブラリ | - | ✅ Slack | - | Block Kit |
-| 6.3.2 | サマリー通知 | - | ✅ ライブラリ | ✅ | ✅ Slack | - | |
-| 6.3.3 | アラート通知 | - | ✅ ライブラリ | - | ✅ Slack | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 6.3.1 | リード通知 | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.3.2 | サマリー通知 | - | ✅ | ✅ | ✅ | - | ⚠️ | - | |
+| 6.3.3 | アラート通知 | - | ✅ | - | ✅ | - | ⚠️ | - | |
 
 ## 6.4 Zapier/Make統合
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 6.4.1 | REST Hook | - | ✅ ライブラリ | - | ✅ Zapier/Make | - | |
-| 6.4.2 | トリガー送信 | - | ✅ ライブラリ | - | ✅ Zapier/Make | - | HMAC署名 |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 6.4.1 | REST Hook | - | ✅ | - | ✅ | - | ⚠️ | - | |
+| 6.4.2 | トリガー送信 | - | ✅ | - | ✅ | - | ⚠️ | - | |
 
 ## 6.5 REST API v2
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 6.5.1 | リード一覧 | - | ✅ GET /api/v2/leads | - | - | ✅ leads | Bearer認証 |
-| 6.5.2 | リード作成 | - | ✅ POST /api/v2/leads | - | - | ✅ leads | |
-| 6.5.3 | リード詳細 | - | ✅ GET /api/v2/leads/[id] | - | - | ✅ leads | |
-| 6.5.4 | リード更新 | - | ✅ PATCH /api/v2/leads/[id] | - | - | ✅ leads | |
-| 6.5.5 | リード削除 | - | ✅ DELETE /api/v2/leads/[id] | - | - | ✅ leads | |
-| 6.5.6 | 分析データ | - | ✅ GET /api/v2/analytics | - | - | ✅ leads | |
-| 6.5.7 | Webhook CRUD | - | ✅ /api/v2/webhooks/* | - | - | ✅ webhooks | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 6.5.1 | リード一覧 | - | ✅ | - | - | ✅ | ⚠️ | - | Bearer |
+| 6.5.2 | リード作成 | - | ✅ | - | - | ✅ | ⚠️ | - | |
+| 6.5.3 | リード詳細 | - | ✅ | - | - | ✅ | ⚠️ | - | |
+| 6.5.4 | リード更新 | - | ✅ | - | - | ✅ | ⚠️ | - | |
+| 6.5.5 | リード削除 | - | ✅ | - | - | ✅ | ⚠️ | - | |
+| 6.5.6 | 分析データ | - | ✅ | - | - | ✅ | ⚠️ | - | |
+| 6.5.7 | Webhook CRUD | - | ✅ | - | - | ✅ | ⚠️ | - | |
 
 ---
 
@@ -309,24 +351,24 @@
 
 ## 7.1 ワークフロー管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 7.1.1 | ワークフロー一覧 | ✅ `/settings` | ✅ workflows.list | - | - | ✅ workflows | |
-| 7.1.2 | ワークフロー作成 | ✅ `/settings` | ✅ workflows.create | - | - | ✅ workflows | |
-| 7.1.3 | ワークフロー編集 | ✅ `/settings` | ✅ workflows.update | - | - | ✅ workflows | |
-| 7.1.4 | ワークフロー削除 | ✅ `/settings` | ✅ workflows.delete | - | - | ✅ workflows | |
-| 7.1.5 | 有効/無効切替 | ✅ `/settings` | ✅ workflows.toggleStatus | - | - | ✅ workflows | |
-| 7.1.6 | 実行履歴 | ✅ `/settings` | ✅ workflows.getExecutions | - | - | ✅ workflowExecutions | |
-| 7.1.7 | 統計情報 | ✅ `/settings` | ✅ workflows.getStats | - | - | ✅ workflowExecutions | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 7.1.1 | ワークフロー一覧 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.2 | ワークフロー作成 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.3 | ワークフロー編集 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.4 | ワークフロー削除 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.5 | 有効/無効切替 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.6 | 実行履歴 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
+| 7.1.7 | 統計情報 | ✅ | ✅ | - | - | ✅ | ✅ workflows-router | ⚠️ | |
 
 ## 7.2 ワークフロー実行
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 7.2.1 | トリガー評価 | - | ✅ 内部処理 | - | - | ✅ workflows | 7種類 |
-| 7.2.2 | 条件評価 | - | ✅ 内部処理 | - | - | - | 12演算子 |
-| 7.2.3 | アクション実行 | - | ✅ 内部処理 | - | ✅ 各種 | ✅ workflowExecutions | 7種類 |
-| 7.2.4 | スケジュール実行 | - | - | ✅ Cron | - | ✅ workflows | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 7.2.1 | トリガー評価 | - | ✅ | - | - | ✅ | ✅ workflows-router | - | |
+| 7.2.2 | 条件評価 | - | ✅ | - | - | - | ✅ workflows-router | - | |
+| 7.2.3 | アクション実行 | - | ✅ | - | ✅ | ✅ | ✅ workflows-router | - | |
+| 7.2.4 | スケジュール実行 | - | - | ✅ | - | ✅ | ⚠️ | - | |
 
 ---
 
@@ -334,32 +376,24 @@
 
 ## 8.1 埋め込み設定
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 8.1.1 | 設定一覧 | ✅ `/settings/embed` | ✅ embed.list | - | - | ✅ embedConfigs | |
-| 8.1.2 | 設定作成 | ✅ `/settings/embed` | ✅ embed.create | - | - | ✅ embedConfigs | |
-| 8.1.3 | 設定編集 | ✅ `/settings/embed` | ✅ embed.update | - | - | ✅ embedConfigs | |
-| 8.1.4 | 設定削除 | ✅ `/settings/embed` | ✅ embed.delete | - | - | ✅ embedConfigs | |
-| 8.1.5 | APIキー再生成 | ✅ `/settings/embed` | ✅ embed.regenerateKey | - | - | ✅ embedConfigs | |
-| 8.1.6 | 埋め込みコード取得 | ✅ `/settings/embed` | ✅ embed.getCode | - | - | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 8.1.1 | 設定一覧 | ✅ | ✅ | - | - | ✅ | ✅ embed-router | ✅ embed-settings | |
+| 8.1.2 | 設定作成 | ✅ | ✅ | - | - | ✅ | ✅ embed-router | ✅ embed-settings | |
+| 8.1.3 | 設定編集 | ✅ | ✅ | - | - | ✅ | ✅ embed-router | ⚠️ | |
+| 8.1.4 | 設定削除 | ✅ | ✅ | - | - | ✅ | ✅ embed-router | ⚠️ | |
+| 8.1.5 | APIキー再生成 | ✅ | ✅ | - | - | ✅ | ✅ embed-router | ⚠️ | |
+| 8.1.6 | 埋め込みコード取得 | ✅ | ✅ | - | - | - | ✅ embed-router | ⚠️ | |
 
-## 8.2 埋め込みAPI
+## 8.2 埋め込みセキュリティ
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 8.2.1 | 診断フォーム取得 | - | ✅ /api/embed/v1/diagnostic | - | - | ✅ diagnosticTemplates | |
-| 8.2.2 | リード送信 | - | ✅ /api/embed/v1/lead | - | - | ✅ leads | |
-| 8.2.3 | ドメイン検証 | - | ✅ ライブラリ | - | - | ✅ embedConfigs | |
-| 8.2.4 | レート制限 | - | ✅ ライブラリ | - | - | - | |
-
-## 8.3 QRキャンペーン
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 8.3.1 | キャンペーン一覧 | ✅ `/settings/qr-campaigns` | ✅ qrCampaigns.list | - | - | ✅ qrCampaigns | |
-| 8.3.2 | キャンペーン作成 | ✅ `/settings/qr-campaigns` | ✅ qrCampaigns.create | - | - | ✅ qrCampaigns | |
-| 8.3.3 | QRコード生成 | ✅ `/settings/qr-campaigns` | ✅ qrCampaigns.generateQR | - | - | - | qrcode |
-| 8.3.4 | キャンペーン統計 | ✅ `/settings/qr-campaigns` | ✅ qrCampaigns.getStats | - | - | ✅ leads | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 8.2.1 | ドメイン検証 | - | ✅ | - | - | ✅ | ✅ embed/security | - | |
+| 8.2.2 | APIキー検証 | - | ✅ | - | - | ✅ | ✅ embed/security | - | |
+| 8.2.3 | CSRF保護 | - | ✅ | - | - | - | ✅ embed/security | - | |
+| 8.2.4 | レート制限 | - | ✅ | - | - | - | ✅ embed/security | - | |
+| 8.2.5 | CSPヘッダー | - | ✅ | - | - | - | ✅ embed/security | - | |
 
 ---
 
@@ -367,150 +401,141 @@
 
 ## 9.1 ブログ管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 9.1.1 | 記事一覧 | ✅ `/content/blog` | ✅ content.blog.list | - | - | ✅ PayloadCMS | |
-| 9.1.2 | 記事作成 | ✅ `/content/blog` | ✅ content.blog.create | - | - | ✅ PayloadCMS | |
-| 9.1.3 | 記事編集 | ✅ `/content/blog` | ✅ content.blog.update | - | - | ✅ PayloadCMS | Lexical |
-| 9.1.4 | 記事削除 | ✅ `/content/blog` | ✅ content.blog.delete | - | - | ✅ PayloadCMS | |
-| 9.1.5 | ブログ公開ページ | ✅ `/blog` | - | - | - | ✅ PayloadCMS | ISR |
-| 9.1.6 | ブログ詳細ページ | ✅ `/blog/[slug]` | - | - | - | ✅ PayloadCMS | ISR |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 9.1.1 | 記事一覧 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.1.2 | 記事作成 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.1.3 | 記事編集 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.1.4 | 記事削除 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.1.5 | ブログ公開ページ | ✅ | - | - | - | ✅ | ⚠️ | ⚠️ | ISR |
+| 9.1.6 | ブログ詳細ページ | ✅ | - | - | - | ✅ | ⚠️ | ⚠️ | ISR |
 
 ## 9.2 FAQ管理
 
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 9.2.1 | FAQ一覧 | ✅ `/content/faqs` | ✅ content.faqs.list | - | - | ✅ PayloadCMS | |
-| 9.2.2 | FAQ作成 | ✅ `/content/faqs` | ✅ content.faqs.create | - | - | ✅ PayloadCMS | |
-| 9.2.3 | FAQ編集 | ✅ `/content/faqs` | ✅ content.faqs.update | - | - | ✅ PayloadCMS | |
-| 9.2.4 | FAQ削除 | ✅ `/content/faqs` | ✅ content.faqs.delete | - | - | ✅ PayloadCMS | |
-| 9.2.5 | FAQ公開ページ | ✅ `/faq` | - | - | - | ✅ PayloadCMS | アコーディオン |
-
-## 9.3 PayloadCMS Admin
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 9.3.1 | Admin Panel | ✅ `/admin` | - | - | - | ✅ PayloadCMS | |
-| 9.3.2 | メディア管理 | ✅ `/admin` | ✅ PayloadCMS | - | - | ✅ PayloadCMS | |
-| 9.3.3 | GraphQL API | - | ✅ /api/graphql | - | - | ✅ PayloadCMS | |
-| 9.3.4 | GraphQL Playground | ✅ `/api/graphql-playground` | - | - | - | - | 開発用 |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 9.2.1 | FAQ一覧 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.2.2 | FAQ作成 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.2.3 | FAQ編集 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.2.4 | FAQ削除 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 9.2.5 | FAQ公開ページ | ✅ | - | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ---
 
 # 10. 通知機能
 
-## 10.1 アプリ内通知
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 10.1.1 | 通知一覧 | ✅ ヘッダードロップダウン | ✅ notifications.list | - | - | ✅ notifications | |
-| 10.1.2 | 未読カウント | ✅ ヘッダー | ✅ notifications.getUnreadCount | - | - | ✅ notifications | |
-| 10.1.3 | 既読化 | ✅ ドロップダウン | ✅ notifications.markAsRead | - | - | ✅ notifications | |
-| 10.1.4 | 通知設定 | ✅ `/settings` | ✅ notifications.updatePreferences | - | - | ✅ notificationPreferences | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 10.1 | 通知一覧 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 10.2 | 未読カウント | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 10.3 | 既読化 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
+| 10.4 | 通知設定 | ✅ | ✅ | - | - | ✅ | ⚠️ | ⚠️ | |
 
 ---
 
-# 11. 公開ページ
+# 11. 公開ページ・SEO
 
-## 11.1 ランディングページ
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 11.1.1 | トップページ | ✅ `/` | - | - | - | - | |
-| 11.1.2 | ランディングページ | ✅ `/landing` | - | - | - | - | ISR |
-
-## 11.2 SEO
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 11.2.1 | サイトマップ | - | ✅ /sitemap.xml | - | - | - | 自動生成 |
-| 11.2.2 | robots.txt | - | ✅ /robots.txt | - | - | - | |
-| 11.2.3 | OGP/Twitter Card | ✅ 各ページ | - | - | - | - | Metadata API |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 11.1 | トップページ | ✅ | - | - | - | - | ⚠️ | ⚠️ | |
+| 11.2 | ランディングページ | ✅ | - | - | - | - | ⚠️ | ⚠️ | ISR |
+| 11.3 | サイトマップ | - | ✅ | - | - | - | ⚠️ | - | |
+| 11.4 | robots.txt | - | ✅ | - | - | - | ⚠️ | - | |
+| 11.5 | OGP/Twitter Card | ✅ | - | - | - | - | ⚠️ | ⚠️ | |
 
 ---
 
 # 12. システム管理
 
-## 12.1 バッチ処理
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 12.1.1 | Webhook配信ログ削除 | - | - | ✅ 毎日3:00 UTC | - | ✅ webhookDeliveries | Vercel Cron |
-| 12.1.2 | セッション期限切れ削除 | - | - | ✅ Better Auth | - | ✅ sessions | |
-| 12.1.3 | 埋め込み更新 | - | - | ✅ オンデマンド | ✅ OpenAI | ✅ leads | |
-
-## 12.2 監視・ログ
-
-| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | 備考 |
-|----|--------|------|-----|--------|--------|-----|------|
-| 12.2.1 | エラー監視 | - | - | - | ✅ Sentry | - | クライアント/サーバー/エッジ |
-| 12.2.2 | 構造化ログ | - | - | - | - | - | JSON/人間可読 |
-| 12.2.3 | ヘルスチェック | - | ✅ /api/health | - | - | - | |
+| No | 機能名 | 画面 | API | バッチ | 外部IF | DB | Unit | E2E | 備考 |
+|----|--------|------|-----|--------|--------|-----|------|-----|------|
+| 12.1 | Webhookログ削除 | - | - | ✅ | - | ✅ | ⚠️ | - | Cron |
+| 12.2 | セッション削除 | - | - | ✅ | - | ✅ | ⚠️ | - | |
+| 12.3 | エラー監視 | - | - | - | ✅ | - | - | - | Sentry |
+| 12.4 | ヘルスチェック | - | ✅ | - | - | - | ⚠️ | - | |
 
 ---
 
-# 集計
+# テストカバレッジサマリー
 
-## カテゴリ別機能数
+## カテゴリ別テスト状況
 
-| 大分類 | 画面 | API | バッチ | 外部IF | DB |
-|--------|------|-----|--------|--------|-----|
-| 1. 認証・ユーザー管理 | 8 | 16 | 1 | 2 | 8 |
-| 2. リード管理 | 12 | 25 | 0 | 0 | 6 |
-| 3. AI機能 | 6 | 14 | 3 | 3 | 3 |
-| 4. 分析・レポート | 8 | 12 | 1 | 1 | 3 |
-| 5. 診断フォーム | 8 | 14 | 0 | 1 | 3 |
-| 6. 外部連携 | 3 | 20 | 2 | 8 | 3 |
-| 7. ワークフロー自動化 | 7 | 10 | 1 | 1 | 2 |
-| 8. 埋め込みウィジェット | 6 | 10 | 0 | 0 | 3 |
-| 9. コンテンツ管理 | 10 | 10 | 0 | 0 | 1 |
-| 10. 通知機能 | 3 | 4 | 0 | 0 | 2 |
-| 11. 公開ページ | 4 | 2 | 0 | 0 | 0 |
-| 12. システム管理 | 0 | 1 | 3 | 2 | 2 |
-| **合計** | **75** | **138** | **11** | **18** | **36** |
+| 大分類 | 機能数 | Unit ✅ | Unit ⚠️ | E2E ✅ | E2E ⚠️ | カバレッジ |
+|--------|--------|---------|---------|--------|--------|-----------|
+| 1. 認証・ユーザー管理 | 23 | 14 | 9 | 2 | 21 | 61% |
+| 2. リード管理 | 28 | 23 | 5 | 5 | 23 | 82% |
+| 3. AI機能 | 13 | 7 | 6 | 0 | 13 | 54% |
+| 4. 分析・レポート | 14 | 10 | 4 | 4 | 10 | 71% |
+| 5. 診断フォーム | 16 | 13 | 3 | 0 | 16 | 81% |
+| 6. 外部連携 | 23 | 7 | 16 | 0 | 23 | 30% |
+| 7. ワークフロー | 11 | 10 | 1 | 0 | 11 | 91% |
+| 8. 埋め込み | 11 | 11 | 0 | 2 | 9 | 100% |
+| 9. コンテンツ管理 | 11 | 0 | 11 | 0 | 11 | 0% |
+| 10. 通知機能 | 4 | 0 | 4 | 0 | 4 | 0% |
+| 11. 公開ページ | 5 | 0 | 5 | 0 | 5 | 0% |
+| 12. システム管理 | 4 | 0 | 4 | 0 | 4 | 0% |
+| **合計** | **163** | **95** | **68** | **13** | **150** | **58%** |
 
-## 外部IF一覧
+## 優先度別テスト追加計画
 
-| サービス | 用途 |
-|----------|------|
-| Anthropic (Claude) | AIスコアリング、要約、チャット |
-| OpenAI | 埋め込みベクトル生成 |
-| Resend | メール送信 |
-| Slack | 通知連携 |
-| Zapier/Make | 自動化連携 |
-| Sentry | エラー監視 |
-| PayloadCMS | コンテンツ管理 |
+### P0: 重要機能 (ビジネスクリティカル)
 
-## DBテーブル一覧
+| 機能 | 現状 | 追加テスト |
+|------|------|-----------|
+| ログイン/サインアップ | ✅ Unit | E2E追加推奨 |
+| リードCRUD | ✅ Unit / E2E | 完了 |
+| 組織管理 | ✅ Unit | E2E追加推奨 |
+| 診断フォーム送信 | ⚠️ | Unit/E2E追加必須 |
 
-| テーブル | 用途 |
-|----------|------|
-| users | ユーザー |
-| sessions | セッション |
-| accounts | OAuth連携 |
-| verification | 確認トークン |
-| organizations | 組織 |
-| members | 組織メンバー |
-| invitations | 招待 |
-| leads | リード |
-| tags | タグ |
-| leadTags | リード-タグ関連 |
-| leadComments | コメント |
-| customFields | カスタムフィールド |
-| leadScoringRulesets | スコアリングルール |
-| diagnosticTemplates | 診断テンプレート |
-| diagnosticAbTests | A/Bテスト |
-| webhooks | Webhook設定 |
-| webhookDeliveries | Webhook配信ログ |
-| workflows | ワークフロー |
-| workflowExecutions | ワークフロー実行履歴 |
-| embedConfigs | 埋め込み設定 |
-| qrCampaigns | QRキャンペーン |
-| scheduledReports | スケジュールレポート |
-| customReports | カスタムレポート |
-| notifications | 通知 |
-| notificationPreferences | 通知設定 |
-| PayloadCMS (別スキーマ) | CMS用テーブル群 |
+### P1: コア機能
+
+| 機能 | 現状 | 追加テスト |
+|------|------|-----------|
+| AIスコアリング | ⚠️ | モック付きUnit追加 |
+| セマンティック検索 | ⚠️ | モック付きUnit追加 |
+| Webhook配信 | ✅ Unit | E2E追加推奨 |
+| メール送信 | ⚠️ | モック付きUnit追加 |
+
+### P2: 拡張機能
+
+| 機能 | 現状 | 追加テスト |
+|------|------|-----------|
+| CMS (ブログ/FAQ) | ⚠️ | Unit追加推奨 |
+| 通知機能 | ⚠️ | Unit追加推奨 |
+| REST API v2 | ⚠️ | Unit追加推奨 |
+| 階層管理 | ⚠️ | Unit追加推奨 |
+
+---
+
+# CI/CD テスト自動化
+
+## GitHub Actions ワークフロー
+
+```yaml
+# .github/workflows/ci.yml で自動実行
+jobs:
+  test:
+    - Lint (Biome)
+    - TypeCheck (TypeScript)
+    - Unit Test (Vitest) ← 339テスト
+    - E2E Test (Playwright) ← 環境構築後
+```
+
+## テスト実行コマンド
+
+```bash
+# ユニットテスト
+bun run test
+
+# カバレッジ付き
+bun run test:coverage
+
+# E2Eテスト (要Playwright)
+bun run test:e2e
+
+# 特定ファイル
+bun run test test/unit/features/leads-router.test.ts
+```
 
 ---
 
