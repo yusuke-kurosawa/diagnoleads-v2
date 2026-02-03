@@ -1,13 +1,10 @@
 'use client';
 
-import { ImportDialog } from '@/components/features/leads/import-dialog';
-import { LeadDetails } from '@/components/features/leads/lead-details';
-import { LeadDialog } from '@/components/features/leads/lead-dialog';
 import { useCreateLead, useDeleteLead, useListLeads, useUpdateLead } from '@/hooks/use-leads';
 import { useOrganization } from '@/hooks/use-organization';
 import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,7 +23,7 @@ import type { Lead } from '@/lib/db/schema';
 import type { CreateLeadInput, UpdateLeadInput } from '@/lib/features/leads/types';
 import { Plus, Target, TrendingUp, Upload, UserCheck, Users } from 'lucide-react';
 
-// Dynamic import for heavy table component (TanStack Table)
+// Dynamic imports for heavy components (performance optimization)
 const LeadTable = dynamic(
   () =>
     import('@/components/features/leads/lead-table').then((mod) => ({ default: mod.LeadTable })),
@@ -43,6 +40,28 @@ const LeadTable = dynamic(
     ),
     ssr: false,
   }
+);
+
+const LeadDialog = dynamic(
+  () =>
+    import('@/components/features/leads/lead-dialog').then((mod) => ({ default: mod.LeadDialog })),
+  { ssr: false }
+);
+
+const LeadDetails = dynamic(
+  () =>
+    import('@/components/features/leads/lead-details').then((mod) => ({
+      default: mod.LeadDetails,
+    })),
+  { ssr: false }
+);
+
+const ImportDialog = dynamic(
+  () =>
+    import('@/components/features/leads/import-dialog').then((mod) => ({
+      default: mod.ImportDialog,
+    })),
+  { ssr: false }
 );
 
 /**
@@ -93,15 +112,36 @@ export default function LeadsPage() {
 
   const leads = leadsData?.items || [];
 
-  // Calculate stats
-  const totalLeads = leads.length;
-  const newLeads = leads.filter((l) => l.status === 'new').length;
-  const contactedLeads = leads.filter((l) => l.status === 'contacted').length;
-  const qualifiedLeads = leads.filter((l) => l.status === 'qualified').length;
-  const convertedLeads = leads.filter((l) => l.status === 'converted').length;
-  const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
-  const averageScore =
-    leads.length > 0 ? leads.reduce((acc, l) => acc + (l.score || 0), 0) / leads.length : 0;
+  // Calculate stats with useMemo for performance
+  const stats = useMemo(() => {
+    const total = leads.length;
+    const newCount = leads.filter((l) => l.status === 'new').length;
+    const contacted = leads.filter((l) => l.status === 'contacted').length;
+    const qualified = leads.filter((l) => l.status === 'qualified').length;
+    const converted = leads.filter((l) => l.status === 'converted').length;
+    const conversionRate = total > 0 ? (converted / total) * 100 : 0;
+    const avgScore = total > 0 ? leads.reduce((acc, l) => acc + (l.score || 0), 0) / total : 0;
+
+    return {
+      totalLeads: total,
+      newLeads: newCount,
+      contactedLeads: contacted,
+      qualifiedLeads: qualified,
+      convertedLeads: converted,
+      conversionRate,
+      averageScore: avgScore,
+    };
+  }, [leads]);
+
+  const {
+    totalLeads,
+    newLeads,
+    contactedLeads,
+    qualifiedLeads,
+    convertedLeads,
+    conversionRate,
+    averageScore,
+  } = stats;
 
   const handleCreateLead = async (
     data: Omit<CreateLeadInput | UpdateLeadInput, 'organizationId'>
