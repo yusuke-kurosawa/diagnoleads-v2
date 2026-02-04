@@ -8,6 +8,10 @@ export interface RateLimitConfig {
   max: number;
   /** 期間（ミリ秒） */
   windowMs: number;
+  /** スキップ条件（オプション） */
+  skip?: (request: NextRequest) => boolean;
+  /** カスタムキー生成（オプション） */
+  keyGenerator?: (request: NextRequest) => string;
 }
 
 /**
@@ -20,6 +24,64 @@ export const DEFAULT_RATE_LIMITS = {
   auth: { max: 5, windowMs: 60 * 1000 },
   /** 一般ページ: 300リクエスト/分 */
   page: { max: 300, windowMs: 60 * 1000 },
+  /** Webhook送信: 50リクエスト/分 */
+  webhook: { max: 50, windowMs: 60 * 1000 },
+  /** AI機能: 20リクエスト/分 */
+  ai: { max: 20, windowMs: 60 * 1000 },
+  /** エクスポート: 10リクエスト/分 */
+  export: { max: 10, windowMs: 60 * 1000 },
+  /** ファイルアップロード: 30リクエスト/分 */
+  upload: { max: 30, windowMs: 60 * 1000 },
+  /** 検索: 60リクエスト/分 */
+  search: { max: 60, windowMs: 60 * 1000 },
+  /** 診断フォーム送信: 30リクエスト/分 */
+  diagnostic: { max: 30, windowMs: 60 * 1000 },
+  /** REST API v2: 200リクエスト/分 */
+  restApiV2: { max: 200, windowMs: 60 * 1000 },
+  /** GraphQL: 100リクエスト/分 */
+  graphql: { max: 100, windowMs: 60 * 1000 },
+};
+
+/**
+ * エンドポイント別の詳細レート制限マッピング
+ */
+export const ENDPOINT_RATE_LIMITS: Record<string, RateLimitConfig> = {
+  // 認証
+  '/api/auth/login': { max: 5, windowMs: 60 * 1000 },
+  '/api/auth/signup': { max: 3, windowMs: 60 * 1000 },
+  '/api/auth/forgot-password': { max: 3, windowMs: 60 * 1000 },
+  '/api/auth/reset-password': { max: 3, windowMs: 60 * 1000 },
+
+  // AI機能
+  '/api/trpc/ai.scoreLeads': { max: 10, windowMs: 60 * 1000 },
+  '/api/trpc/ai.chat': { max: 30, windowMs: 60 * 1000 },
+  '/api/trpc/ai.search': { max: 30, windowMs: 60 * 1000 },
+
+  // エクスポート
+  '/api/trpc/leads.export': { max: 5, windowMs: 60 * 1000 },
+  '/api/trpc/reports.export': { max: 5, windowMs: 60 * 1000 },
+  '/api/trpc/auditLogs.export': { max: 3, windowMs: 60 * 1000 },
+
+  // バルク操作
+  '/api/trpc/leads.bulkCreate': { max: 10, windowMs: 60 * 1000 },
+  '/api/trpc/leads.bulkUpdate': { max: 10, windowMs: 60 * 1000 },
+  '/api/trpc/leads.bulkDelete': { max: 5, windowMs: 60 * 1000 },
+
+  // Webhook
+  '/api/trpc/webhooks.test': { max: 10, windowMs: 60 * 1000 },
+
+  // REST API v2
+  '/api/v2/leads': { max: 200, windowMs: 60 * 1000 },
+  '/api/v2/webhooks': { max: 100, windowMs: 60 * 1000 },
+  '/api/v2/analytics': { max: 60, windowMs: 60 * 1000 },
+
+  // 診断
+  '/api/diagnostic': { max: 30, windowMs: 60 * 1000 },
+  '/api/embed/v1/diagnostic': { max: 60, windowMs: 60 * 1000 },
+  '/api/embed/v1/lead': { max: 60, windowMs: 60 * 1000 },
+
+  // GraphQL
+  '/api/graphql': { max: 100, windowMs: 60 * 1000 },
 };
 
 /**
@@ -150,9 +212,46 @@ export function setRateLimitHeaders(
  * ルートのレート制限設定を取得
  */
 export function getRateLimitConfig(pathname: string): RateLimitConfig {
+  // エンドポイント別の設定をチェック（完全一致）
+  if (ENDPOINT_RATE_LIMITS[pathname]) {
+    return ENDPOINT_RATE_LIMITS[pathname];
+  }
+
+  // パスプレフィックスでマッチング
+  for (const [endpoint, config] of Object.entries(ENDPOINT_RATE_LIMITS)) {
+    if (pathname.startsWith(endpoint)) {
+      return config;
+    }
+  }
+
   // 認証エンドポイント
   if (pathname.startsWith('/api/auth')) {
     return DEFAULT_RATE_LIMITS.auth;
+  }
+
+  // AI機能
+  if (pathname.includes('/ai.') || pathname.includes('/ai/')) {
+    return DEFAULT_RATE_LIMITS.ai;
+  }
+
+  // エクスポート機能
+  if (pathname.includes('export') || pathname.includes('Export')) {
+    return DEFAULT_RATE_LIMITS.export;
+  }
+
+  // GraphQL
+  if (pathname.startsWith('/api/graphql')) {
+    return DEFAULT_RATE_LIMITS.graphql;
+  }
+
+  // REST API v2
+  if (pathname.startsWith('/api/v2')) {
+    return DEFAULT_RATE_LIMITS.restApiV2;
+  }
+
+  // 診断フォーム
+  if (pathname.includes('diagnostic') || pathname.includes('embed')) {
+    return DEFAULT_RATE_LIMITS.diagnostic;
   }
 
   // API エンドポイント
@@ -162,4 +261,40 @@ export function getRateLimitConfig(pathname: string): RateLimitConfig {
 
   // 一般ページ
   return DEFAULT_RATE_LIMITS.page;
+}
+
+/**
+ * 組織IDを含むレート制限キーを生成
+ */
+export function getOrganizationRateLimitKey(request: NextRequest, organizationId: string): string {
+  const identifier = getIdentifier(request);
+  return `org:${organizationId}:${identifier}:${request.nextUrl.pathname}`;
+}
+
+/**
+ * レート制限結果の型
+ */
+export interface RateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+  retryAfter?: number;
+}
+
+/**
+ * レート制限情報を取得（ヘッダー用）
+ */
+export function getRateLimitInfo(result: RateLimitResult): Record<string, string> {
+  const headers: Record<string, string> = {
+    'X-RateLimit-Limit': result.limit.toString(),
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.reset.toString(),
+  };
+
+  if (!result.allowed && result.retryAfter) {
+    headers['Retry-After'] = result.retryAfter.toString();
+  }
+
+  return headers;
 }

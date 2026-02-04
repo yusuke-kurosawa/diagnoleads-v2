@@ -1915,3 +1915,122 @@ export type QRCampaign = typeof qrCampaigns.$inferSelect;
 export type NewQRCampaign = typeof qrCampaigns.$inferInsert;
 export type QRScan = typeof qrScans.$inferSelect;
 export type NewQRScan = typeof qrScans.$inferInsert;
+
+// ============================================================================
+// Feature Flags (P0 - Sprint 3)
+// ============================================================================
+
+/**
+ * Feature flag status
+ */
+export type FeatureFlagStatus = 'active' | 'inactive' | 'archived';
+
+/**
+ * Rollout strategy
+ */
+export type RolloutStrategy =
+  | 'all'
+  | 'none'
+  | 'percentage'
+  | 'organization'
+  | 'user'
+  | 'environment';
+
+/**
+ * Feature Flags Table
+ * Manages feature toggles for gradual rollouts and A/B testing
+ */
+export const featureFlags = pgTable('feature_flags', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  /** Unique key for the flag (e.g., 'ai_lead_scoring') */
+  key: text('key').notNull(),
+  /** Human-readable name */
+  name: text('name').notNull(),
+  /** Description of the feature */
+  description: text('description'),
+  /** Flag status */
+  status: text('status').$type<FeatureFlagStatus>().default('inactive').notNull(),
+  /** Rollout strategy */
+  strategy: text('strategy').$type<RolloutStrategy>().default('none').notNull(),
+  /** Percentage for percentage-based rollout (0-100) */
+  rolloutPercentage: integer('rollout_percentage'),
+  /** Target organization IDs for organization strategy */
+  targetOrganizationIds: jsonb('target_organization_ids').$type<string[]>(),
+  /** Target user IDs for user strategy */
+  targetUserIds: jsonb('target_user_ids').$type<string[]>(),
+  /** Target environments for environment strategy */
+  environments: jsonb('environments').$type<string[]>(),
+  /** Additional metadata */
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Feature Flags Relations
+ */
+export const featureFlagsRelations = relations(featureFlags, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [featureFlags.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type NewFeatureFlag = typeof featureFlags.$inferInsert;
+
+// ============================================================================
+// Audit Logs (P0 - Sprint 3)
+// ============================================================================
+
+/**
+ * Audit action types
+ */
+export type AuditAction = 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'export';
+
+/**
+ * Audit Logs Table
+ * Records all important actions for compliance and debugging
+ */
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  /** Action performed */
+  action: text('action').$type<AuditAction>().notNull(),
+  /** Resource type (e.g., 'lead', 'organization') */
+  resource: text('resource').notNull(),
+  /** Resource ID */
+  resourceId: text('resource_id'),
+  /** Changes made (for update actions) */
+  changes: jsonb('changes').$type<{ before?: unknown; after?: unknown }>(),
+  /** Request metadata */
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  /** Additional context */
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  /** Timestamp */
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Audit Logs Relations
+ */
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [auditLogs.organizationId],
+    references: [organizations.id],
+  }),
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;
