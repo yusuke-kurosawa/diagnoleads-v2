@@ -1,6 +1,6 @@
 # DiagnoLeads v2 Sprint Summary
 
-## 実装完了サマリー (2026-02-05)
+## 実装完了サマリー (最終更新: 2026-02-05)
 
 ### Sprint 3 - P0/P1 タスク
 
@@ -42,9 +42,24 @@
 
 ---
 
-## 総テスト数: 721 (37ファイル)
+## 総テスト数: 1,012 (47ファイル)
 
-### テストファイル一覧
+### 追加テスト一覧 (ROADMAPタスク)
+
+| テストファイル | テスト数 | タスク |
+|--------------|---------|--------|
+| `diagnostic-submit.test.ts` | 30 | P0-2: 診断フォーム送信 |
+| `ai-scoring.test.ts` | 29 | P1-1: AI機能 |
+| `slack-service.test.ts` | 20 | P1-2: 外部連携 |
+| `zapier-service.test.ts` | 27 | P1-2: 外部連携 |
+| `api-v2-leads.test.ts` | 41 | P1-3: REST API v2 |
+| `api-v2-analytics.test.ts` | 26 | P1-3: REST API v2 |
+| `api-v2-webhooks.test.ts` | 34 | P1-3: REST API v2 |
+| `content-router.test.ts` | 29 | P2-1: CMS機能 |
+| `notifications-router.test.ts` | 27 | P2-2: 通知機能 |
+| `hierarchy-router.test.ts` | 28 | P2-3: 階層管理 |
+
+### Sprint 3-6 テストファイル一覧
 
 ```
 test/unit/
