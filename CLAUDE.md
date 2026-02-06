@@ -1,11 +1,26 @@
 # DiagnoLeads v2 開発ルール
 
-## ⚠️ 最重要: アジャイル開発ルール (Droid対応)
+## 🚀 DiagnoFlow - 独自アジャイル開発手法
 
-### 開発フロー概要
+> **DiagnoFlow**はDiagnoLeads v2のための独自アジャイル手法です。
+> 詳細: [docs/DIAGNOFLOW.md](./docs/DIAGNOFLOW.md)
+
+### DiagnoFlowの5原則
+
+1. **🎯 Issue-First** - コードを書く前に、必ずIssueを確認
+2. **🔄 Continuous Quality** - テストが通らなければ、コミットしない
+3. **🤖 Human-AI Collaboration** - Droidは実行者、人間は意思決定者
+4. **📊 Visibility** - 進捗は常に見える状態にする
+5. **🚀 Ship Small** - 大きな変更より、小さな改善を積み重ねる
+
+---
+
+## ⚠️ Droid開発フロー (DiagnoFlow準拠)
+
+### フロー概要
 
 ```
-STEP 1: タスク確認 → STEP 2: 実装 → STEP 3: テスト → STEP 4: コミット → STEP 5: 報告
+CONFIRM → IMPLEMENT → VERIFY → COMMIT → REPORT
 ```
 
 ---
