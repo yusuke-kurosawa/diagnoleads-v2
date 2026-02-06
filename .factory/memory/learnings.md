@@ -58,6 +58,24 @@
 
 ---
 
+## 原則関連
+
+### [Process] Issue-First原則違反 (CRITICAL)
+- **日付**: 2026-02-06
+- **状況**: SprintPath名称変更・MemoryBank導入をIssue化せずに実行
+- **原因**: ユーザーの指示に即座に対応しようとし、Issue-First原則確認を怠った
+- **解決策**: 
+  - violations.mdに違反を記録
+  - SprintPathに[最重要]マーク追加
+  - CLAUDE.md/AGENTS.mdに強制チェックポイント追加
+- **教訓**:
+  - **ユーザー指示でも、まずIssue確認が最優先**
+  - Issueがなければ「Issueを作成しますか？」と必ず確認
+  - 原則は例外なく適用。緊急性を理由にスキップしない
+  - 違反したらviolations.mdに記録し、再発防止策を実装
+
+---
+
 ## 命名関連
 
 ### [Naming] 製品名のフレームワーク名への混入
