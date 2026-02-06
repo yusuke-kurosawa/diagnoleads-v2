@@ -1,4 +1,4 @@
-# DiagnoLeads v2 - Agent Instructions
+# DiagnoLeads v2 - Droid Instructions
 
 ## Project Overview
 
@@ -6,108 +6,178 @@ DiagnoLeads v2 is an enterprise-grade diagnostic lead management platform built 
 
 ---
 
-## ⚠️ Agile Rules (MUST FOLLOW)
+## ⚠️ Droid開発フロー (MUST FOLLOW)
 
-### Issue-Driven Development
+### 🔄 標準フロー
 
-**全ての作業はGitHub Issueから始める**
-
-```bash
-# 作業開始前に必ず確認
-gh issue list --label "status: in-progress" --assignee @me
-
-# 新規作業はIssueを作成してから
-gh issue create --template user_story.yml
-gh issue create --template task.yml
-gh issue create --template bug_report.yml
 ```
-
-### Issue作成ルール
-
-1. **テンプレートを必ず使用**
-   - User Story: 新機能
-   - Bug Report: バグ修正
-   - Task: 技術タスク
-   - Spike: 調査・研究
-
-2. **必須ラベル付け**
-   ```
-   priority: critical|high|medium|low
-   type: feature|tech-debt|test|spike
-   area: frontend|backend|database|devops|ai
-   story-points: 1|2|3|5|8
-   status: backlog|ready|in-progress|review|blocked
-   ```
-
-3. **ステータス更新**
-   - 作業開始: `status: backlog` → `status: in-progress`
-   - レビュー依頼: `status: in-progress` → `status: review`
-   - ブロック時: `status: blocked` + コメントで理由記載
-
-### ブランチ命名規則
-
-```bash
-# 必ずIssue番号を含める
-git checkout -b feat/123-add-lead-export
-git checkout -b fix/456-login-error
-git checkout -b refactor/789-optimize-query
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 1: タスク確認                                          │
+│  ↓                                                          │
+│  STEP 2: 実装                                                │
+│  ↓                                                          │
+│  STEP 3: テスト実行 (必須)                                    │
+│  ↓                                                          │
+│  STEP 4: コミット                                            │
+│  ↓                                                          │
+│  STEP 5: ユーザーへ報告                                      │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-### コミットメッセージ
-
-```bash
-# Issue番号を必ず含める
-git commit -m "feat(leads): add bulk export functionality
-
-- Add CSV export button
-- Implement export API endpoint
-- Add download progress indicator
-
-Closes #123"
-```
-
-### Pull Request ルール
-
-1. **PRテンプレートに従う** (`.github/PULL_REQUEST_TEMPLATE.md`)
-2. **Issue紐付け必須**: `Closes #123` or `Fixes #456`
-3. **チェックリスト完了必須**
-4. **レビュー前にテスト実行**
-   ```bash
-   bun run test && bun run typecheck && bun run lint
-   ```
-
-### Definition of Done (完了の定義)
-
-Issueをクローズする前に確認:
-
-- [ ] コードが実装されている
-- [ ] ユニットテストが書かれている
-- [ ] コードレビューが完了
-- [ ] テストがすべてパス
-- [ ] 受け入れ基準をすべて満たす
-- [ ] mainブランチにマージ済み
 
 ---
 
-## 📊 Agile Queries
+### STEP 1: タスク確認
+
+**作業開始前に実行:**
+```bash
+# オープンなIssueを確認
+gh issue list --state open --limit 10
+
+# 優先度の高いものを確認
+gh issue list --label "priority: critical" --state open
+gh issue list --label "priority: high" --state open
+```
+
+**判断基準:**
+- Issueがある → Issueの受け入れ基準に従って実装
+- Issueがない → ユーザーに確認「Issueを作成しますか？」
+
+---
+
+### STEP 2: 実装
+
+**コーディングルール:**
+```
+✅ DO:
+- 既存のコードパターンを踏襲
+- Biomeのルールに従う
+- テストを書く
+- 型を明示する
+
+❌ DON'T:
+- any型を使う
+- console.logを残す
+- 秘密情報をハードコード
+- 既存テストを壊す
+```
+
+**ファイル配置:**
+```
+新機能:     lib/features/{name}/
+テスト:     test/unit/features/{name}.test.ts
+コンポーネント: components/{name}/
+```
+
+---
+
+### STEP 3: テスト実行 (必須)
+
+**実装後に必ず実行:**
+```bash
+bun run test        # ユニットテスト
+bun run typecheck   # 型チェック
+bun run lint        # リント
+```
+
+**⚠️ 全てパスするまでSTEP 4に進まない**
+
+失敗した場合:
+1. エラー内容を確認
+2. 修正
+3. 再度テスト実行
+4. パスするまで繰り返す
+
+---
+
+### STEP 4: コミット
+
+**コミットメッセージ形式:**
+```bash
+git commit -m "type(scope): 説明
+
+- 変更点1
+- 変更点2
+
+Refs #ISSUE番号 (あれば)
+
+Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.github.com>"
+```
+
+**Type:**
+| Type | 用途 |
+|------|------|
+| `feat` | 新機能 |
+| `fix` | バグ修正 |
+| `docs` | ドキュメント |
+| `test` | テスト追加 |
+| `refactor` | リファクタリング |
+| `chore` | その他 |
+| `perf` | パフォーマンス |
+
+**プッシュ:**
+```bash
+git push origin main  # ユーザー確認後
+```
+
+---
+
+### STEP 5: ユーザーへ報告
+
+**報告テンプレート:**
+```
+## 完了報告
+
+**実装内容:**
+- [実装した機能/修正]
+
+**変更ファイル:**
+- path/to/file1.ts
+- path/to/file2.ts
+
+**テスト結果:**
+- ユニットテスト: ✅ PASS (XXX tests)
+- 型チェック: ✅ PASS
+- リント: ✅ PASS
+
+**関連Issue:** #XXX (あれば)
+
+**コミット:** abc1234
+```
+
+---
+
+## 📊 便利なコマンド
 
 ```bash
-# 現在のスプリント
-gh issue list --milestone "Sprint X"
+# Issue確認
+gh issue list --state open --limit 10
+gh issue view NUMBER
 
-# 自分のタスク
-gh issue list --assignee @me --state open
+# 優先度別
+gh issue list --label "priority: critical"
+gh issue list --label "priority: high"
 
-# P0/P1の未着手
-gh issue list --label "priority: critical" --label "status: backlog"
-gh issue list --label "priority: high" --label "status: backlog"
-
-# ブロック中
+# ステータス別
+gh issue list --label "status: in-progress"
 gh issue list --label "status: blocked"
 
-# レビュー待ち
-gh issue list --label "status: review"
+# テスト
+bun run test                    # 全テスト
+bun run test path/to/test.ts    # 特定テスト
+bun run test:coverage           # カバレッジ
 ```
+
+---
+
+## 🏷️ ラベル体系
+
+| カテゴリ | ラベル |
+|---------|--------|
+| 優先度 | `priority: critical/high/medium/low` |
+| タイプ | `type: feature/tech-debt/test/spike` |
+| 見積もり | `story-points: 1/2/3/5/8` |
+| ステータス | `status: backlog/ready/in-progress/review/blocked` |
+| エリア | `area: frontend/backend/database/devops/ai` |
 
 ---
 

@@ -1,55 +1,113 @@
 # DiagnoLeads v2 開発ルール
 
-## ⚠️ 最重要: アジャイル開発ルール
+## ⚠️ 最重要: アジャイル開発ルール (Droid対応)
 
-### 1. Issue-First Development (必須)
-
-**全ての作業はGitHub Issueから始めること**
+### 開発フロー概要
 
 ```
-作業開始前チェックリスト:
-□ 対応するIssueが存在するか確認
-□ Issueがない場合は作成してから作業開始
-□ Issueに適切なラベルが付いているか確認
-□ ステータスを status: in-progress に更新
+STEP 1: タスク確認 → STEP 2: 実装 → STEP 3: テスト → STEP 4: コミット → STEP 5: 報告
 ```
 
-### 2. Issue作成時の必須ラベル
+---
 
-| カテゴリ | ラベル | 必須 |
-|---------|--------|------|
-| 優先度 | `priority: critical/high/medium/low` | ✅ |
-| タイプ | `type: feature/tech-debt/test/spike` | ✅ |
-| 見積もり | `story-points: 1/2/3/5/8` | ✅ |
-| エリア | `area: frontend/backend/database/devops/ai` | 推奨 |
-| ステータス | `status: backlog/ready/in-progress/review/blocked` | ✅ |
+### STEP 1: タスク確認 (作業開始前)
 
-### 3. ブランチ・コミットルール
-
+**必ず実行:**
 ```bash
-# ブランチ名: 必ずIssue番号を含める
-feat/123-feature-name
-fix/456-bug-description
+# 現在のIssue状況を確認
+gh issue list --state open --limit 10
 
-# コミット: 必ずCloses/Fixesを含める
-git commit -m "feat(scope): description
-
-Closes #123"
+# 優先度の高いタスクを確認
+gh issue list --label "priority: critical" --state open
+gh issue list --label "priority: high" --state open
 ```
 
-### 4. PR作成時の必須事項
+**確認事項:**
+- [ ] 対応するIssueが存在するか
+- [ ] Issueの受け入れ基準を理解したか
+- [ ] 依存関係・ブロッカーがないか
 
-- [ ] `.github/PULL_REQUEST_TEMPLATE.md` に従う
-- [ ] `Closes #xxx` でIssue紐付け
-- [ ] テスト通過: `bun run test && bun run typecheck && bun run lint`
-- [ ] チェックリスト全項目確認
+**Issueがない場合:** ユーザーに確認してから作業開始
 
-### 5. 参照ドキュメント
+---
+
+### STEP 2: 実装
+
+**コーディング規約:**
+- Biomeのルールに従う
+- 既存のコードパターンを踏襲
+- `any`型を使わない
+- UI文字列は`locales/`に定義
+
+**ファイル配置:**
+```
+lib/features/{feature}/     # 機能モジュール
+test/unit/features/         # ユニットテスト
+components/                 # UIコンポーネント
+```
+
+---
+
+### STEP 3: テスト (必須)
+
+**実装後に必ず実行:**
+```bash
+bun run test        # ユニットテスト
+bun run typecheck   # 型チェック
+bun run lint        # リント
+```
+
+**全てパスするまでコミットしない**
+
+---
+
+### STEP 4: コミット
+
+**コミットメッセージ形式:**
+```bash
+git commit -m "type(scope): description
+
+- 変更点1
+- 変更点2
+
+Refs #ISSUE_NUMBER (あれば)
+
+Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.github.com>"
+```
+
+**Type一覧:** `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `perf`
+
+---
+
+### STEP 5: 報告
+
+**作業完了時にユーザーに報告:**
+- 実装した内容
+- 追加/変更したファイル
+- テスト結果
+- 関連Issue番号 (あれば)
+
+---
+
+### ラベル体系 (参照用)
+
+| カテゴリ | ラベル |
+|---------|--------|
+| 優先度 | `priority: critical/high/medium/low` |
+| タイプ | `type: feature/tech-debt/test/spike` |
+| 見積もり | `story-points: 1/2/3/5/8` |
+| ステータス | `status: backlog/ready/in-progress/review/blocked` |
+| エリア | `area: frontend/backend/database/devops/ai` |
+
+---
+
+### 参照ドキュメント
 
 | ドキュメント | 内容 |
 |-------------|------|
-| `docs/AGILE_PROCESS.md` | スクラムプロセス、セレモニー |
-| `docs/PRODUCT_BACKLOG.md` | バックログ管理、Epic一覧 |
+| `docs/WORKFLOW.md` | 詳細ワークフロー |
+| `docs/AGILE_PROCESS.md` | スクラムプロセス |
+| `docs/PRODUCT_BACKLOG.md` | バックログ管理 |
 | `CONTRIBUTING.md` | 開発者ガイド |
 
 ---
