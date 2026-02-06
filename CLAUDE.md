@@ -1,3 +1,61 @@
+# DiagnoLeads v2 開発ルール
+
+## ⚠️ 最重要: アジャイル開発ルール
+
+### 1. Issue-First Development (必須)
+
+**全ての作業はGitHub Issueから始めること**
+
+```
+作業開始前チェックリスト:
+□ 対応するIssueが存在するか確認
+□ Issueがない場合は作成してから作業開始
+□ Issueに適切なラベルが付いているか確認
+□ ステータスを status: in-progress に更新
+```
+
+### 2. Issue作成時の必須ラベル
+
+| カテゴリ | ラベル | 必須 |
+|---------|--------|------|
+| 優先度 | `priority: critical/high/medium/low` | ✅ |
+| タイプ | `type: feature/tech-debt/test/spike` | ✅ |
+| 見積もり | `story-points: 1/2/3/5/8` | ✅ |
+| エリア | `area: frontend/backend/database/devops/ai` | 推奨 |
+| ステータス | `status: backlog/ready/in-progress/review/blocked` | ✅ |
+
+### 3. ブランチ・コミットルール
+
+```bash
+# ブランチ名: 必ずIssue番号を含める
+feat/123-feature-name
+fix/456-bug-description
+
+# コミット: 必ずCloses/Fixesを含める
+git commit -m "feat(scope): description
+
+Closes #123"
+```
+
+### 4. PR作成時の必須事項
+
+- [ ] `.github/PULL_REQUEST_TEMPLATE.md` に従う
+- [ ] `Closes #xxx` でIssue紐付け
+- [ ] テスト通過: `bun run test && bun run typecheck && bun run lint`
+- [ ] チェックリスト全項目確認
+
+### 5. 参照ドキュメント
+
+| ドキュメント | 内容 |
+|-------------|------|
+| `docs/AGILE_PROCESS.md` | スクラムプロセス、セレモニー |
+| `docs/PRODUCT_BACKLOG.md` | バックログ管理、Epic一覧 |
+| `CONTRIBUTING.md` | 開発者ガイド |
+
+---
+
+## UI/コンポーネントルール
+
 - TailAdminを導入してください
 | 特徴項目          | TailAdmin（無料版）                         | Flowbite Admin                              |
 |------------------|-------------------------------------------|---------------------------------------------|
