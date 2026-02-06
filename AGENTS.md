@@ -12,13 +12,15 @@ DiagnoLeads v2 is an enterprise-grade diagnostic lead management platform built 
 
 **セッション開始時に必ず参照:**
 
-| ファイル | 内容 |
-|----------|------|
-| `.factory/memory/decisions.md` | 過去の意思決定（技術選定、設計判断） |
-| `.factory/memory/preferences.md` | ユーザーの好み（コミュニケーション、コーディングスタイル） |
-| `.factory/memory/learnings.md` | 過去の学習・教訓（失敗パターン、成功パターン） |
+| ファイル | 内容 | 重要度 |
+|----------|------|--------|
+| `.factory/memory/violations.md` | **原則違反記録** | **必読** |
+| `.factory/memory/decisions.md` | 過去の意思決定 | 必読 |
+| `.factory/memory/preferences.md` | ユーザーの好み | 必読 |
+| `.factory/memory/learnings.md` | 学習・教訓 | 必読 |
 
 **更新タイミング:**
+- **原則に違反した → `violations.md` に記録（必須）**
 - 重要な意思決定をした → `decisions.md` に追記
 - ユーザーの好みが判明した → `preferences.md` に追記
 - 問題を解決した / 学びがあった → `learnings.md` に追記

@@ -8,8 +8,10 @@
 - `.factory/memory/decisions.md` - 過去の意思決定
 - `.factory/memory/preferences.md` - ユーザーの好み
 - `.factory/memory/learnings.md` - 過去の学習・教訓
+- `.factory/memory/violations.md` - **原則違反記録（必読）**
 
 **重要な決定・学習があれば該当ファイルに追記する**
+**原則違反があれば violations.md に記録する**
 
 ---
 
@@ -20,11 +22,13 @@
 
 ### SprintPathの5原則
 
-1. **🎯 Issue-First** - コードを書く前に、必ずIssueを確認
+1. **🎯 Issue-First [最重要]** - コードを書く前に、必ずIssueを確認
 2. **🔄 Continuous Quality** - テストが通らなければ、コミットしない
 3. **👤 Clear Ownership** - 役割分担を明確にし、責任者を決める
 4. **📊 Visibility** - 進捗は常に見える状態にする
 5. **🚀 Ship Small** - 大きな変更より、小さな改善を積み重ねる
+
+> **警告**: 原則違反は `.factory/memory/violations.md` に記録される
 
 ---
 
@@ -38,7 +42,7 @@ CONFIRM → IMPLEMENT → VERIFY → COMMIT → REPORT
 
 ---
 
-### STEP 1: タスク確認 (作業開始前)
+### STEP 1: タスク確認 (作業開始前) [必須・スキップ不可]
 
 **必ず実行:**
 ```bash
@@ -55,7 +59,14 @@ gh issue list --label "priority: high" --state open
 - [ ] Issueの受け入れ基準を理解したか
 - [ ] 依存関係・ブロッカーがないか
 
-**Issueがない場合:** ユーザーに確認してから作業開始
+**Issueがない場合:** 
+```
+ユーザーに確認: 「Issueを作成してから対応しますか？」
+→ Yes: Issue作成後に作業開始
+→ No: 作業しない
+```
+
+**違反した場合:** `.factory/memory/violations.md` に記録
 
 ---
 
