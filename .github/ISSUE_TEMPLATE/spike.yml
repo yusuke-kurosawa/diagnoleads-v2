@@ -1,0 +1,65 @@
+name: "🔬 Spike / Research"
+description: "Research or investigation task"
+title: "[Spike] "
+labels: ["type: spike", "status: backlog"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Spike / Research Task
+        For investigation, research, or proof-of-concept work.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Research Question
+      description: "What question are we trying to answer?"
+      placeholder: "What do we need to learn or validate?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Background
+      description: "Why is this research needed?"
+      placeholder: "Background information and motivation"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Deliverables
+      description: "What should be delivered at the end?"
+      placeholder: |
+        - [ ] Document findings in docs/
+        - [ ] Create proof-of-concept
+        - [ ] Recommendation for next steps
+    validations:
+      required: true
+
+  - type: dropdown
+    id: timebox
+    attributes:
+      label: Time Box
+      description: "Maximum time to spend on this spike"
+      options:
+        - "2 hours"
+        - "4 hours"
+        - "1 day"
+        - "2 days"
+        - "3 days"
+    validations:
+      required: true
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: Resources / References
+      description: "Links to documentation, articles, or tools to investigate"
+      placeholder: |
+        - https://docs.example.com
+        - Library: xyz
+    validations:
+      required: false

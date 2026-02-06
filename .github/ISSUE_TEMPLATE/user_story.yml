@@ -1,0 +1,99 @@
+name: "📖 User Story"
+description: "Create a user story for the product backlog"
+title: "[Story] "
+labels: ["type: feature", "status: backlog"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## User Story Template
+        Please fill in the details below to create a well-defined user story.
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: "As a [type of user], I want [goal] so that [benefit]"
+      placeholder: |
+        As a **sales manager**,
+        I want **to see a dashboard with lead conversion metrics**
+        so that **I can track team performance and make data-driven decisions**.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: "Define the conditions that must be met for this story to be complete"
+      placeholder: |
+        - [ ] Dashboard shows total leads, converted leads, conversion rate
+        - [ ] Data can be filtered by date range
+        - [ ] Export to CSV is available
+        - [ ] Mobile responsive design
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: "Business priority level"
+      options:
+        - P0 - Critical (Must have for release)
+        - P1 - High (Should have soon)
+        - P2 - Medium (Nice to have)
+        - P3 - Low (Future consideration)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: story-points
+    attributes:
+      label: Story Points (Estimated Effort)
+      description: "Fibonacci scale estimation"
+      options:
+        - "1 (~2 hours)"
+        - "2 (~4 hours)"
+        - "3 (~1 day)"
+        - "5 (~2-3 days)"
+        - "8 (~1 week)"
+        - "13 (needs breakdown)"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: "Primary area of the codebase"
+      multiple: true
+      options:
+        - Frontend
+        - Backend
+        - Database
+        - DevOps
+        - AI/ML
+    validations:
+      required: false
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: "Any technical considerations or implementation hints"
+      placeholder: |
+        - Use tRPC for API
+        - Consider caching for performance
+        - Related to #123
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup / Design Reference
+      description: "Links to designs or screenshots"
+      placeholder: "Figma link, screenshot, or description"
+    validations:
+      required: false

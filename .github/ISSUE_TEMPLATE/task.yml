@@ -1,0 +1,81 @@
+name: "✅ Task"
+description: "Create a technical task or chore"
+title: "[Task] "
+labels: ["status: backlog"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Technical Task
+        For technical work that isn't directly a user-facing feature.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: "What needs to be done?"
+      placeholder: "Describe the task clearly"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Task Type
+      description: "What kind of task is this?"
+      options:
+        - Tech Debt - Refactoring, cleanup
+        - Testing - Add or improve tests
+        - Documentation - Docs, comments
+        - DevOps - CI/CD, infrastructure
+        - Security - Security improvements
+        - Performance - Optimization
+        - Dependency - Update dependencies
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Definition of Done
+      description: "How do we know this task is complete?"
+      placeholder: |
+        - [ ] Code refactored
+        - [ ] Tests pass
+        - [ ] Documentation updated
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Effort
+      options:
+        - "1 (~2 hours)"
+        - "2 (~4 hours)"
+        - "3 (~1 day)"
+        - "5 (~2-3 days)"
+        - "8 (~1 week)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Issues / PRs
+      description: "Link related issues or pull requests"
+      placeholder: "Closes #123, Related to #456"
+    validations:
+      required: false

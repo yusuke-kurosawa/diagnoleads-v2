@@ -1,0 +1,94 @@
+name: "🐛 Bug Report"
+description: "Report a bug or unexpected behavior"
+title: "[Bug] "
+labels: ["bug", "status: backlog"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+        Thank you for reporting! Please provide as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: "A clear and concise description of the bug"
+      placeholder: "What went wrong?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: "Detailed steps to reproduce the behavior"
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: "What should happen?"
+      placeholder: "What did you expect to happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: "What actually happened?"
+      placeholder: "What actually happened instead?"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: "How severe is this bug?"
+      options:
+        - Critical - System unusable, data loss
+        - High - Major feature broken
+        - Medium - Feature partially working
+        - Low - Minor inconvenience
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Where did this occur?"
+      placeholder: |
+        - Browser: Chrome 120
+        - OS: macOS 14
+        - Device: Desktop
+        - Environment: Production / Staging / Local
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / Screenshots
+      description: "Any relevant error messages, console logs, or screenshots"
+      placeholder: "Paste error logs or attach screenshots"
+    validations:
+      required: false
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: "Is there a temporary workaround?"
+      placeholder: "Any workaround users can use?"
+    validations:
+      required: false
