@@ -1,21 +1,21 @@
 # DiagnoLeads v2 開発ルール
 
-## 🚀 DiagnoFlow - 独自アジャイル開発手法
+## 🚀 SprintPath - アジャイル開発フレームワーク
 
-> **DiagnoFlow**はDiagnoLeads v2のための独自アジャイル手法です。
-> 詳細: [docs/DIAGNOFLOW.md](./docs/DIAGNOFLOW.md)
+> **SprintPath**は汎用的なアジャイル開発フレームワークです。
+> 詳細: [docs/SPRINTPATH.md](./docs/SPRINTPATH.md)
 
-### DiagnoFlowの5原則
+### SprintPathの5原則
 
 1. **🎯 Issue-First** - コードを書く前に、必ずIssueを確認
 2. **🔄 Continuous Quality** - テストが通らなければ、コミットしない
-3. **🤖 Human-AI Collaboration** - Droidは実行者、人間は意思決定者
+3. **👤 Clear Ownership** - 役割分担を明確にし、責任者を決める
 4. **📊 Visibility** - 進捗は常に見える状態にする
 5. **🚀 Ship Small** - 大きな変更より、小さな改善を積み重ねる
 
 ---
 
-## ⚠️ Droid開発フロー (DiagnoFlow準拠)
+## ⚠️ Droid開発フロー (SprintPath準拠)
 
 ### フロー概要
 
@@ -120,9 +120,9 @@ Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.g
 
 | ドキュメント | 内容 |
 |-------------|------|
+| `docs/SPRINTPATH.md` | SprintPathフレームワーク |
 | `docs/WORKFLOW.md` | 詳細ワークフロー |
 | `docs/AGILE_PROCESS.md` | スクラムプロセス |
-| `docs/PRODUCT_BACKLOG.md` | バックログ管理 |
 | `CONTRIBUTING.md` | 開発者ガイド |
 
 ---

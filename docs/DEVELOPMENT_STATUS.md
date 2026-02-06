@@ -365,7 +365,7 @@ lib/
 
 ## 関連ドキュメント
 
-- [DIAGNOFLOW.md](./DIAGNOFLOW.md) - DiagnoFlow手法定義
+- [SPRINTPATH.md](./SPRINTPATH.md) - SprintPathアジャイルフレームワーク
 - [ROADMAP.md](./ROADMAP.md) - ロードマップ
 - [SPRINT_SUMMARY.md](./SPRINT_SUMMARY.md) - スプリント実績
 - [FEATURE_MATRIX.md](./FEATURE_MATRIX.md) - 機能マトリクス

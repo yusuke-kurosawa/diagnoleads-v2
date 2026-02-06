@@ -6,26 +6,26 @@ DiagnoLeads v2 is an enterprise-grade diagnostic lead management platform built 
 
 ---
 
-## 🚀 DiagnoFlow - 独自アジャイル開発手法
+## 🚀 SprintPath - アジャイル開発フレームワーク
 
-> **DiagnoFlow**はDiagnoLeads v2のための独自アジャイル手法です。
-> 全てのDroid作業はDiagnoFlowに従って実行されます。
+> **SprintPath**は汎用的なアジャイル開発フレームワークです。
+> 全てのDroid作業はSprintPathに従って実行されます。
 
-### DiagnoFlowの5原則 (MUST FOLLOW)
+### SprintPathの5原則 (MUST FOLLOW)
 
 | 原則 | 説明 |
 |------|------|
 | 🎯 **Issue-First** | コードを書く前に、必ずIssueを確認する |
 | 🔄 **Continuous Quality** | テストが通らなければ、コミットしない |
-| 🤖 **Human-AI Collaboration** | Droidは実行者、人間は意思決定者 |
+| 👤 **Clear Ownership** | 役割分担を明確にし、責任者を決める |
 | 📊 **Visibility** | 進捗は常に見える状態にする |
 | 🚀 **Ship Small** | 大きな変更より、小さな改善を積み重ねる |
 
-**詳細**: [docs/DIAGNOFLOW.md](./docs/DIAGNOFLOW.md)
+**詳細**: [docs/SPRINTPATH.md](./docs/SPRINTPATH.md)
 
 ---
 
-## ⚠️ DiagnoFlow開発サイクル (MUST FOLLOW)
+## ⚠️ SprintPath開発サイクル (MUST FOLLOW)
 
 ### 🔄 サイクル図
 
