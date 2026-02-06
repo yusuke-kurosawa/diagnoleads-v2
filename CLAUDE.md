@@ -1,5 +1,18 @@
 # DiagnoLeads v2 開発ルール
 
+## 🧠 MemoryBank
+
+> セッション間で一貫した判断を行うための記憶システム
+
+**セッション開始時に参照:**
+- `.factory/memory/decisions.md` - 過去の意思決定
+- `.factory/memory/preferences.md` - ユーザーの好み
+- `.factory/memory/learnings.md` - 過去の学習・教訓
+
+**重要な決定・学習があれば該当ファイルに追記する**
+
+---
+
 ## 🚀 SprintPath - アジャイル開発フレームワーク
 
 > **SprintPath**は汎用的なアジャイル開発フレームワークです。

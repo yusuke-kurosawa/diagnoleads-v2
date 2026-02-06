@@ -6,6 +6,25 @@ DiagnoLeads v2 is an enterprise-grade diagnostic lead management platform built 
 
 ---
 
+## 🧠 MemoryBank (MUST READ)
+
+> セッション間で一貫した判断を行うための記憶システム
+
+**セッション開始時に必ず参照:**
+
+| ファイル | 内容 |
+|----------|------|
+| `.factory/memory/decisions.md` | 過去の意思決定（技術選定、設計判断） |
+| `.factory/memory/preferences.md` | ユーザーの好み（コミュニケーション、コーディングスタイル） |
+| `.factory/memory/learnings.md` | 過去の学習・教訓（失敗パターン、成功パターン） |
+
+**更新タイミング:**
+- 重要な意思決定をした → `decisions.md` に追記
+- ユーザーの好みが判明した → `preferences.md` に追記
+- 問題を解決した / 学びがあった → `learnings.md` に追記
+
+---
+
 ## 🚀 SprintPath - アジャイル開発フレームワーク
 
 > **SprintPath**は汎用的なアジャイル開発フレームワークです。
