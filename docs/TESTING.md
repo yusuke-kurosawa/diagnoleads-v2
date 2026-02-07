@@ -1,356 +1,396 @@
-# Testing Guide
+# テスト戦略ガイド
 
-## Overview
+> DiagnoLeads v2 のテスト原則・ルールを定義
 
-DiagnoLeads v2 uses the following testing tools:
+---
 
-- **Vitest** - Unit and integration testing
-- **React Testing Library** - Component testing
-- **Playwright** - End-to-end testing
-
-## Test Structure
+## テストピラミッド
 
 ```
-test/
-├── unit/              # Unit tests
-│   ├── components/    # UI component tests
-│   ├── features/      # Feature/service tests
-│   └── trpc/          # tRPC router tests
-└── e2e/               # End-to-end tests
+        ┌───────────┐
+        │   E2E     │  少量・高コスト・遅い
+        │  Tests    │  クリティカルパスのみ
+        ├───────────┤
+        │Integration│  中量・中コスト・中速
+        │  Tests    │  モジュール連携
+        ├───────────┤
+        │   Unit    │  大量・低コスト・高速
+        │  Tests    │  ビジネスロジック
+        └───────────┘
 ```
 
-## Running Tests
+| 種別 | 割合目安 | 実行時間 | 外部依存 |
+|------|---------|---------|---------|
+| Unit | 70% | 数秒 | なし |
+| Integration | 20% | 数十秒 | モック |
+| E2E | 10% | 数分 | 実環境 |
 
-```bash
-# Run all unit tests
-bun run test
+---
 
-# Run tests in watch mode
-bun run test:watch
+## 1. Unit Tests
 
-# Run tests with coverage
-bun run test:coverage
+### 定義
+**外部依存なし**で実行可能な、単一関数・モジュールのテスト
 
-# Run specific test file
-bun run test test/unit/features/export-service.test.ts
-
-# Run E2E tests
-bun run test:e2e
+### 命名規則
+```
+*.test.ts
 ```
 
-## Writing Tests
+### 対象
+- 純粋関数（入力→出力が決定的）
+- バリデーション・スキーマ
+- 型定義・ユーティリティ
+- ビジネスロジック（計算・変換）
+- Reactコンポーネント（レンダリング・イベント）
 
-### Unit Tests
+### 原則
 
-Unit tests are located in `test/unit/` and should test individual functions or modules in isolation.
-
+#### 1.1 AAA パターン
 ```typescript
-// test/unit/features/my-service.test.ts
-import { myFunction } from '@/lib/features/my-service';
-import { describe, expect, it } from 'vitest';
-
-describe('My Service', () => {
-  describe('myFunction', () => {
-    it('should return expected result', () => {
-      const result = myFunction('input');
-      expect(result).toBe('expected');
-    });
-
-    it('should handle edge cases', () => {
-      expect(() => myFunction(null)).toThrow();
-    });
-  });
+it('should calculate lead score correctly', () => {
+  // Arrange（準備）
+  const lead = { responses: [{ score: 80 }, { score: 60 }] };
+  
+  // Act（実行）
+  const result = calculateLeadScore(lead);
+  
+  // Assert（検証）
+  expect(result).toBe(70);
 });
 ```
 
-### Component Tests
-
-Component tests use React Testing Library to test UI components.
+#### 1.2 単一責任
+- 1テスト = 1検証項目
+- テスト名で何を検証しているか明確に
 
 ```typescript
-// test/unit/components/my-component.test.tsx
-import { MyComponent } from '@/components/my-component';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+// ❌ Bad: 複数の検証
+it('should validate email', () => {
+  expect(isValidEmail('test@example.com')).toBe(true);
+  expect(isValidEmail('invalid')).toBe(false);
+  expect(isValidEmail('')).toBe(false);
+});
 
-describe('MyComponent', () => {
-  it('should render correctly', () => {
-    render(<MyComponent title="Hello" />);
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-  });
+// ✅ Good: 単一の検証
+it('should return true for valid email', () => {
+  expect(isValidEmail('test@example.com')).toBe(true);
+});
 
-  it('should handle user interaction', async () => {
-    const onClick = vi.fn();
-    render(<MyComponent onClick={onClick} />);
+it('should return false for invalid format', () => {
+  expect(isValidEmail('invalid')).toBe(false);
+});
 
-    await userEvent.click(screen.getByRole('button'));
-    expect(onClick).toHaveBeenCalledTimes(1);
-  });
+it('should return false for empty string', () => {
+  expect(isValidEmail('')).toBe(false);
 });
 ```
 
-### tRPC Router Tests
-
-Test tRPC procedures by calling them directly.
-
+#### 1.3 外部依存の排除
 ```typescript
-// test/unit/trpc/my-router.test.ts
-import { appRouter } from '@/server/routers/_app';
-import { createCallerFactory } from '@/server/trpc';
-import { describe, expect, it, vi } from 'vitest';
+// ❌ Bad: 外部依存あり
+import { db } from '@/lib/db/client';
 
-describe('My Router', () => {
-  const createCaller = createCallerFactory(appRouter);
+it('should get user', async () => {
+  const user = await db.query.users.findFirst(); // DB接続必要
+});
 
-  it('should return data', async () => {
-    const caller = createCaller({
-      session: { user: { id: 'user-1' } },
-      organizationId: 'org-1',
-    });
-
-    const result = await caller.myRouter.getData();
-    expect(result).toBeDefined();
-  });
+// ✅ Good: 純粋関数テスト
+it('should format user name', () => {
+  const result = formatUserName({ firstName: '太郎', lastName: '田中' });
+  expect(result).toBe('田中 太郎');
 });
 ```
 
-### E2E Tests
-
-End-to-end tests use Playwright to test full user flows.
-
+#### 1.4 テストデータの独立性
 ```typescript
-// test/e2e/my-flow.spec.ts
-import { expect, test } from '@playwright/test';
+// ❌ Bad: 共有状態
+let counter = 0;
+it('test 1', () => { counter++; expect(counter).toBe(1); });
+it('test 2', () => { counter++; expect(counter).toBe(2); }); // 順序依存
 
-test.describe('My Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
-    // Login steps...
-  });
-
-  test('should complete flow successfully', async ({ page }) => {
-    await page.goto('/dashboard');
-    await expect(page.getByRole('heading')).toHaveText('Dashboard');
-
-    await page.click('button[data-testid="action-btn"]');
-    await expect(page.getByText('Success')).toBeVisible();
-  });
+// ✅ Good: 独立したテスト
+it('test 1', () => {
+  const counter = createCounter();
+  counter.increment();
+  expect(counter.value).toBe(1);
 });
 ```
 
-## Mocking
+### カバレッジ目標
+- **ビジネスロジック**: 80%+
+- **バリデーション**: 100%
+- **ユーティリティ**: 100%
 
-### Mock Environment Variables
+---
 
-Environment variables are set in `test/setup.ts`:
+## 2. Integration Tests
 
-```typescript
-process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+### 定義
+**モックを使用**して、複数モジュールの連携をテスト
+
+### 命名規則
+```
+*.integration.ts
 ```
 
-### Mock Next.js Router
+### 対象
+- DB操作（Drizzle ORM モック）
+- Cache操作（Redis モック）
+- Email送信（Resend モック）
+- 外部API連携（Anthropic/OpenAI モック）
+- tRPC routers（コンテキストモック）
+- 認証フロー（better-auth モック）
 
-The Next.js router is mocked in `test/setup.ts`:
+### 原則
 
+#### 2.1 モック境界の明確化
 ```typescript
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
-  }),
-  usePathname: () => '/',
-  useSearchParams: () => new URLSearchParams(),
-}));
-```
-
-### Mock Database
-
-For database tests, use a mock or test database:
-
-```typescript
-import { vi } from 'vitest';
-
+// モックする外部依存を明示
 vi.mock('@/lib/db/client', () => ({
   db: {
-    select: vi.fn().mockResolvedValue([]),
-    insert: vi.fn().mockResolvedValue([{ id: '1' }]),
+    query: { users: { findFirst: vi.fn() } },
+    insert: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returning: vi.fn(),
   },
+}));
+
+vi.mock('@/lib/email/client', () => ({
+  sendEmail: vi.fn().mockResolvedValue({ id: 'email-123' }),
 }));
 ```
 
-### Mock External APIs
-
+#### 2.2 実際の関数をテスト
 ```typescript
-import { vi } from 'vitest';
+// ✅ Good: 実際の関数をインポートしてテスト
+import { createUser } from '@/lib/features/users/service';
 
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: class MockAnthropic {
-    messages = {
-      create: vi.fn().mockResolvedValue({
-        content: [{ text: 'Mocked response' }],
-      }),
-    };
-  },
-}));
+it('should create user and send welcome email', async () => {
+  const mockDb = vi.mocked(db);
+  const mockSendEmail = vi.mocked(sendEmail);
+  
+  mockDb.returning.mockResolvedValue([{ id: 'user-123' }]);
+  
+  const result = await createUser({ email: 'test@example.com' });
+  
+  expect(mockDb.insert).toHaveBeenCalled();
+  expect(mockSendEmail).toHaveBeenCalledWith(
+    expect.objectContaining({ to: 'test@example.com' })
+  );
+  expect(result.id).toBe('user-123');
+});
 ```
 
-## Coverage
-
-Coverage thresholds are set in `vitest.config.ts`:
-
+#### 2.3 エラーハンドリングの検証
 ```typescript
-coverage: {
-  thresholds: {
-    lines: 70,
-    functions: 70,
-    branches: 70,
-    statements: 70,
-  },
+it('should handle database error', async () => {
+  const mockDb = vi.mocked(db);
+  mockDb.returning.mockRejectedValue(new Error('Connection failed'));
+  
+  await expect(createUser({ email: 'test@example.com' }))
+    .rejects.toThrow('Connection failed');
+});
+
+it('should rollback on partial failure', async () => {
+  // トランザクションのロールバック検証
+});
+```
+
+#### 2.4 beforeEach でモックリセット
+```typescript
+describe('UserService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  
+  // tests...
+});
+```
+
+### カバレッジ目標
+- **API routers**: 70%+
+- **主要サービス**: 80%+
+- **エラーハンドリング**: 100%
+
+---
+
+## 3. E2E Tests
+
+### 定義
+**実環境**で、ユーザー視点のフロー全体をテスト
+
+### 命名規則
+```
+*.spec.ts
+```
+
+### 対象
+- 認証フロー（ログイン/登録/パスワードリセット）
+- 診断フォーム送信
+- リード管理（CRUD）
+- 組織管理・切り替え
+- ダッシュボード表示
+
+### 原則
+
+#### 3.1 ユーザー視点で記述
+```typescript
+// ❌ Bad: 実装詳細に依存
+test('should set localStorage token', async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem('token', 'xxx'));
+});
+
+// ✅ Good: ユーザー操作で記述
+test('user can login with valid credentials', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('[name="email"]', 'user@example.com');
+  await page.fill('[name="password"]', 'password123');
+  await page.click('button[type="submit"]');
+  
+  await expect(page).toHaveURL('/dashboard');
+  await expect(page.locator('h1')).toContainText('ダッシュボード');
+});
+```
+
+#### 3.2 Page Object Model (POM)
+```typescript
+// pages/login.page.ts
+export class LoginPage {
+  constructor(private page: Page) {}
+  
+  async goto() {
+    await this.page.goto('/login');
+  }
+  
+  async login(email: string, password: string) {
+    await this.page.fill('[name="email"]', email);
+    await this.page.fill('[name="password"]', password);
+    await this.page.click('button[type="submit"]');
+  }
 }
+
+// tests/auth.spec.ts
+test('user can login', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login('user@example.com', 'password123');
+  
+  await expect(page).toHaveURL('/dashboard');
+});
 ```
 
-View coverage report:
+#### 3.3 テストデータの独立性
+```typescript
+test.beforeEach(async ({ page }) => {
+  // テスト用ユーザーを作成
+  await createTestUser({ email: `test-${Date.now()}@example.com` });
+});
 
+test.afterEach(async () => {
+  // テストデータをクリーンアップ
+  await cleanupTestData();
+});
+```
+
+#### 3.4 待機戦略
+```typescript
+// ❌ Bad: 固定待機
+await page.waitForTimeout(3000);
+
+// ✅ Good: 要素の出現を待機
+await page.waitForSelector('[data-testid="dashboard"]');
+await expect(page.locator('h1')).toBeVisible();
+```
+
+#### 3.5 クリティカルパスのみ
+```typescript
+// E2Eでテストすべき: ユーザーの主要フロー
+test('complete diagnostic form submission flow', async ({ page }) => {
+  // 1. フォームにアクセス
+  // 2. 質問に回答
+  // 3. 送信
+  // 4. 結果確認
+  // 5. リード作成確認
+});
+
+// E2Eで不要: 細かいバリデーション（Unitでカバー）
+```
+
+### カバレッジ目標
+- **クリティカルパス**: 100%
+- **主要ユーザーフロー**: 100%
+- **エッジケース**: Unitでカバー
+
+---
+
+## テスト環境
+
+### Unit / Integration
 ```bash
-bun run test:coverage
-# HTML report: coverage/index.html
+bun run test              # 全テスト
+bun run test:coverage     # カバレッジ付き
+bun run test -- --watch   # ウォッチモード
 ```
 
-## Best Practices
-
-### 1. Test Behavior, Not Implementation
-
-```typescript
-// Good - tests behavior
-it('should display error message on invalid input', async () => {
-  render(<Form />);
-  await userEvent.type(screen.getByRole('textbox'), 'invalid');
-  await userEvent.click(screen.getByRole('button'));
-  expect(screen.getByRole('alert')).toHaveTextContent('Invalid input');
-});
-
-// Bad - tests implementation details
-it('should set error state to true', () => {
-  const { result } = renderHook(() => useForm());
-  act(() => result.current.setError(true));
-  expect(result.current.error).toBe(true);
-});
-```
-
-### 2. Use Descriptive Test Names
-
-```typescript
-// Good
-describe('LeadTable', () => {
-  it('should filter leads by status when status filter is changed', () => {});
-  it('should export filtered leads to CSV when export button is clicked', () => {});
-});
-
-// Bad
-describe('LeadTable', () => {
-  it('works', () => {});
-  it('filters', () => {});
-});
-```
-
-### 3. Arrange-Act-Assert Pattern
-
-```typescript
-it('should update lead status', async () => {
-  // Arrange
-  const lead = { id: '1', status: 'new' };
-  render(<LeadCard lead={lead} onUpdate={mockUpdate} />);
-
-  // Act
-  await userEvent.click(screen.getByText('Mark as Contacted'));
-
-  // Assert
-  expect(mockUpdate).toHaveBeenCalledWith({ id: '1', status: 'contacted' });
-});
-```
-
-### 4. Test Edge Cases
-
-```typescript
-describe('formatDate', () => {
-  it('should format valid date', () => {
-    expect(formatDate(new Date('2024-01-15'))).toBe('Jan 15, 2024');
-  });
-
-  it('should handle null date', () => {
-    expect(formatDate(null)).toBe('-');
-  });
-
-  it('should handle invalid date', () => {
-    expect(formatDate(new Date('invalid'))).toBe('Invalid Date');
-  });
-});
-```
-
-### 5. Keep Tests Independent
-
-Each test should be able to run in isolation:
-
-```typescript
-// Good - each test sets up its own data
-describe('Leads', () => {
-  it('should create lead', async () => {
-    const lead = await createLead({ email: 'test@example.com' });
-    expect(lead.id).toBeDefined();
-  });
-
-  it('should update lead', async () => {
-    const lead = await createLead({ email: 'test2@example.com' });
-    const updated = await updateLead(lead.id, { status: 'contacted' });
-    expect(updated.status).toBe('contacted');
-  });
-});
-```
-
-## Debugging Tests
-
-### Run Single Test
-
+### E2E
 ```bash
-bun run test -t "should render correctly"
+# 環境起動
+docker compose up -d
+
+# テスト実行
+bun run test:e2e
+
+# UIモードで実行
+bun run test:e2e -- --ui
 ```
 
-### Verbose Output
+---
 
-```bash
-bun run test --reporter=verbose
-```
+## CI/CD 統合
 
-### Debug in VS Code
+### 実行タイミング
 
-Add to `.vscode/launch.json`:
+| 種別 | PR | main | release |
+|------|-----|------|---------|
+| Unit | ✅ | ✅ | ✅ |
+| Integration | ✅ | ✅ | ✅ |
+| E2E | ❌ | ✅ | ✅ |
 
-```json
-{
-  "type": "node",
-  "request": "launch",
-  "name": "Debug Vitest",
-  "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-  "args": ["--run", "${file}"],
-  "console": "integratedTerminal"
-}
-```
-
-## CI/CD Integration
-
-Tests run automatically in CI:
+### 失敗時の対応
 
 ```yaml
-# .github/workflows/test.yml
-- name: Run tests
-  run: bun run test:coverage
-
-- name: Upload coverage
-  uses: codecov/codecov-action@v3
-  with:
-    files: ./coverage/lcov.info
+# Unit/Integration 失敗 → PRマージ不可
+# E2E 失敗 → リリース不可
 ```
+
+---
+
+## ベストプラクティス
+
+### DO ✅
+- テスト名は「should + 期待動作」で記述
+- 1テスト1検証を守る
+- テストデータは各テストで独立
+- モックは最小限に
+- エラーケースも必ずテスト
+
+### DON'T ❌
+- 実装詳細に依存したテスト
+- 順序依存のテスト
+- 外部サービスへの実接続（Unit/Integration）
+- sleep/timeout での待機（E2E）
+- スナップショットの過度な使用
+
+---
+
+## 関連ドキュメント
+
+- [SprintPath](./SPRINTPATH.md) - アジャイル開発フレームワーク
+- [CONTRIBUTING](../CONTRIBUTING.md) - 開発者ガイド
+- [vitest.config.ts](../vitest.config.ts) - Vitest設定
+- [playwright.config.ts](../playwright.config.ts) - Playwright設定
+
+---
+
+*最終更新: 2026-02-07*
