@@ -4,6 +4,36 @@
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
+// Mock dependencies before importing
+vi.mock('@/lib/cms/adapters/payload/adapter', () => ({
+  PayloadCMSAdapter: class MockPayloadCMSAdapter {
+    name = 'PayloadCMS';
+    version = '3.66';
+    initialize = vi.fn().mockResolvedValue(undefined);
+    healthCheck = vi.fn().mockResolvedValue(true);
+    find = vi.fn().mockResolvedValue({ data: [], meta: { total: 0 } });
+  },
+}));
+
+vi.mock('@/lib/cms/adapters/mock/adapter', () => ({
+  MockCMSAdapter: class MockMockCMSAdapter {
+    name = 'MockCMS';
+    version = '1.0.0';
+    initialize = vi.fn().mockResolvedValue(undefined);
+    healthCheck = vi.fn().mockResolvedValue(true);
+    find = vi.fn().mockResolvedValue({ data: [], meta: { total: 0 } });
+  },
+}));
+
+// Import after mocking
+import {
+  getCMSAdapter,
+  setCMSAdapter,
+  resetCMSAdapter,
+  initializeCMS,
+  checkCMSHealth,
+} from '@/lib/cms/adapters/factory';
+
 // Types matching source
 type CMSProvider = 'payload' | 'mock' | 'sanity';
 
@@ -18,6 +48,7 @@ describe('getCMSProvider', () => {
   const originalEnv = process.env.CMS_PROVIDER;
 
   afterEach(() => {
+    resetCMSAdapter();
     if (originalEnv !== undefined) {
       process.env.CMS_PROVIDER = originalEnv;
     } else {
@@ -247,5 +278,92 @@ describe('Provider switching', () => {
     const adapter2 = getAdapter('mock');
     expect(adapter2.name).toBe('mock');
     expect(adapter2).not.toBe(adapter1);
+  });
+});
+
+// Integration tests with actual module
+describe('Integration: getCMSAdapter', () => {
+  const originalEnv = process.env.CMS_PROVIDER;
+
+  afterEach(() => {
+    resetCMSAdapter();
+    if (originalEnv !== undefined) {
+      process.env.CMS_PROVIDER = originalEnv;
+    } else {
+      delete process.env.CMS_PROVIDER;
+    }
+  });
+
+  it('should return adapter for payload provider', () => {
+    process.env.CMS_PROVIDER = 'payload';
+    resetCMSAdapter();
+    
+    const adapter = getCMSAdapter();
+    expect(adapter.name).toBe('PayloadCMS');
+  });
+
+  it('should return adapter for mock provider', () => {
+    process.env.CMS_PROVIDER = 'mock';
+    resetCMSAdapter();
+    
+    const adapter = getCMSAdapter();
+    expect(adapter.name).toBe('MockCMS');
+  });
+
+  it('should return same instance on multiple calls', () => {
+    process.env.CMS_PROVIDER = 'mock';
+    resetCMSAdapter();
+    
+    const adapter1 = getCMSAdapter();
+    const adapter2 = getCMSAdapter();
+    expect(adapter1).toBe(adapter2);
+  });
+});
+
+describe('Integration: setCMSAdapter', () => {
+  afterEach(() => {
+    resetCMSAdapter();
+  });
+
+  it('should call setCMSAdapter without error', () => {
+    const customAdapter = {
+      name: 'CustomAdapter',
+      version: '1.0.0',
+      initialize: vi.fn().mockResolvedValue(undefined),
+      healthCheck: vi.fn().mockResolvedValue(true),
+      find: vi.fn().mockResolvedValue({ data: [], meta: { total: 0 } }),
+    };
+
+    // Should not throw
+    expect(() => setCMSAdapter(customAdapter as any)).not.toThrow();
+  });
+});
+
+describe('Integration: initializeCMS', () => {
+  afterEach(() => {
+    resetCMSAdapter();
+  });
+
+  it('should initialize adapter', async () => {
+    process.env.CMS_PROVIDER = 'mock';
+    resetCMSAdapter();
+    
+    await initializeCMS();
+    const adapter = getCMSAdapter();
+    expect(adapter.initialize).toHaveBeenCalled();
+  });
+});
+
+describe('Integration: checkCMSHealth', () => {
+  afterEach(() => {
+    resetCMSAdapter();
+  });
+
+  it('should return health status', async () => {
+    process.env.CMS_PROVIDER = 'mock';
+    resetCMSAdapter();
+    
+    const result = await checkCMSHealth();
+    expect(typeof result).toBe('boolean');
   });
 });
