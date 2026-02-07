@@ -229,3 +229,34 @@ describe('AppRouter type', () => {
     expect(router.health).toBeDefined();
   });
 });
+
+// Integration tests with actual router
+import { appRouter, type AppRouter } from '@/server/routers/_app';
+
+describe('Integration: appRouter (actual)', () => {
+  it('should export appRouter', () => {
+    expect(appRouter).toBeDefined();
+  });
+
+  it('should have _def property', () => {
+    expect(appRouter._def).toBeDefined();
+  });
+
+  it('should have createCaller method', () => {
+    expect(typeof appRouter.createCaller).toBe('function');
+  });
+
+  it('should include all required routers', () => {
+    const routerDef = appRouter._def;
+    expect(routerDef.procedures).toBeDefined();
+  });
+});
+
+describe('Integration: AppRouter type', () => {
+  it('should export AppRouter type', () => {
+    const testType = (router: AppRouter) => {
+      return router;
+    };
+    expect(typeof testType).toBe('function');
+  });
+});

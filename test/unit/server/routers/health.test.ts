@@ -154,3 +154,61 @@ describe('Public procedure', () => {
     expect(isPublic).toBe(true);
   });
 });
+
+// Integration tests with actual router
+import { healthRouter } from '@/server/routers/health';
+
+describe('Integration: healthRouter (actual)', () => {
+  it('should export healthRouter', () => {
+    expect(healthRouter).toBeDefined();
+  });
+
+  it('should have _def property', () => {
+    expect(healthRouter._def).toBeDefined();
+  });
+
+  it('should have procedures defined', () => {
+    const def = healthRouter._def;
+    expect(def.procedures).toBeDefined();
+  });
+});
+
+describe('Integration: health.check (actual)', () => {
+  it('should create caller for health router', () => {
+    const caller = healthRouter.createCaller({});
+    expect(caller).toBeDefined();
+  });
+
+  it('should call check procedure and return ok status', async () => {
+    const caller = healthRouter.createCaller({});
+    const result = await caller.check();
+
+    expect(result.status).toBe('ok');
+    expect(result.timestamp).toBeDefined();
+    expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+});
+
+describe('Integration: health.echo (actual)', () => {
+  it('should call echo procedure with message', async () => {
+    const caller = healthRouter.createCaller({});
+    const result = await caller.echo({ message: 'Hello' });
+
+    expect(result.message).toBe('Hello');
+    expect(result.timestamp).toBeDefined();
+  });
+
+  it('should echo Japanese message', async () => {
+    const caller = healthRouter.createCaller({});
+    const result = await caller.echo({ message: 'こんにちは' });
+
+    expect(result.message).toBe('こんにちは');
+  });
+
+  it('should echo empty message', async () => {
+    const caller = healthRouter.createCaller({});
+    const result = await caller.echo({ message: '' });
+
+    expect(result.message).toBe('');
+  });
+});
