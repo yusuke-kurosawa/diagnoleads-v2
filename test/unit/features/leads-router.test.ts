@@ -419,4 +419,188 @@ describe('Leads Router', () => {
       expect(defineAbilitiesFor).toHaveBeenCalled();
     });
   });
+
+  describe('bulkUpdateStatus', () => {
+    it('should update status for multiple leads', async () => {
+      mockDb.returning.mockResolvedValue([
+        { id: TEST_LEAD_ID },
+        { id: TEST_LEAD_ID_2 },
+      ]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.bulkUpdateStatus({
+        organizationId: TEST_ORG_ID,
+        ids: [TEST_LEAD_ID, TEST_LEAD_ID_2],
+        status: 'contacted',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.updatedCount).toBe(2);
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+
+    it('should return count of 0 when no leads match', async () => {
+      mockDb.returning.mockResolvedValue([]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.bulkUpdateStatus({
+        organizationId: TEST_ORG_ID,
+        ids: [TEST_LEAD_ID],
+        status: 'contacted',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.updatedCount).toBe(0);
+    });
+
+  });
+
+  describe('bulkDelete', () => {
+    it('should delete multiple leads', async () => {
+      mockDb.returning.mockResolvedValue([
+        { id: TEST_LEAD_ID },
+        { id: TEST_LEAD_ID_2 },
+      ]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.bulkDelete({
+        organizationId: TEST_ORG_ID,
+        ids: [TEST_LEAD_ID, TEST_LEAD_ID_2],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedCount).toBe(2);
+      expect(mockDb.delete).toHaveBeenCalled();
+    });
+
+    it('should return count of 0 when no leads match', async () => {
+      mockDb.returning.mockResolvedValue([]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.bulkDelete({
+        organizationId: TEST_ORG_ID,
+        ids: [TEST_LEAD_ID],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedCount).toBe(0);
+    });
+
+    it('should throw FORBIDDEN if user does not have delete permission', async () => {
+      const memberMembership = { ...mockMembership, role: 'member' };
+      mockDb.query.organizationMembers.findFirst.mockResolvedValue(memberMembership);
+
+      const caller = appRouter.createCaller(mockContext);
+
+      await expect(
+        caller.leads.bulkDelete({
+          organizationId: TEST_ORG_ID,
+          ids: [TEST_LEAD_ID],
+        })
+      ).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
+    });
+  });
+
+  describe('bulkCreate', () => {
+    it('should create multiple leads from import', async () => {
+      mockDb.returning.mockResolvedValue([
+        { id: TEST_LEAD_ID },
+        { id: TEST_LEAD_ID_2 },
+      ]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.bulkCreate({
+        organizationId: TEST_ORG_ID,
+        leads: [
+          { email: 'lead1@example.com', name: 'Lead 1' },
+          { email: 'lead2@example.com', name: 'Lead 2' },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.createdCount).toBe(2);
+      expect(mockDb.insert).toHaveBeenCalled();
+    });
+
+  });
+
+  describe('list with advanced filters', () => {
+    it('should filter by score range', async () => {
+      mockDb.offset.mockResolvedValue([mockLead]);
+
+      const caller = appRouter.createCaller(mockContext);
+      await caller.leads.list({
+        organizationId: TEST_ORG_ID,
+        scoreMin: 50,
+        scoreMax: 100,
+      });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+
+    it('should filter by tags', async () => {
+      const TAG_ID = 'aa0e8400-e29b-41d4-a716-446655440000';
+      mockDb.groupBy = vi.fn().mockResolvedValue([{ leadId: TEST_LEAD_ID }]);
+      mockDb.offset.mockResolvedValue([mockLead]);
+
+      const caller = appRouter.createCaller(mockContext);
+      await caller.leads.list({
+        organizationId: TEST_ORG_ID,
+        tagIds: [TAG_ID],
+      });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+
+    it('should return empty when no leads match tag filter', async () => {
+      const TAG_ID = 'aa0e8400-e29b-41d4-a716-446655440000';
+      mockDb.groupBy = vi.fn().mockResolvedValue([]);
+
+      const caller = appRouter.createCaller(mockContext);
+      const result = await caller.leads.list({
+        organizationId: TEST_ORG_ID,
+        tagIds: [TAG_ID],
+      });
+
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+
+    it('should apply advanced filter with equals operator', async () => {
+      mockDb.offset.mockResolvedValue([mockLead]);
+
+      const caller = appRouter.createCaller(mockContext);
+      await caller.leads.list({
+        organizationId: TEST_ORG_ID,
+        advancedFilter: {
+          logic: 'and',
+          conditions: [
+            { field: 'status', operator: 'equals', value: 'new' },
+          ],
+        },
+      });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+
+    it('should apply advanced filter with contains operator', async () => {
+      mockDb.offset.mockResolvedValue([mockLead]);
+
+      const caller = appRouter.createCaller(mockContext);
+      await caller.leads.list({
+        organizationId: TEST_ORG_ID,
+        advancedFilter: {
+          logic: 'or',
+          conditions: [
+            { field: 'name', operator: 'contains', value: 'Test' },
+            { field: 'company', operator: 'contains', value: 'Corp' },
+          ],
+        },
+      });
+
+      expect(mockDb.select).toHaveBeenCalled();
+    });
+  });
 });
