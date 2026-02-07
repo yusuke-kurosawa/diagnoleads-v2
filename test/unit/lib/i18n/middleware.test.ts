@@ -216,3 +216,92 @@ describe('Cookie handling', () => {
     expect(cookieOptions.maxAge).toBe(31536000);
   });
 });
+
+// Integration tests with actual module
+import {
+  shouldSkipI18nMiddleware,
+  stripLocalePrefix,
+  addLocalePrefixToPath,
+} from '@/lib/i18n/middleware';
+
+describe('Integration: shouldSkipI18nMiddleware', () => {
+  it('should skip API routes', () => {
+    expect(shouldSkipI18nMiddleware('/api/health')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/api/trpc/leads.list')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/api/auth/session')).toBe(true);
+  });
+
+  it('should skip _next paths', () => {
+    expect(shouldSkipI18nMiddleware('/_next/static/chunks/main.js')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/_next/image')).toBe(true);
+  });
+
+  it('should skip static files', () => {
+    expect(shouldSkipI18nMiddleware('/favicon.ico')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/robots.txt')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/sitemap.xml')).toBe(true);
+  });
+
+  it('should skip PayloadCMS admin', () => {
+    expect(shouldSkipI18nMiddleware('/admin')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/admin/collections/posts')).toBe(true);
+  });
+
+  it('should skip files with extensions', () => {
+    expect(shouldSkipI18nMiddleware('/images/logo.png')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/fonts/roboto.woff2')).toBe(false); // woff2 not in list
+    expect(shouldSkipI18nMiddleware('/styles/main.css')).toBe(true);
+    expect(shouldSkipI18nMiddleware('/scripts/app.js')).toBe(true);
+  });
+
+  it('should not skip regular pages', () => {
+    expect(shouldSkipI18nMiddleware('/dashboard')).toBe(false);
+    expect(shouldSkipI18nMiddleware('/settings/profile')).toBe(false);
+    expect(shouldSkipI18nMiddleware('/')).toBe(false);
+    expect(shouldSkipI18nMiddleware('/ja/dashboard')).toBe(false);
+  });
+});
+
+describe('Integration: stripLocalePrefix', () => {
+  it('should strip ja prefix', () => {
+    expect(stripLocalePrefix('/ja/dashboard')).toBe('/dashboard');
+    expect(stripLocalePrefix('/ja/settings/profile')).toBe('/settings/profile');
+  });
+
+  it('should strip en prefix', () => {
+    expect(stripLocalePrefix('/en/dashboard')).toBe('/dashboard');
+    expect(stripLocalePrefix('/en/leads/123')).toBe('/leads/123');
+  });
+
+  it('should return / for locale-only paths', () => {
+    expect(stripLocalePrefix('/ja')).toBe('/');
+    expect(stripLocalePrefix('/en')).toBe('/');
+  });
+
+  it('should return unchanged for paths without locale', () => {
+    expect(stripLocalePrefix('/dashboard')).toBe('/dashboard');
+    expect(stripLocalePrefix('/')).toBe('/');
+  });
+});
+
+describe('Integration: addLocalePrefixToPath', () => {
+  it('should add locale prefix', () => {
+    expect(addLocalePrefixToPath('/dashboard', 'ja')).toBe('/ja/dashboard');
+    expect(addLocalePrefixToPath('/settings', 'en')).toBe('/en/settings');
+  });
+
+  it('should replace existing locale', () => {
+    expect(addLocalePrefixToPath('/ja/dashboard', 'en')).toBe('/en/dashboard');
+    expect(addLocalePrefixToPath('/en/settings', 'ja')).toBe('/ja/settings');
+  });
+
+  it('should handle root path', () => {
+    expect(addLocalePrefixToPath('/', 'ja')).toBe('/ja/');
+    expect(addLocalePrefixToPath('/', 'en')).toBe('/en/');
+  });
+
+  it('should handle nested paths', () => {
+    expect(addLocalePrefixToPath('/leads/123/edit', 'ja')).toBe('/ja/leads/123/edit');
+    expect(addLocalePrefixToPath('/ja/leads/123/edit', 'en')).toBe('/en/leads/123/edit');
+  });
+});
