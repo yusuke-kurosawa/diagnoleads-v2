@@ -112,3 +112,15 @@ vi.mock('@/lib/cms/adapters/payload/adapter', () => ({
 vi.mock('payload', () => ({
   getPayload: vi.fn().mockResolvedValue({}),
 }));
+
+// Mock Resend for email tests
+vi.mock('resend', () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: {
+      send: vi.fn().mockResolvedValue({
+        data: { id: 'mock-email-id' },
+        error: null,
+      }),
+    },
+  })),
+}));
