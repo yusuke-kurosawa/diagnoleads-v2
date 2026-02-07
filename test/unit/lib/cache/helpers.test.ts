@@ -4,7 +4,7 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// Mock cache client
+// Mock cache client for unit tests
 const mockCache = {
   get: vi.fn(),
   set: vi.fn(),
@@ -13,11 +13,7 @@ const mockCache = {
   ttl: vi.fn(),
 };
 
-vi.mock('@/lib/cache/client', () => ({
-  getCache: () => mockCache,
-}));
-
-describe('cacheAside', () => {
+describe('cacheAside (unit)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -249,5 +245,73 @@ describe('Cache statistics', () => {
     expect(stats.hits).toBe(2);
     expect(stats.misses).toBe(1);
     expect(stats.getHitRate()).toBeCloseTo(0.67, 1);
+  });
+});
+
+// Integration tests with actual module
+import { withLock } from '@/lib/cache/helpers';
+
+describe('Integration: withLock (actual)', () => {
+  it('should prevent concurrent execution', async () => {
+    let counter = 0;
+    const slowFn = async () => {
+      counter++;
+      await new Promise(r => setTimeout(r, 50));
+      return counter;
+    };
+
+    // Start multiple concurrent calls
+    const results = await Promise.all([
+      withLock('lock-key-test', slowFn),
+      withLock('lock-key-test', slowFn),
+      withLock('lock-key-test', slowFn),
+    ]);
+
+    // All should return the same result (first call)
+    expect(results[0]).toBe(results[1]);
+    expect(results[1]).toBe(results[2]);
+    expect(counter).toBe(1);
+  });
+
+  it('should allow sequential execution', async () => {
+    let counter = 0;
+    const fn = async () => ++counter;
+
+    const result1 = await withLock('seq-key-test', fn);
+    const result2 = await withLock('seq-key-test', fn);
+
+    expect(result1).toBe(1);
+    expect(result2).toBe(2);
+  });
+
+  it('should handle errors and release lock', async () => {
+    const errorFn = async () => {
+      throw new Error('Test error');
+    };
+
+    await expect(withLock('error-key', errorFn)).rejects.toThrow('Test error');
+
+    // Lock should be released, subsequent call should work
+    let counter = 0;
+    const successFn = async () => ++counter;
+    const result = await withLock('error-key', successFn);
+    expect(result).toBe(1);
+  });
+});
+
+describe('Integration: Helper function exports', () => {
+  it('should export all helper functions', async () => {
+    const helpers = await import('@/lib/cache/helpers');
+
+    expect(typeof helpers.cacheAside).toBe('function');
+    expect(typeof helpers.cacheAsideSWR).toBe('function');
+    expect(typeof helpers.memoize).toBe('function');
+    expect(typeof helpers.invalidatePattern).toBe('function');
+    expect(typeof helpers.invalidateKeys).toBe('function');
+    expect(typeof helpers.batchGet).toBe('function');
+    expect(typeof helpers.batchSet).toBe('function');
+    expect(typeof helpers.withLock).toBe('function');
+    expect(typeof helpers.cacheAsideWithLock).toBe('function');
+    expect(typeof helpers.cached).toBe('function');
   });
 });
