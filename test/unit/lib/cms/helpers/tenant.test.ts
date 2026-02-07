@@ -4,7 +4,7 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// Mock dependencies
+// Mock dependencies before importing
 vi.mock('@/lib/auth/config', () => ({
   auth: {
     api: {
@@ -17,13 +17,37 @@ vi.mock('next/headers', () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
 }));
 
-// Types
-interface TenantContext {
-  userId: string | null;
-  organizationId: string | null;
-  isAuthenticated: boolean;
-}
+vi.mock('@/lib/cms/repositories/assessment.repository', () => ({
+  AssessmentRepository: class MockAssessmentRepository {
+    findAll = vi.fn().mockResolvedValue([]);
+  },
+}));
 
+vi.mock('@/lib/cms/repositories/blog.repository', () => ({
+  BlogRepository: class MockBlogRepository {
+    findAll = vi.fn().mockResolvedValue([]);
+  },
+}));
+
+vi.mock('@/lib/cms/repositories/faq.repository', () => ({
+  FAQRepository: class MockFAQRepository {
+    findAll = vi.fn().mockResolvedValue([]);
+  },
+}));
+
+// Import after mocking
+import { auth } from '@/lib/auth/config';
+import {
+  getTenantContext,
+  getBlogRepository,
+  getFAQRepository,
+  getAssessmentRepository,
+  requireTenantContext,
+  getPublicContentContext,
+  type TenantContext,
+} from '@/lib/cms/helpers/tenant';
+
+// Types
 interface Session {
   user: { id: string } | null;
   session: { activeOrganizationId?: string };
@@ -248,5 +272,129 @@ describe('getPublicContentContext', () => {
 
     const result = await getPublicContentContext(null);
     expect(result.organizationId).toBeNull();
+  });
+});
+
+// Integration tests with actual module
+describe('getTenantContext (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return unauthenticated context when no session', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    const context = await getTenantContext();
+    expect(context.isAuthenticated).toBe(false);
+    expect(context.userId).toBeNull();
+    expect(context.organizationId).toBeNull();
+  });
+
+  it('should return authenticated context with session', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { id: 'user-123', email: 'test@example.com', name: 'Test' },
+      session: { activeOrganizationId: 'org-456' },
+    } as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
+
+    const context = await getTenantContext();
+    expect(context.isAuthenticated).toBe(true);
+    expect(context.userId).toBe('user-123');
+  });
+
+  it('should handle error and return unauthenticated', async () => {
+    vi.mocked(auth.api.getSession).mockRejectedValue(new Error('Session error'));
+
+    const context = await getTenantContext();
+    expect(context.isAuthenticated).toBe(false);
+  });
+});
+
+describe('getBlogRepository (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return BlogRepository instance', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    const { repo, organizationId } = await getBlogRepository();
+    expect(repo).toBeDefined();
+    expect(organizationId).toBeNull();
+  });
+});
+
+describe('getFAQRepository (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return FAQRepository instance', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    const { repo, organizationId } = await getFAQRepository();
+    expect(repo).toBeDefined();
+    expect(organizationId).toBeNull();
+  });
+});
+
+describe('getAssessmentRepository (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return AssessmentRepository instance', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    const { repo, organizationId } = await getAssessmentRepository();
+    expect(repo).toBeDefined();
+    expect(organizationId).toBeNull();
+  });
+});
+
+describe('requireTenantContext (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should throw when not authenticated', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    await expect(requireTenantContext()).rejects.toThrow('Authentication required');
+  });
+
+  it('should throw when no organizationId', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { id: 'user-123' },
+      session: {},
+    } as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
+
+    await expect(requireTenantContext()).rejects.toThrow('Organization context required');
+  });
+
+  it('should return context when valid', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { id: 'user-123' },
+      session: { activeOrganizationId: 'org-456' },
+    } as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
+
+    const result = await requireTenantContext();
+    expect(result.userId).toBe('user-123');
+    expect(result.organizationId).toBe('org-456');
+  });
+});
+
+describe('getPublicContentContext (integration)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return organizationId from session', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue({
+      user: { id: 'user-123' },
+      session: { activeOrganizationId: 'org-456' },
+    } as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
+
+    const { organizationId } = await getPublicContentContext();
+    expect(organizationId).toBe('org-456');
   });
 });
