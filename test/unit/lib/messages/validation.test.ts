@@ -2,11 +2,19 @@
  * Zod Validation i18n Integration Tests
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { z } from 'zod';
 
+// Import actual module
+import {
+  fieldNameMap as actualFieldNameMap,
+  getZodErrorMessage,
+  createZodErrorMap,
+  formatZodErrors,
+} from '@/lib/messages/validation';
+
 // Field name map matching source
-const fieldNameMap: Record<string, string> = {
+const localFieldNameMap: Record<string, string> = {
   name: 'leads.name',
   email: 'leads.email',
   phone: 'leads.phone',
@@ -29,26 +37,26 @@ const fieldNameMap: Record<string, string> = {
 
 describe('fieldNameMap', () => {
   it('should map lead fields', () => {
-    expect(fieldNameMap.name).toBe('leads.name');
-    expect(fieldNameMap.email).toBe('leads.email');
-    expect(fieldNameMap.phone).toBe('leads.phone');
-    expect(fieldNameMap.company).toBe('leads.company');
+    expect(localFieldNameMap.name).toBe('leads.name');
+    expect(localFieldNameMap.email).toBe('leads.email');
+    expect(localFieldNameMap.phone).toBe('leads.phone');
+    expect(localFieldNameMap.company).toBe('leads.company');
   });
 
   it('should map organization fields', () => {
-    expect(fieldNameMap.organizationName).toBe('organization.name');
-    expect(fieldNameMap.organizationSlug).toBe('organization.slug');
+    expect(localFieldNameMap.organizationName).toBe('organization.name');
+    expect(localFieldNameMap.organizationSlug).toBe('organization.slug');
   });
 
   it('should map member fields', () => {
-    expect(fieldNameMap.memberEmail).toBe('member.email');
-    expect(fieldNameMap.memberRole).toBe('member.role');
+    expect(localFieldNameMap.memberEmail).toBe('member.email');
+    expect(localFieldNameMap.memberRole).toBe('member.role');
   });
 
   it('should map common fields', () => {
-    expect(fieldNameMap.title).toBe('common.title');
-    expect(fieldNameMap.description).toBe('common.description');
-    expect(fieldNameMap.url).toBe('common.url');
+    expect(localFieldNameMap.title).toBe('common.title');
+    expect(localFieldNameMap.description).toBe('common.description');
+    expect(localFieldNameMap.url).toBe('common.url');
   });
 });
 
@@ -74,7 +82,7 @@ describe('getZodErrorMessage', () => {
       path: ['email'],
     };
 
-    const fieldName = tFields(fieldNameMap['email'] || 'email');
+    const fieldName = tFields(localFieldNameMap['email'] || 'email');
     const result = t('validation.required', { field: fieldName });
 
     expect(result).toContain('validation.required');
@@ -360,5 +368,129 @@ describe('Zod schema integration', () => {
 
     const valid = schema.safeParse({ score: 50 });
     expect(valid.success).toBe(true);
+  });
+});
+
+// Integration tests with actual module
+describe('Integration: fieldNameMap (actual)', () => {
+  it('should export fieldNameMap', () => {
+    expect(actualFieldNameMap).toBeDefined();
+    expect(actualFieldNameMap.name).toBe('leads.name');
+    expect(actualFieldNameMap.email).toBe('leads.email');
+    expect(actualFieldNameMap.organizationName).toBe('organization.name');
+  });
+});
+
+describe('Integration: getZodErrorMessage (actual)', () => {
+  const mockT = vi.fn((key: string, params?: Record<string, string | number>) => {
+    if (params) return `${key}:${JSON.stringify(params)}`;
+    return key;
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should handle invalid_type issue', () => {
+    const issue: z.ZodIssueOptionalMessage = {
+      code: z.ZodIssueCode.invalid_type,
+      expected: 'string',
+      received: 'undefined',
+      path: ['name'],
+    };
+
+    const result = getZodErrorMessage(issue, mockT);
+    expect(mockT).toHaveBeenCalled();
+    expect(typeof result).toBe('string');
+  });
+
+  it('should handle too_small issue', () => {
+    const issue: z.ZodIssueOptionalMessage = {
+      code: z.ZodIssueCode.too_small,
+      type: 'string',
+      minimum: 2,
+      inclusive: true,
+      path: ['name'],
+    };
+
+    const result = getZodErrorMessage(issue, mockT);
+    expect(typeof result).toBe('string');
+  });
+
+  it('should handle invalid_string for email', () => {
+    const issue: z.ZodIssueOptionalMessage = {
+      code: z.ZodIssueCode.invalid_string,
+      validation: 'email',
+      path: ['email'],
+    };
+
+    const result = getZodErrorMessage(issue, mockT);
+    expect(result).toContain('validation.email');
+  });
+
+  it('should handle custom error', () => {
+    const issue: z.ZodIssueOptionalMessage = {
+      code: z.ZodIssueCode.custom,
+      message: 'Custom message',
+      path: ['field'],
+    };
+
+    const result = getZodErrorMessage(issue, mockT);
+    expect(result).toBe('Custom message');
+  });
+});
+
+describe('Integration: createZodErrorMap (actual)', () => {
+  it('should create error map', () => {
+    const mockT = vi.fn().mockReturnValue('Translated');
+    const errorMap = createZodErrorMap(mockT);
+    
+    expect(typeof errorMap).toBe('function');
+  });
+
+  it('should return message from issue if present', () => {
+    const mockT = vi.fn().mockReturnValue('Default');
+    const errorMap = createZodErrorMap(mockT);
+
+    const result = errorMap(
+      { code: z.ZodIssueCode.custom, message: 'Preset message', path: [] },
+      { defaultError: 'default' }
+    );
+
+    expect(result.message).toBe('Preset message');
+  });
+});
+
+describe('Integration: formatZodErrors (actual)', () => {
+  it('should format zod errors into record', () => {
+    const mockT = vi.fn().mockReturnValue('Error');
+    const schema = z.object({
+      email: z.string().email(),
+      name: z.string().min(2),
+    });
+
+    const result = schema.safeParse({ email: 'bad', name: 'a' });
+    
+    if (!result.success) {
+      const formatted = formatZodErrors(result.error, mockT);
+      expect(typeof formatted).toBe('object');
+      expect(formatted).toHaveProperty('email');
+      expect(formatted).toHaveProperty('name');
+    }
+  });
+
+  it('should use tFields for field translation', () => {
+    const mockT = vi.fn().mockReturnValue('Error');
+    const mockTFields = vi.fn((key) => `Field: ${key}`);
+    const schema = z.object({
+      email: z.string().email(),
+    });
+
+    const result = schema.safeParse({ email: 'invalid' });
+    
+    if (!result.success) {
+      const formatted = formatZodErrors(result.error, mockT, mockTFields);
+      expect(typeof formatted).toBe('object');
+    }
   });
 });

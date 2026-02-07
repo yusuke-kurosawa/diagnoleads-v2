@@ -4,8 +4,22 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+// Import actual module
+import {
+  errorMessageMap,
+  httpStatusToErrorCode,
+  getErrorMessageKey,
+  getErrorCodeFromStatus,
+  createErrorResponse,
+  mapTRPCErrorToErrorResponse,
+  getLocalizedErrorMessage,
+  getToastMessageKey,
+  type ErrorCode,
+  type ErrorResponse,
+} from '@/lib/messages/error-mapper';
+
 // Types matching source
-type ErrorCode =
+type ErrorCodeType =
   | 'AUTH_REQUIRED'
   | 'AUTH_INVALID_CREDENTIALS'
   | 'AUTH_SESSION_EXPIRED'
@@ -385,5 +399,117 @@ describe('getToastMessageKey', () => {
 
   it('should return error key for update', () => {
     expect(getToastMessageKey('update', 'organization', true)).toBe('toast.organization.updateError');
+  });
+});
+
+// Integration tests with actual module
+describe('Integration: errorMessageMap', () => {
+  it('should export errorMessageMap', () => {
+    expect(errorMessageMap).toBeDefined();
+    expect(errorMessageMap.AUTH_REQUIRED).toBe('auth.unauthorized');
+  });
+});
+
+describe('Integration: httpStatusToErrorCode', () => {
+  it('should export httpStatusToErrorCode', () => {
+    expect(httpStatusToErrorCode).toBeDefined();
+    expect(httpStatusToErrorCode[401]).toBe('AUTH_REQUIRED');
+  });
+});
+
+describe('Integration: getErrorMessageKey', () => {
+  it('should return correct key', () => {
+    expect(getErrorMessageKey('AUTH_REQUIRED')).toBe('auth.unauthorized');
+    expect(getErrorMessageKey('NOT_FOUND')).toBe('api.404');
+    expect(getErrorMessageKey('UNKNOWN_ERROR')).toBe('api.unknown');
+  });
+});
+
+describe('Integration: getErrorCodeFromStatus', () => {
+  it('should return correct error code', () => {
+    expect(getErrorCodeFromStatus(400)).toBe('VALIDATION_ERROR');
+    expect(getErrorCodeFromStatus(401)).toBe('AUTH_REQUIRED');
+    expect(getErrorCodeFromStatus(403)).toBe('FORBIDDEN');
+    expect(getErrorCodeFromStatus(404)).toBe('NOT_FOUND');
+    expect(getErrorCodeFromStatus(500)).toBe('SERVER_ERROR');
+    expect(getErrorCodeFromStatus(999)).toBe('UNKNOWN_ERROR');
+  });
+});
+
+describe('Integration: createErrorResponse', () => {
+  it('should create error response', () => {
+    const response = createErrorResponse('AUTH_REQUIRED');
+    expect(response.code).toBe('AUTH_REQUIRED');
+    expect(response.message).toBe('auth.unauthorized');
+  });
+
+  it('should create error response with custom message', () => {
+    const response = createErrorResponse('VALIDATION_ERROR', 'Custom validation error');
+    expect(response.message).toBe('Custom validation error');
+  });
+
+  it('should create error response with field and details', () => {
+    const response = createErrorResponse('INVALID_EMAIL', undefined, 'email', { format: 'invalid' });
+    expect(response.field).toBe('email');
+    expect(response.details).toEqual({ format: 'invalid' });
+  });
+});
+
+describe('Integration: mapTRPCErrorToErrorResponse', () => {
+  it('should map tRPC error', () => {
+    const trpcError = {
+      code: 'UNAUTHORIZED',
+      message: 'Not authenticated',
+    };
+    const response = mapTRPCErrorToErrorResponse(trpcError);
+    expect(response.code).toBe('AUTH_REQUIRED');
+  });
+
+  it('should use data.code if provided', () => {
+    const trpcError = {
+      code: 'BAD_REQUEST',
+      message: 'Invalid email',
+      data: { code: 'INVALID_EMAIL' as ErrorCode, field: 'email' },
+    };
+    const response = mapTRPCErrorToErrorResponse(trpcError);
+    expect(response.code).toBe('INVALID_EMAIL');
+    expect(response.field).toBe('email');
+  });
+});
+
+describe('Integration: getLocalizedErrorMessage', () => {
+  it('should get localized message', () => {
+    const t = vi.fn().mockReturnValue('ログインが必要です');
+    const errorResponse: ErrorResponse = {
+      code: 'AUTH_REQUIRED',
+      message: 'auth.unauthorized',
+    };
+    
+    const message = getLocalizedErrorMessage(errorResponse, t);
+    expect(t).toHaveBeenCalled();
+    expect(message).toBe('ログインが必要です');
+  });
+
+  it('should pass field params to translator', () => {
+    const t = vi.fn().mockImplementation((key, params) => `${key}: ${JSON.stringify(params)}`);
+    const errorResponse: ErrorResponse = {
+      code: 'REQUIRED_FIELD',
+      message: 'validation.required',
+      field: 'email',
+    };
+    
+    const message = getLocalizedErrorMessage(errorResponse, t);
+    expect(message).toContain('email');
+  });
+});
+
+describe('Integration: getToastMessageKey (actual)', () => {
+  it('should return correct toast keys', () => {
+    expect(getToastMessageKey('create', 'lead', false)).toBe('toast.lead.created');
+    expect(getToastMessageKey('update', 'lead', false)).toBe('toast.lead.updated');
+    expect(getToastMessageKey('delete', 'lead', false)).toBe('toast.lead.deleted');
+    expect(getToastMessageKey('create', 'lead', true)).toBe('toast.lead.createError');
+    expect(getToastMessageKey('update', 'organization', true)).toBe('toast.organization.updateError');
+    expect(getToastMessageKey('delete', 'member', true)).toBe('toast.member.deleteError');
   });
 });

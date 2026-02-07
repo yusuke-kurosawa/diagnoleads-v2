@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { cn, formatDate, formatRelativeTime, truncate } from '@/lib/utils/index';
+import { cn, formatDate, formatRelativeTime, truncate, sleep, randomString } from '@/lib/utils/index';
 
 describe('cn export', () => {
   it('should export cn function', () => {
@@ -95,16 +95,96 @@ describe('truncate', () => {
 });
 
 describe('sleep', () => {
-  it('should be available in utils', async () => {
-    // sleep is defined in index.ts but not exported
-    // Test that formatDate and other exports work
-    expect(typeof formatDate).toBe('function');
+  it('should export sleep function', () => {
+    expect(typeof sleep).toBe('function');
+  });
+
+  it('should return a promise', () => {
+    const result = sleep(0);
+    expect(result).toBeInstanceOf(Promise);
+  });
+
+  it('should resolve after specified time', async () => {
+    const start = Date.now();
+    await sleep(10);
+    const elapsed = Date.now() - start;
+    expect(elapsed).toBeGreaterThanOrEqual(10);
   });
 });
 
 describe('randomString', () => {
-  it('should be available in utils', () => {
-    // randomString is defined in index.ts but not exported
-    expect(typeof formatDate).toBe('function');
+  it('should export randomString function', () => {
+    expect(typeof randomString).toBe('function');
+  });
+
+  it('should generate string of default length 10', () => {
+    const result = randomString();
+    expect(result.length).toBe(10);
+  });
+
+  it('should generate string of specified length', () => {
+    expect(randomString(5).length).toBe(5);
+    expect(randomString(20).length).toBe(20);
+    expect(randomString(1).length).toBe(1);
+  });
+
+  it('should only contain alphanumeric characters', () => {
+    const result = randomString(100);
+    expect(/^[A-Za-z0-9]+$/.test(result)).toBe(true);
+  });
+
+  it('should generate different strings on each call', () => {
+    const results = new Set<string>();
+    for (let i = 0; i < 10; i++) {
+      results.add(randomString(20));
+    }
+    expect(results.size).toBe(10);
+  });
+});
+
+describe('formatRelativeTime edge cases', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2024-06-15T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should handle seconds', () => {
+    const date = new Date('2024-06-15T11:59:30Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('second');
+  });
+
+  it('should handle hours', () => {
+    const date = new Date('2024-06-15T09:00:00Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('hour');
+  });
+
+  it('should handle days', () => {
+    const date = new Date('2024-06-12T12:00:00Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('day');
+  });
+
+  it('should handle weeks', () => {
+    const date = new Date('2024-06-01T12:00:00Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('week');
+  });
+
+  it('should handle months', () => {
+    const date = new Date('2024-04-15T12:00:00Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('month');
+  });
+
+  it('should handle years', () => {
+    const date = new Date('2022-06-15T12:00:00Z');
+    const formatted = formatRelativeTime(date, 'en-US');
+    expect(formatted).toContain('year');
   });
 });

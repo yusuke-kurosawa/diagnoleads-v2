@@ -2,7 +2,14 @@
  * Workflow Engine Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import {
+  WorkflowEngine,
+  getWorkflowEngine,
+  createWorkflowEngine,
+  resetWorkflowEngine,
+} from '@/lib/workflow/engine';
+import type { WorkflowDefinition } from '@/lib/workflow/types';
 
 // Types matching source
 type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -384,5 +391,201 @@ describe('WorkflowDefinition', () => {
 
     expect(workflow.nodes).toHaveLength(5);
     expect(workflow.edges).toHaveLength(5);
+  });
+});
+
+// Integration tests with actual module
+describe('Integration: WorkflowEngine (actual)', () => {
+  let engine: WorkflowEngine;
+
+  beforeEach(() => {
+    engine = createWorkflowEngine();
+  });
+
+  afterEach(() => {
+    resetWorkflowEngine();
+  });
+
+  it('should create new engine instance', () => {
+    expect(engine).toBeInstanceOf(WorkflowEngine);
+  });
+
+  it('should execute simple workflow', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'Test Workflow',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger-1', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+        {
+          id: 'action-1',
+          type: 'action',
+          name: 'Send Email',
+          config: { actionType: 'send_email', params: { to: 'test@example.com' } },
+        },
+      ],
+      edges: [{ id: 'e1', source: 'trigger-1', target: 'action-1' }],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow, { email: 'lead@example.com' });
+
+    expect(execution.status).toBe('completed');
+    expect(execution.steps.length).toBeGreaterThan(0);
+    expect(execution.workflowId).toBe('test-wf');
+  });
+
+  it('should fail if no trigger node', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'No Trigger',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        {
+          id: 'action-1',
+          type: 'action',
+          name: 'Action',
+          config: { actionType: 'send_email', params: {} },
+        },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+
+    expect(execution.status).toBe('failed');
+    expect(execution.error).toContain('trigger');
+  });
+
+  it('should handle condition nodes', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'Condition Workflow',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger-1', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+        {
+          id: 'condition-1',
+          type: 'condition',
+          name: 'Check Score',
+          config: {
+            conditions: [{ field: 'trigger.score', operator: 'gte', value: 50 }],
+            operator: 'and',
+          },
+        },
+        {
+          id: 'action-1',
+          type: 'action',
+          name: 'Send Email',
+          config: { actionType: 'send_email', params: {} },
+        },
+      ],
+      edges: [
+        { id: 'e1', source: 'trigger-1', target: 'condition-1' },
+        { id: 'e2', source: 'condition-1', target: 'action-1', condition: 'true' },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow, { score: 75 });
+
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should cancel running execution', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'Long Workflow',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger-1', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+
+    // Already completed, can't cancel
+    const cancelled = engine.cancelExecution(execution.id);
+    expect(cancelled).toBe(false);
+  });
+
+  it('should get execution by ID', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'Test',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger-1', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+    const retrieved = engine.getExecution(execution.id);
+
+    expect(retrieved).toBeDefined();
+    expect(retrieved?.id).toBe(execution.id);
+  });
+
+  it('should register custom action handler', async () => {
+    engine.registerActionHandler('custom_action', async (params, context) => {
+      return { custom: true, message: params.message };
+    });
+
+    const workflow: WorkflowDefinition = {
+      id: 'test-wf',
+      name: 'Custom Action',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger-1', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+        {
+          id: 'action-1',
+          type: 'action',
+          name: 'Custom',
+          config: { actionType: 'custom_action', params: { message: 'Hello' } },
+        },
+      ],
+      edges: [{ id: 'e1', source: 'trigger-1', target: 'action-1' }],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+});
+
+describe('Integration: getWorkflowEngine (singleton)', () => {
+  afterEach(() => {
+    resetWorkflowEngine();
+  });
+
+  it('should return same instance', () => {
+    const engine1 = getWorkflowEngine();
+    const engine2 = getWorkflowEngine();
+    expect(engine1).toBe(engine2);
+  });
+
+  it('should create new instance after reset', () => {
+    const engine1 = getWorkflowEngine();
+    resetWorkflowEngine();
+    const engine2 = getWorkflowEngine();
+    expect(engine1).not.toBe(engine2);
   });
 });
