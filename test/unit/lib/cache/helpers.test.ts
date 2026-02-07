@@ -315,3 +315,226 @@ describe('Integration: Helper function exports', () => {
     expect(typeof helpers.cached).toBe('function');
   });
 });
+
+// Integration tests with actual cache (MemoryCache)
+import {
+  cacheAside,
+  cacheAsideSWR,
+  memoize,
+  invalidatePattern,
+  invalidateKeys,
+  batchGet,
+  batchSet,
+  cacheAsideWithLock,
+} from '@/lib/cache/helpers';
+import { getCache, resetCacheInstance } from '@/lib/cache/client';
+
+describe('Integration: cacheAside (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should cache and return fetched value', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ id: '123', name: 'Test User' });
+
+    const result1 = await cacheAside('user:123', fetcher);
+    expect(result1).toEqual({ id: '123', name: 'Test User' });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+
+    // Second call should return cached value
+    const result2 = await cacheAside('user:123', fetcher);
+    expect(result2).toEqual({ id: '123', name: 'Test User' });
+    expect(fetcher).toHaveBeenCalledTimes(1); // Not called again
+  });
+
+  it('should respect custom TTL option', async () => {
+    const fetcher = vi.fn().mockResolvedValue('value');
+
+    await cacheAside('ttl-test', fetcher, { ttl: 1 });
+    const cache = getCache();
+    const ttl = await cache.ttl('ttl-test');
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('Integration: cacheAsideSWR (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should return cached value and trigger background refresh when stale', async () => {
+    const fetcher = vi.fn().mockResolvedValue('fresh-value');
+
+    // First call - cache miss
+    const result1 = await cacheAsideSWR('swr-test', fetcher, { ttl: 60 });
+    expect(result1).toBe('fresh-value');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+
+    // Second call - cache hit
+    const result2 = await cacheAsideSWR('swr-test', fetcher, { ttl: 60 });
+    expect(result2).toBe('fresh-value');
+  });
+
+  it('should use default staleTime of 30 seconds', async () => {
+    const fetcher = vi.fn().mockResolvedValue('value');
+    await cacheAsideSWR('swr-default', fetcher);
+
+    const result = await cacheAsideSWR('swr-default', fetcher);
+    expect(result).toBe('value');
+  });
+});
+
+describe('Integration: memoize (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should memoize function with arguments', async () => {
+    const expensiveFn = vi.fn().mockImplementation(async (x: number, y: number) => x + y);
+    const keyGen = (x: number, y: number) => `sum:${x}:${y}`;
+    const memoizedFn = memoize(expensiveFn, keyGen);
+
+    const result1 = await memoizedFn(5, 3);
+    expect(result1).toBe(8);
+    expect(expensiveFn).toHaveBeenCalledTimes(1);
+
+    const result2 = await memoizedFn(5, 3);
+    expect(result2).toBe(8);
+    expect(expensiveFn).toHaveBeenCalledTimes(1); // Cached
+  });
+
+  it('should use different cache keys for different arguments', async () => {
+    const fn = vi.fn().mockImplementation(async (x: number) => x * 2);
+    const keyGen = (x: number) => `double:${x}`;
+    const memoizedFn = memoize(fn, keyGen);
+
+    await memoizedFn(5);
+    await memoizedFn(10);
+
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Integration: invalidatePattern (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should invalidate keys matching pattern', async () => {
+    const cache = getCache();
+    await cache.set('user:1', 'value1');
+    await cache.set('user:2', 'value2');
+    await cache.set('org:1', 'org-value');
+
+    const count = await invalidatePattern('user:*');
+    expect(count).toBe(2);
+
+    expect(await cache.get('user:1')).toBeNull();
+    expect(await cache.get('user:2')).toBeNull();
+    expect(await cache.get('org:1')).toBe('org-value');
+  });
+});
+
+describe('Integration: invalidateKeys (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should invalidate specific keys', async () => {
+    const cache = getCache();
+    await cache.set('key1', 'value1');
+    await cache.set('key2', 'value2');
+    await cache.set('key3', 'value3');
+
+    await invalidateKeys(['key1', 'key3']);
+
+    expect(await cache.get('key1')).toBeNull();
+    expect(await cache.get('key2')).toBe('value2');
+    expect(await cache.get('key3')).toBeNull();
+  });
+});
+
+describe('Integration: batchGet (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should get multiple keys at once', async () => {
+    const cache = getCache();
+    await cache.set('batch:1', 'value1');
+    await cache.set('batch:2', 'value2');
+
+    const results = await batchGet<string>(['batch:1', 'batch:2', 'batch:3']);
+
+    expect(results.get('batch:1')).toBe('value1');
+    expect(results.get('batch:2')).toBe('value2');
+    expect(results.get('batch:3')).toBeNull();
+  });
+});
+
+describe('Integration: batchSet (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should set multiple entries at once', async () => {
+    await batchSet([
+      { key: 'multi:1', value: 'val1' },
+      { key: 'multi:2', value: 'val2' },
+      { key: 'multi:3', value: 'val3' },
+    ]);
+
+    const cache = getCache();
+    expect(await cache.get('multi:1')).toBe('val1');
+    expect(await cache.get('multi:2')).toBe('val2');
+    expect(await cache.get('multi:3')).toBe('val3');
+  });
+
+  it('should respect TTL option', async () => {
+    await batchSet([{ key: 'ttl-batch', value: 'test' }], { ttl: 5 });
+
+    const cache = getCache();
+    const ttl = await cache.ttl('ttl-batch');
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(5);
+  });
+});
+
+describe('Integration: cacheAsideWithLock (actual)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should prevent cache stampede with lock', async () => {
+    let fetchCount = 0;
+    const slowFetcher = async () => {
+      fetchCount++;
+      await new Promise(r => setTimeout(r, 50));
+      return `result-${fetchCount}`;
+    };
+
+    // Concurrent calls should only trigger one fetch
+    const results = await Promise.all([
+      cacheAsideWithLock('stampede-test', slowFetcher),
+      cacheAsideWithLock('stampede-test', slowFetcher),
+      cacheAsideWithLock('stampede-test', slowFetcher),
+    ]);
+
+    expect(fetchCount).toBe(1);
+    expect(results[0]).toBe('result-1');
+    expect(results[1]).toBe('result-1');
+    expect(results[2]).toBe('result-1');
+  });
+
+  it('should return cached value on subsequent calls', async () => {
+    const fetcher = vi.fn().mockResolvedValue('cached-value');
+
+    const result1 = await cacheAsideWithLock('lock-cache-test', fetcher);
+    const result2 = await cacheAsideWithLock('lock-cache-test', fetcher);
+
+    expect(result1).toBe('cached-value');
+    expect(result2).toBe('cached-value');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
