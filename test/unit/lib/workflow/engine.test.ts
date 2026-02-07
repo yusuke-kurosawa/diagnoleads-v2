@@ -589,3 +589,259 @@ describe('Integration: getWorkflowEngine (singleton)', () => {
     expect(engine1).not.toBe(engine2);
   });
 });
+
+describe('Integration: Built-in action handlers', () => {
+  let engine: WorkflowEngine;
+
+  beforeEach(() => {
+    resetWorkflowEngine();
+    engine = createWorkflowEngine();
+  });
+
+  const createWorkflowWithAction = (actionType: string, params: Record<string, unknown>): WorkflowDefinition => ({
+    id: `wf-${actionType}`,
+    name: `Test ${actionType}`,
+    organizationId: 'org-123',
+    status: 'active',
+    nodes: [
+      { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      { id: 'action', type: 'action', name: 'Action', config: { actionType, params } },
+    ],
+    edges: [{ id: 'e1', source: 'trigger', target: 'action' }],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  it('should execute send_email action', async () => {
+    const workflow = createWorkflowWithAction('send_email', { to: 'test@example.com', subject: 'Test' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute send_notification action', async () => {
+    const workflow = createWorkflowWithAction('send_notification', { message: 'Hello' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute update_lead action', async () => {
+    const workflow = createWorkflowWithAction('update_lead', { leadId: 'lead-1', data: { status: 'qualified' } });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute create_task action', async () => {
+    const workflow = createWorkflowWithAction('create_task', { title: 'Follow up' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute call_webhook action', async () => {
+    const workflow = createWorkflowWithAction('call_webhook', { url: 'https://example.com/hook' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute ai_process action', async () => {
+    const workflow = createWorkflowWithAction('ai_process', { task: 'score_lead' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute assign_lead action', async () => {
+    const workflow = createWorkflowWithAction('assign_lead', { leadId: 'lead-1', assignee: 'user-1' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute add_tag action', async () => {
+    const workflow = createWorkflowWithAction('add_tag', { leadId: 'lead-1', tag: 'hot' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute remove_tag action', async () => {
+    const workflow = createWorkflowWithAction('remove_tag', { leadId: 'lead-1', tag: 'cold' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute delay action', async () => {
+    const workflow = createWorkflowWithAction('delay', { duration: 10 });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should execute run_script action', async () => {
+    const workflow = createWorkflowWithAction('run_script', { script: 'console.log("test")' });
+    const execution = await engine.execute(workflow);
+    expect(execution.status).toBe('completed');
+  });
+});
+
+describe('Integration: Condition operators', () => {
+  let engine: WorkflowEngine;
+
+  beforeEach(() => {
+    resetWorkflowEngine();
+    engine = createWorkflowEngine();
+  });
+
+  const createConditionWorkflow = (conditions: Array<{ field: string; operator: string; value: unknown }>): WorkflowDefinition => ({
+    id: 'wf-condition',
+    name: 'Condition Test',
+    organizationId: 'org-123',
+    status: 'active',
+    nodes: [
+      { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      { id: 'condition', type: 'condition', name: 'Check', config: { conditions, operator: 'and' } },
+      { id: 'action', type: 'action', name: 'Action', config: { actionType: 'send_notification', params: {} } },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger', target: 'condition' },
+      { id: 'e2', source: 'condition', target: 'action', condition: 'true' },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  it('should evaluate eq operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.status', operator: 'eq', value: 'new' }]);
+    const execution = await engine.execute(workflow, { status: 'new' });
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should evaluate neq operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.status', operator: 'neq', value: 'closed' }]);
+    const execution = await engine.execute(workflow, { status: 'new' });
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should evaluate gt operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.score', operator: 'gt', value: 50 }]);
+    const execution = await engine.execute(workflow, { score: 75 });
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should evaluate lt operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.score', operator: 'lt', value: 50 }]);
+    const execution = await engine.execute(workflow, { score: 25 });
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should evaluate contains operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.email', operator: 'contains', value: '@example.com' }]);
+    const execution = await engine.execute(workflow, { email: 'test@example.com' });
+    expect(execution.status).toBe('completed');
+  });
+
+  it('should evaluate exists operator', async () => {
+    const workflow = createConditionWorkflow([{ field: 'trigger.name', operator: 'exists', value: null }]);
+    const execution = await engine.execute(workflow, { name: 'John' });
+    expect(execution.status).toBe('completed');
+  });
+});
+
+describe('Integration: Template resolution', () => {
+  let engine: WorkflowEngine;
+
+  beforeEach(() => {
+    resetWorkflowEngine();
+    engine = createWorkflowEngine();
+  });
+
+  it('should resolve template variables in action params', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'wf-template',
+      name: 'Template Test',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+        { id: 'action', type: 'action', name: 'Email', config: { 
+          actionType: 'send_email', 
+          params: { to: '{{trigger.email}}', subject: 'Hello {{trigger.name}}' } 
+        }},
+      ],
+      edges: [{ id: 'e1', source: 'trigger', target: 'action' }],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow, { email: 'test@example.com', name: 'John' });
+    expect(execution.status).toBe('completed');
+  });
+});
+
+describe('Integration: Execution management', () => {
+  let engine: WorkflowEngine;
+
+  beforeEach(() => {
+    resetWorkflowEngine();
+    engine = createWorkflowEngine();
+  });
+
+  it('should get execution by id', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'wf-1',
+      name: 'Test',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+    const retrieved = engine.getExecution(execution.id);
+    
+    expect(retrieved).toBeDefined();
+    expect(retrieved?.id).toBe(execution.id);
+  });
+
+  it('should execute multiple workflows', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'wf-multi',
+      name: 'Test',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const exec1 = await engine.execute(workflow);
+    const exec2 = await engine.execute(workflow);
+    
+    expect(exec1.id).not.toBe(exec2.id);
+    expect(exec1.status).toBe('completed');
+    expect(exec2.status).toBe('completed');
+  });
+
+  it('should clear all executions', async () => {
+    const workflow: WorkflowDefinition = {
+      id: 'wf-clear',
+      name: 'Test',
+      organizationId: 'org-123',
+      status: 'active',
+      nodes: [
+        { id: 'trigger', type: 'trigger', name: 'Start', config: { triggerType: 'manual' } },
+      ],
+      edges: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const execution = await engine.execute(workflow);
+    engine.clearExecutions();
+    
+    const retrieved = engine.getExecution(execution.id);
+    expect(retrieved).toBeUndefined();
+  });
+});
