@@ -307,6 +307,88 @@ describe('Integration: addLocalePrefixToPath', () => {
 });
 
 import { getLocaleFromPathname as actualGetLocaleFromPathname, localeConfig as actualLocaleConfig, locales as actualLocales, defaultLocale as actualDefaultLocale } from '@/lib/i18n/config';
+import { getLocaleFromRequest } from '@/lib/i18n/middleware';
+
+// Mock NextRequest
+function createMockNextRequest(options: {
+  pathname: string;
+  cookieLocale?: string;
+  acceptLanguage?: string;
+}) {
+  return {
+    nextUrl: {
+      pathname: options.pathname,
+    },
+    cookies: {
+      get: (name: string) => {
+        if (name === 'NEXT_LOCALE' && options.cookieLocale) {
+          return { value: options.cookieLocale };
+        }
+        return undefined;
+      },
+    },
+    headers: {
+      get: (name: string) => {
+        if (name === 'accept-language') {
+          return options.acceptLanguage ?? null;
+        }
+        return null;
+      },
+    },
+  } as any;
+}
+
+describe('Integration: getLocaleFromRequest (actual)', () => {
+  it('should return locale from URL path', () => {
+    const request = createMockNextRequest({ pathname: '/ja/dashboard' });
+    expect(getLocaleFromRequest(request)).toBe('ja');
+  });
+
+  it('should return en from URL path', () => {
+    const request = createMockNextRequest({ pathname: '/en/settings' });
+    expect(getLocaleFromRequest(request)).toBe('en');
+  });
+
+  it('should fallback to cookie when no path locale', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', cookieLocale: 'en' });
+    expect(getLocaleFromRequest(request)).toBe('en');
+  });
+
+  it('should fallback to Accept-Language when no cookie', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', acceptLanguage: 'en-US,en;q=0.9' });
+    expect(getLocaleFromRequest(request)).toBe('en');
+  });
+
+  it('should return default when nothing matches', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', acceptLanguage: 'fr-FR' });
+    expect(getLocaleFromRequest(request)).toBe('ja');
+  });
+
+  it('should ignore invalid cookie locale', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', cookieLocale: 'fr', acceptLanguage: 'en-US' });
+    expect(getLocaleFromRequest(request)).toBe('en');
+  });
+
+  it('should handle complex Accept-Language headers', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', acceptLanguage: 'fr-FR,fr;q=0.9,en-US,en;q=0.8' });
+    expect(getLocaleFromRequest(request)).toBe('en');
+  });
+
+  it('should prioritize URL over cookie and Accept-Language', () => {
+    const request = createMockNextRequest({ pathname: '/ja/dashboard', cookieLocale: 'en', acceptLanguage: 'en-US' });
+    expect(getLocaleFromRequest(request)).toBe('ja');
+  });
+
+  it('should prioritize cookie over Accept-Language', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard', cookieLocale: 'ja', acceptLanguage: 'en-US' });
+    expect(getLocaleFromRequest(request)).toBe('ja');
+  });
+
+  it('should handle empty Accept-Language', () => {
+    const request = createMockNextRequest({ pathname: '/dashboard' });
+    expect(getLocaleFromRequest(request)).toBe('ja');
+  });
+});
 
 describe('Integration: getLocaleFromRequest logic', () => {
   // Test the logic of getLocaleFromRequest without NextRequest

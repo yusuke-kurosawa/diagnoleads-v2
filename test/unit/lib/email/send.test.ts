@@ -234,3 +234,205 @@ describe('Email error handling', () => {
       .rejects.toThrow('Rate limit exceeded');
   });
 });
+
+// Integration tests with actual send functions (using mocked sendEmail)
+import {
+  sendPasswordResetEmail,
+  sendOrganizationInviteEmail,
+  sendWelcomeEmail,
+} from '@/lib/email/send';
+
+describe('Integration: sendPasswordResetEmail (actual)', () => {
+  beforeEach(() => {
+    mockSendEmail.mockClear();
+    mockSendEmail.mockResolvedValue({ id: 'email-reset-123' });
+  });
+
+  it('should call sendEmail with correct params', async () => {
+    const result = await sendPasswordResetEmail({
+      to: 'user@example.com',
+      userName: '田中太郎',
+      resetLink: 'https://app.diagnoleads.com/reset?token=abc',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'user@example.com',
+      subject: 'パスワードのリセット - DiagnoLeads',
+    }));
+    expect(result).toEqual({ id: 'email-reset-123' });
+  });
+
+  it('should use default expiresIn', async () => {
+    await sendPasswordResetEmail({
+      to: 'user@example.com',
+      userName: '田中',
+      resetLink: 'https://example.com/reset',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('1時間'),
+    }));
+  });
+
+  it('should use custom expiresIn', async () => {
+    await sendPasswordResetEmail({
+      to: 'user@example.com',
+      userName: '田中',
+      resetLink: 'https://example.com/reset',
+      expiresIn: '30分',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('30分'),
+    }));
+  });
+
+  it('should include user name in text', async () => {
+    await sendPasswordResetEmail({
+      to: 'user@example.com',
+      userName: '山田花子',
+      resetLink: 'https://example.com/reset',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('山田花子'),
+    }));
+  });
+
+  it('should include reset link in text', async () => {
+    const resetLink = 'https://app.diagnoleads.com/reset?token=xyz789';
+    await sendPasswordResetEmail({
+      to: 'user@example.com',
+      userName: '田中',
+      resetLink,
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining(resetLink),
+    }));
+  });
+});
+
+describe('Integration: sendOrganizationInviteEmail (actual)', () => {
+  beforeEach(() => {
+    mockSendEmail.mockClear();
+    mockSendEmail.mockResolvedValue({ id: 'email-invite-456' });
+  });
+
+  it('should call sendEmail with correct params', async () => {
+    const result = await sendOrganizationInviteEmail({
+      to: 'newuser@example.com',
+      inviterName: '山田花子',
+      organizationName: 'テスト株式会社',
+      inviteLink: 'https://app.diagnoleads.com/invite/xyz',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'newuser@example.com',
+      subject: 'テスト株式会社への招待 - DiagnoLeads',
+    }));
+    expect(result).toEqual({ id: 'email-invite-456' });
+  });
+
+  it('should use default role', async () => {
+    await sendOrganizationInviteEmail({
+      to: 'user@example.com',
+      inviterName: '田中',
+      organizationName: 'ABC社',
+      inviteLink: 'https://example.com/invite',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('メンバー'),
+    }));
+  });
+
+  it('should use custom role', async () => {
+    await sendOrganizationInviteEmail({
+      to: 'user@example.com',
+      inviterName: '田中',
+      organizationName: 'ABC社',
+      inviteLink: 'https://example.com/invite',
+      role: '管理者',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('管理者'),
+    }));
+  });
+
+  it('should use default expiresIn', async () => {
+    await sendOrganizationInviteEmail({
+      to: 'user@example.com',
+      inviterName: '田中',
+      organizationName: 'ABC社',
+      inviteLink: 'https://example.com/invite',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('7日間'),
+    }));
+  });
+
+  it('should include inviter and org name in text', async () => {
+    await sendOrganizationInviteEmail({
+      to: 'user@example.com',
+      inviterName: '佐藤一郎',
+      organizationName: 'サンプル株式会社',
+      inviteLink: 'https://example.com/invite',
+    });
+
+    const calledWith = mockSendEmail.mock.calls[0][0];
+    expect(calledWith.text).toContain('佐藤一郎');
+    expect(calledWith.text).toContain('サンプル株式会社');
+  });
+});
+
+describe('Integration: sendWelcomeEmail (actual)', () => {
+  beforeEach(() => {
+    mockSendEmail.mockClear();
+    mockSendEmail.mockResolvedValue({ id: 'email-welcome-789' });
+  });
+
+  it('should call sendEmail with correct params', async () => {
+    const result = await sendWelcomeEmail({
+      to: 'newuser@example.com',
+      userName: '佐藤一郎',
+      dashboardLink: 'https://app.diagnoleads.com/dashboard',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'newuser@example.com',
+      subject: 'DiagnoLeadsへようこそ！',
+    }));
+    expect(result).toEqual({ id: 'email-welcome-789' });
+  });
+
+  it('should include user name in text', async () => {
+    await sendWelcomeEmail({
+      to: 'user@example.com',
+      userName: '高橋美咲',
+      dashboardLink: 'https://example.com/dashboard',
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('高橋美咲'),
+    }));
+  });
+
+  it('should include dashboard link in text', async () => {
+    const dashboardLink = 'https://app.diagnoleads.com/ja/dashboard';
+    await sendWelcomeEmail({
+      to: 'user@example.com',
+      userName: '田中',
+      dashboardLink,
+    });
+
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining(dashboardLink),
+    }));
+  });
+});

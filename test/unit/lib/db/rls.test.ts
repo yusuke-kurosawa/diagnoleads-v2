@@ -535,3 +535,212 @@ describe('Integration: Context lifecycle', () => {
     expect(operations).toEqual(['disable_rls', 'callback_executed', 'enable_rls']);
   });
 });
+
+// Tests using actual module imports with mocked database
+import {
+  setCurrentUser,
+  setRLSContext,
+  clearRLSContext,
+  withRLS,
+  withHierarchicalRLS,
+  withoutRLS,
+} from '@/lib/db/rls';
+
+describe('Integration: setCurrentUser (actual)', () => {
+  it('should execute SET LOCAL SQL', async () => {
+    const executedQueries: string[] = [];
+    const mockDb = {
+      execute: vi.fn().mockImplementation((query) => {
+        executedQueries.push(String(query));
+        return Promise.resolve();
+      }),
+    };
+
+    await setCurrentUser(mockDb as any, 'user-uuid-123');
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle null userId', async () => {
+    const mockDb = {
+      execute: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await setCurrentUser(mockDb as any, null);
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Integration: setRLSContext (actual)', () => {
+  it('should call set_rls_context function', async () => {
+    const mockDb = {
+      execute: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await setRLSContext(mockDb as any, {
+      userId: 'user-123',
+      organizationId: 'org-456',
+      role: 'admin',
+    });
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call clear_rls_context for null context', async () => {
+    const mockDb = {
+      execute: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await setRLSContext(mockDb as any, null);
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Integration: clearRLSContext (actual)', () => {
+  it('should call clear_rls_context function', async () => {
+    const mockDb = {
+      execute: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await clearRLSContext(mockDb as any);
+
+    expect(mockDb.execute).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Integration: withRLS (actual)', () => {
+  it('should execute callback within transaction', async () => {
+    let callbackExecuted = false;
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = {
+          execute: vi.fn().mockResolvedValue(undefined),
+        };
+        return callback(tx);
+      }),
+    };
+
+    await withRLS(mockDb as any, 'user-123', async () => {
+      callbackExecuted = true;
+      return 'result';
+    });
+
+    expect(mockDb.transaction).toHaveBeenCalledTimes(1);
+    expect(callbackExecuted).toBe(true);
+  });
+
+  it('should return callback result', async () => {
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = { execute: vi.fn().mockResolvedValue(undefined) };
+        return callback(tx);
+      }),
+    };
+
+    const result = await withRLS(mockDb as any, 'user-123', async () => ({ data: 'test' }));
+
+    expect(result).toEqual({ data: 'test' });
+  });
+});
+
+describe('Integration: withHierarchicalRLS (actual)', () => {
+  it('should execute callback with full context', async () => {
+    let contextSet = false;
+    let contextCleared = false;
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = {
+          execute: vi.fn().mockImplementation(() => {
+            if (!contextSet) {
+              contextSet = true;
+            } else {
+              contextCleared = true;
+            }
+            return Promise.resolve(undefined);
+          }),
+        };
+        return callback(tx);
+      }),
+    };
+
+    await withHierarchicalRLS(
+      mockDb as any,
+      { userId: 'user-123', organizationId: 'org-456', role: 'admin' },
+      async () => 'result'
+    );
+
+    expect(mockDb.transaction).toHaveBeenCalledTimes(1);
+    expect(contextSet).toBe(true);
+    expect(contextCleared).toBe(true);
+  });
+
+  it('should clear context even on error', async () => {
+    let clearCalled = false;
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = {
+          execute: vi.fn().mockImplementation(() => {
+            clearCalled = true;
+            return Promise.resolve(undefined);
+          }),
+        };
+        return callback(tx);
+      }),
+    };
+
+    await expect(
+      withHierarchicalRLS(mockDb as any, { userId: 'user-123' }, async () => {
+        throw new Error('Test error');
+      })
+    ).rejects.toThrow('Test error');
+
+    expect(clearCalled).toBe(true);
+  });
+});
+
+describe('Integration: withoutRLS (actual)', () => {
+  it('should disable and re-enable RLS', async () => {
+    const executedStatements: string[] = [];
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = {
+          execute: vi.fn().mockImplementation((sql) => {
+            executedStatements.push('executed');
+            return Promise.resolve(undefined);
+          }),
+        };
+        return callback(tx);
+      }),
+    };
+
+    await withoutRLS(mockDb as any, async () => 'admin-result');
+
+    expect(mockDb.transaction).toHaveBeenCalledTimes(1);
+    expect(executedStatements.length).toBeGreaterThanOrEqual(2); // disable + enable
+  });
+
+  it('should re-enable RLS even on error', async () => {
+    let reEnableCalled = false;
+    const mockDb = {
+      transaction: vi.fn().mockImplementation(async (callback) => {
+        const tx = {
+          execute: vi.fn().mockImplementation(() => {
+            reEnableCalled = true;
+            return Promise.resolve(undefined);
+          }),
+        };
+        return callback(tx);
+      }),
+    };
+
+    await expect(
+      withoutRLS(mockDb as any, async () => {
+        throw new Error('Admin operation failed');
+      })
+    ).rejects.toThrow('Admin operation failed');
+
+    expect(reEnableCalled).toBe(true);
+  });
+});
