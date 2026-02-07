@@ -214,3 +214,90 @@ describe('Transformer', () => {
     expect(deserialized.getTime()).toBe(date.getTime());
   });
 });
+
+// Integration tests with actual tRPC exports
+import { router, publicProcedure, protectedProcedure } from '@/lib/trpc/init';
+import { TRPCError } from '@trpc/server';
+
+describe('Integration: router (actual)', () => {
+  it('should export router function', () => {
+    expect(typeof router).toBe('function');
+  });
+
+  it('should create router with procedures', () => {
+    const testRouter = router({
+      hello: publicProcedure.query(() => 'Hello World'),
+    });
+
+    expect(testRouter).toBeDefined();
+    expect(testRouter._def).toBeDefined();
+  });
+});
+
+describe('Integration: publicProcedure (actual)', () => {
+  it('should export publicProcedure', () => {
+    expect(publicProcedure).toBeDefined();
+  });
+
+  it('should have query method', () => {
+    expect(typeof publicProcedure.query).toBe('function');
+  });
+
+  it('should have mutation method', () => {
+    expect(typeof publicProcedure.mutation).toBe('function');
+  });
+
+  it('should have input method', () => {
+    expect(typeof publicProcedure.input).toBe('function');
+  });
+});
+
+describe('Integration: protectedProcedure (actual)', () => {
+  it('should export protectedProcedure', () => {
+    expect(protectedProcedure).toBeDefined();
+  });
+
+  it('should have query method', () => {
+    expect(typeof protectedProcedure.query).toBe('function');
+  });
+
+  it('should have mutation method', () => {
+    expect(typeof protectedProcedure.mutation).toBe('function');
+  });
+
+  it('should have use method for middleware', () => {
+    expect(typeof protectedProcedure.use).toBe('function');
+  });
+});
+
+describe('Integration: TRPCError usage', () => {
+  it('should create UNAUTHORIZED error', () => {
+    const error = new TRPCError({ code: 'UNAUTHORIZED' });
+    expect(error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('should create FORBIDDEN error with message', () => {
+    const error = new TRPCError({ 
+      code: 'FORBIDDEN', 
+      message: 'You do not have permission' 
+    });
+    expect(error.code).toBe('FORBIDDEN');
+    expect(error.message).toBe('You do not have permission');
+  });
+
+  it('should create NOT_FOUND error', () => {
+    const error = new TRPCError({ 
+      code: 'NOT_FOUND', 
+      message: 'Resource not found' 
+    });
+    expect(error.code).toBe('NOT_FOUND');
+  });
+
+  it('should create BAD_REQUEST error', () => {
+    const error = new TRPCError({ 
+      code: 'BAD_REQUEST', 
+      message: 'Invalid input' 
+    });
+    expect(error.code).toBe('BAD_REQUEST');
+  });
+});
