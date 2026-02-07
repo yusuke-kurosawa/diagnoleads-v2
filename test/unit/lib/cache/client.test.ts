@@ -340,3 +340,176 @@ describe('CacheConfig', () => {
     expect(defaultConfig.prefix).toBe('diagnoleads:');
   });
 });
+
+// Integration tests with actual module
+import {
+  createCacheClient,
+  getCache,
+  resetCacheInstance,
+  type CacheClient as ActualCacheClient,
+} from '@/lib/cache/client';
+
+describe('Integration: MemoryCache (actual)', () => {
+  let cache: ActualCacheClient;
+
+  beforeEach(() => {
+    resetCacheInstance();
+    cache = createCacheClient({ prefix: 'test', defaultTTL: 60 });
+  });
+
+  it('should set and get value', async () => {
+    await cache.set('key1', { data: 'value1' });
+    const result = await cache.get<{ data: string }>('key1');
+    
+    expect(result).not.toBeNull();
+    expect(result?.data).toBe('value1');
+  });
+
+  it('should return null for non-existent key', async () => {
+    const result = await cache.get('nonexistent');
+    expect(result).toBeNull();
+  });
+
+  it('should delete key', async () => {
+    await cache.set('to-delete', 'value');
+    expect(await cache.exists('to-delete')).toBe(true);
+    
+    await cache.del('to-delete');
+    expect(await cache.exists('to-delete')).toBe(false);
+  });
+
+  it('should check key exists', async () => {
+    expect(await cache.exists('not-here')).toBe(false);
+    
+    await cache.set('here', 'value');
+    expect(await cache.exists('here')).toBe(true);
+  });
+
+  it('should get TTL for key', async () => {
+    await cache.set('ttl-test', 'value', { ttl: 60 });
+    const ttl = await cache.ttl('ttl-test');
+    
+    expect(ttl).toBeGreaterThan(0);
+    expect(ttl).toBeLessThanOrEqual(60);
+  });
+
+  it('should return -2 for non-existent key TTL', async () => {
+    const ttl = await cache.ttl('no-such-key');
+    expect(ttl).toBe(-2);
+  });
+
+  it('should delete keys by pattern', async () => {
+    await cache.set('user:1:profile', { name: 'Alice' });
+    await cache.set('user:1:settings', { theme: 'dark' });
+    await cache.set('user:2:profile', { name: 'Bob' });
+
+    const deleted = await cache.delPattern('user:1:*');
+    
+    expect(deleted).toBe(2);
+    expect(await cache.exists('user:1:profile')).toBe(false);
+    expect(await cache.exists('user:2:profile')).toBe(true);
+  });
+
+  it('should list keys by pattern', async () => {
+    await cache.set('lead:1', { id: '1' });
+    await cache.set('lead:2', { id: '2' });
+    await cache.set('org:1', { id: '1' });
+
+    const leadKeys = await cache.keys('lead:*');
+    
+    expect(leadKeys.length).toBe(2);
+    expect(leadKeys.every(k => k.startsWith('lead:'))).toBe(true);
+  });
+
+  it('should flush all keys', async () => {
+    await cache.set('a', 1);
+    await cache.set('b', 2);
+    await cache.set('c', 3);
+
+    await cache.flush();
+
+    expect(await cache.exists('a')).toBe(false);
+    expect(await cache.exists('b')).toBe(false);
+    expect(await cache.exists('c')).toBe(false);
+  });
+
+  it('should track stats', async () => {
+    await cache.set('stat-test', 'value');
+    await cache.get('stat-test');
+    await cache.get('miss-key');
+    await cache.del('stat-test');
+
+    const stats = cache.getStats();
+    
+    expect(stats.sets).toBeGreaterThanOrEqual(1);
+    expect(stats.hits).toBeGreaterThanOrEqual(1);
+    expect(stats.misses).toBeGreaterThanOrEqual(1);
+    expect(stats.deletes).toBeGreaterThanOrEqual(1);
+    expect(stats.hitRate).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should respect custom TTL', async () => {
+    await cache.set('short-lived', 'value', { ttl: 1 });
+    
+    expect(await cache.get('short-lived')).toBe('value');
+    
+    // Wait for expiration
+    await new Promise(r => setTimeout(r, 1100));
+    
+    expect(await cache.get('short-lived')).toBeNull();
+  });
+
+  it('should handle various value types', async () => {
+    await cache.set('string', 'hello');
+    await cache.set('number', 42);
+    await cache.set('boolean', true);
+    await cache.set('array', [1, 2, 3]);
+    await cache.set('object', { nested: { value: 'deep' } });
+
+    expect(await cache.get('string')).toBe('hello');
+    expect(await cache.get('number')).toBe(42);
+    expect(await cache.get('boolean')).toBe(true);
+    expect(await cache.get<number[]>('array')).toEqual([1, 2, 3]);
+    expect(await cache.get<{ nested: { value: string } }>('object')).toEqual({ nested: { value: 'deep' } });
+  });
+});
+
+describe('Integration: createCacheClient', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should create memory cache when Redis not configured', () => {
+    const cache = createCacheClient();
+    expect(cache).toBeDefined();
+    expect(typeof cache.get).toBe('function');
+  });
+
+  it('should use custom config', () => {
+    const cache = createCacheClient({
+      prefix: 'custom',
+      defaultTTL: 600,
+    });
+
+    expect(cache).toBeDefined();
+  });
+});
+
+describe('Integration: getCache (singleton)', () => {
+  beforeEach(() => {
+    resetCacheInstance();
+  });
+
+  it('should return same instance', () => {
+    const cache1 = getCache();
+    const cache2 = getCache();
+    expect(cache1).toBe(cache2);
+  });
+
+  it('should return new instance after reset', () => {
+    const cache1 = getCache();
+    resetCacheInstance();
+    const cache2 = getCache();
+    expect(cache1).not.toBe(cache2);
+  });
+});

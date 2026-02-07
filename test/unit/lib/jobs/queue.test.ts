@@ -453,3 +453,199 @@ describe('JobQueueOptions', () => {
     expect(options.concurrency).toBe(5);
   });
 });
+
+// Integration tests with actual module
+import { JobQueue, getJobQueue, createJobQueue, resetJobQueue } from '@/lib/jobs/queue';
+
+describe('Integration: JobQueue (actual)', () => {
+  let queue: JobQueue;
+
+  beforeEach(() => {
+    resetJobQueue();
+    queue = createJobQueue({ name: 'test-queue', concurrency: 2 });
+  });
+
+  it('should create queue instance', () => {
+    expect(queue).toBeInstanceOf(JobQueue);
+  });
+
+  it('should register job handler', () => {
+    queue.register({
+      name: 'test-job',
+      handler: async (payload: { data: string }) => {
+        return { processed: payload.data };
+      },
+    });
+
+    // No error means success
+    expect(true).toBe(true);
+  });
+
+  it('should enqueue job', async () => {
+    queue.register({
+      name: 'enqueue-test',
+      handler: async () => ({ success: true }),
+    });
+
+    const jobId = await queue.enqueue('enqueue-test', { value: 1 });
+
+    expect(jobId).toBeDefined();
+    expect(typeof jobId).toBe('string');
+  });
+
+  it('should throw for unregistered job', async () => {
+    await expect(queue.enqueue('unknown-job', {})).rejects.toThrow('No handler registered');
+  });
+
+  it('should get job by id', async () => {
+    queue.register({
+      name: 'get-job-test',
+      handler: async () => ({}),
+    });
+
+    const jobId = await queue.enqueue('get-job-test', { test: true });
+    const job = queue.getJob(jobId);
+
+    expect(job).toBeDefined();
+    expect(job?.name).toBe('get-job-test');
+    expect(job?.status).toBe('pending');
+  });
+
+  it('should return undefined for non-existent job', () => {
+    const job = queue.getJob('non-existent');
+    expect(job).toBeUndefined();
+  });
+
+  it('should get queue stats', () => {
+    const stats = queue.getStats();
+
+    expect(stats).toHaveProperty('pending');
+    expect(stats).toHaveProperty('running');
+    expect(stats).toHaveProperty('completed');
+    expect(stats).toHaveProperty('failed');
+    expect(stats).toHaveProperty('cancelled');
+  });
+
+  it('should cancel pending job', async () => {
+    queue.register({
+      name: 'cancel-test',
+      handler: async () => ({}),
+    });
+
+    const jobId = await queue.enqueue('cancel-test', {});
+    const cancelled = await queue.cancel(jobId);
+
+    expect(cancelled).toBe(true);
+  });
+
+  it('should handle cancel for completed job (returns true but no status change)', async () => {
+    queue.register({
+      name: 'complete-then-cancel',
+      handler: async () => ({}),
+    });
+
+    const jobId = await queue.enqueue('complete-then-cancel', {});
+    
+    // Manually complete the job
+    const job = queue.getJob(jobId);
+    if (job) {
+      (job as any).status = 'completed';
+    }
+
+    // cancel returns true but status won't change
+    const result = await queue.cancel(jobId);
+    expect(result).toBe(true);
+    expect(queue.getJob(jobId)?.status).toBe('completed');
+  });
+
+  it('should subscribe to events', async () => {
+    const events: string[] = [];
+
+    queue.on('job:enqueued', () => {
+      events.push('enqueued');
+    });
+
+    queue.register({
+      name: 'event-test',
+      handler: async () => ({}),
+    });
+
+    await queue.enqueue('event-test', {});
+
+    expect(events).toContain('enqueued');
+  });
+
+  it('should subscribe to multiple events', async () => {
+    const events: string[] = [];
+
+    queue.on('job:enqueued', () => events.push('enqueued'));
+    queue.on('job:started', () => events.push('started'));
+
+    queue.register({
+      name: 'multi-event-test',
+      handler: async () => ({}),
+    });
+
+    await queue.enqueue('multi-event-test', {});
+
+    expect(events).toContain('enqueued');
+  });
+
+  it('should handle unique jobs', async () => {
+    queue.register({
+      name: 'unique-job',
+      handler: async () => ({}),
+    });
+
+    const id1 = await queue.enqueue('unique-job', { data: 'same' }, { uniqueKey: 'unique-1' });
+    const id2 = await queue.enqueue('unique-job', { data: 'same' }, { uniqueKey: 'unique-1' });
+
+    // Should return same ID for duplicate unique jobs
+    expect(id1).toBe(id2);
+  });
+
+  it('should support delayed jobs', async () => {
+    queue.register({
+      name: 'delayed-job',
+      handler: async () => ({}),
+    });
+
+    const jobId = await queue.enqueue('delayed-job', {}, { delay: 5000 });
+    const job = queue.getJob(jobId);
+
+    expect(job?.scheduledAt).toBeDefined();
+    expect(job?.scheduledAt!.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('should support priority', async () => {
+    queue.register({
+      name: 'priority-job',
+      handler: async () => ({}),
+      priority: 'high',
+    });
+
+    const jobId = await queue.enqueue('priority-job', {}, { priority: 'critical' });
+    const job = queue.getJob(jobId);
+
+    expect(job?.priority).toBe('critical');
+  });
+});
+
+describe('Integration: getJobQueue (singleton)', () => {
+  beforeEach(() => {
+    resetJobQueue();
+  });
+
+  it('should return same instance', () => {
+    const queue1 = getJobQueue();
+    const queue2 = getJobQueue();
+    expect(queue1).toBe(queue2);
+  });
+
+  it('should return new instance after reset', () => {
+    const queue1 = getJobQueue();
+    resetJobQueue();
+    const queue2 = getJobQueue();
+    expect(queue1).not.toBe(queue2);
+  });
+});
