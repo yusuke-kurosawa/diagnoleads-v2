@@ -448,3 +448,177 @@ describe('resetStorageInstance', () => {
     expect(instance).toBeNull();
   });
 });
+
+// Integration tests with actual module
+import {
+  LocalStorage,
+  createStorageClient,
+  getStorage,
+  resetStorageInstance,
+} from '@/lib/storage/client';
+
+describe('Integration: LocalStorage (actual)', () => {
+  let storage: LocalStorage;
+
+  beforeEach(() => {
+    storage = new LocalStorage('/tmp/test-storage');
+  });
+
+  afterEach(() => {
+    storage.clear();
+  });
+
+  it('should upload and download file', async () => {
+    const key = 'test-file.txt';
+    const content = 'Hello, World!';
+
+    await storage.upload(key, Buffer.from(content));
+    const downloaded = await storage.download(key);
+
+    expect(downloaded.toString()).toBe(content);
+  });
+
+  it('should check file exists', async () => {
+    const key = 'exists-test.txt';
+
+    expect(await storage.exists(key)).toBe(false);
+
+    await storage.upload(key, Buffer.from('test'));
+
+    expect(await storage.exists(key)).toBe(true);
+  });
+
+  it('should delete file', async () => {
+    const key = 'delete-test.txt';
+
+    await storage.upload(key, Buffer.from('test'));
+    expect(await storage.exists(key)).toBe(true);
+
+    await storage.delete(key);
+    expect(await storage.exists(key)).toBe(false);
+  });
+
+  it('should delete many files', async () => {
+    const keys = ['file1.txt', 'file2.txt', 'file3.txt'];
+
+    for (const key of keys) {
+      await storage.upload(key, Buffer.from(key));
+    }
+
+    await storage.deleteMany(keys);
+
+    for (const key of keys) {
+      expect(await storage.exists(key)).toBe(false);
+    }
+  });
+
+  it('should get file metadata', async () => {
+    const key = 'metadata-test.txt';
+    const content = 'Test content';
+
+    await storage.upload(key, Buffer.from(content), {
+      contentType: 'text/plain',
+      metadata: { custom: 'value' },
+    });
+
+    const metadata = await storage.getMetadata(key);
+
+    expect(metadata).not.toBeNull();
+    expect(metadata?.key).toBe(key);
+    expect(metadata?.size).toBe(content.length);
+    expect(metadata?.contentType).toBe('text/plain');
+  });
+
+  it('should return null for non-existent file metadata', async () => {
+    const metadata = await storage.getMetadata('nonexistent.txt');
+    expect(metadata).toBeNull();
+  });
+
+  it('should list files', async () => {
+    await storage.upload('dir/file1.txt', Buffer.from('1'));
+    await storage.upload('dir/file2.txt', Buffer.from('2'));
+    await storage.upload('other/file3.txt', Buffer.from('3'));
+
+    const result = await storage.list({ prefix: 'dir/' });
+
+    expect(result.files.length).toBe(2);
+    expect(result.isTruncated).toBe(false);
+  });
+
+  it('should copy file', async () => {
+    const sourceKey = 'source.txt';
+    const destKey = 'dest.txt';
+
+    await storage.upload(sourceKey, Buffer.from('test content'));
+    await storage.copy(sourceKey, destKey);
+
+    expect(await storage.exists(sourceKey)).toBe(true);
+    expect(await storage.exists(destKey)).toBe(true);
+  });
+
+  it('should move file', async () => {
+    const sourceKey = 'move-source.txt';
+    const destKey = 'move-dest.txt';
+
+    await storage.upload(sourceKey, Buffer.from('test content'));
+    await storage.move(sourceKey, destKey);
+
+    expect(await storage.exists(sourceKey)).toBe(false);
+    expect(await storage.exists(destKey)).toBe(true);
+  });
+
+  it('should generate presigned URLs', async () => {
+    const key = 'presigned-test.txt';
+
+    const uploadUrl = await storage.getPresignedUploadUrl(key);
+    const downloadUrl = await storage.getPresignedDownloadUrl(key);
+    const publicUrl = storage.getPublicUrl(key);
+
+    expect(uploadUrl).toContain(key);
+    expect(downloadUrl).toContain(key);
+    expect(publicUrl).toContain(key);
+  });
+
+  it('should throw error when downloading non-existent file', async () => {
+    await expect(storage.download('nonexistent.txt')).rejects.toThrow('File not found');
+  });
+
+  it('should throw error when copying non-existent file', async () => {
+    await expect(storage.copy('nonexistent.txt', 'dest.txt')).rejects.toThrow('File not found');
+  });
+});
+
+describe('Integration: createStorageClient', () => {
+  afterEach(() => {
+    resetStorageInstance();
+  });
+
+  it('should create LocalStorage when provider is local', () => {
+    const storage = createStorageClient({ provider: 'local', bucket: '/tmp/test' });
+    expect(storage).toBeDefined();
+  });
+
+  it('should create local storage by default when no config', () => {
+    const storage = createStorageClient();
+    expect(storage).toBeDefined();
+  });
+});
+
+describe('Integration: getStorage (singleton)', () => {
+  afterEach(() => {
+    resetStorageInstance();
+  });
+
+  it('should return same instance', () => {
+    const storage1 = getStorage();
+    const storage2 = getStorage();
+    expect(storage1).toBe(storage2);
+  });
+
+  it('should return new instance after reset', () => {
+    const storage1 = getStorage();
+    resetStorageInstance();
+    const storage2 = getStorage();
+    expect(storage1).not.toBe(storage2);
+  });
+});
