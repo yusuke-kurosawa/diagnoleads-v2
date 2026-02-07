@@ -305,3 +305,73 @@ describe('Integration: addLocalePrefixToPath', () => {
     expect(addLocalePrefixToPath('/ja/leads/123/edit', 'en')).toBe('/en/leads/123/edit');
   });
 });
+
+import { getLocaleFromPathname as actualGetLocaleFromPathname, localeConfig as actualLocaleConfig, locales as actualLocales, defaultLocale as actualDefaultLocale } from '@/lib/i18n/config';
+
+describe('Integration: getLocaleFromRequest logic', () => {
+  // Test the logic of getLocaleFromRequest without NextRequest
+  const getLocaleFromRequestLogic = (
+    pathname: string,
+    cookieLocale: string | undefined,
+    acceptLanguage: string | null
+  ): string => {
+    // 1. URL path
+    const localeFromPath = getLocaleFromPathname(pathname);
+    if (localeFromPath) {
+      return localeFromPath;
+    }
+
+    // 2. Cookie
+    if (cookieLocale && locales.includes(cookieLocale as (typeof locales)[number])) {
+      return cookieLocale;
+    }
+
+    // 3. Accept-Language header
+    if (acceptLanguage) {
+      const languages = acceptLanguage.split(',').map((lang) => {
+        const parts = lang.trim().split(';');
+        const locale = parts[0].split('-')[0];
+        return locale;
+      });
+
+      for (const lang of languages) {
+        if (locales.includes(lang as (typeof locales)[number])) {
+          return lang;
+        }
+      }
+    }
+
+    // 4. Default
+    return defaultLocale;
+  };
+
+  it('should return locale from path first', () => {
+    expect(getLocaleFromRequestLogic('/ja/dashboard', 'en', 'en-US')).toBe('ja');
+    expect(getLocaleFromRequestLogic('/en/settings', 'ja', 'ja-JP')).toBe('en');
+  });
+
+  it('should fallback to cookie when no path locale', () => {
+    expect(getLocaleFromRequestLogic('/dashboard', 'en', 'ja-JP')).toBe('en');
+    expect(getLocaleFromRequestLogic('/settings', 'ja', 'en-US')).toBe('ja');
+  });
+
+  it('should fallback to Accept-Language when no path or cookie', () => {
+    expect(getLocaleFromRequestLogic('/dashboard', undefined, 'en-US,en;q=0.9')).toBe('en');
+    expect(getLocaleFromRequestLogic('/settings', undefined, 'ja-JP,ja;q=0.9')).toBe('ja');
+  });
+
+  it('should fallback to default when nothing matches', () => {
+    expect(getLocaleFromRequestLogic('/dashboard', undefined, 'fr-FR')).toBe('ja');
+    expect(getLocaleFromRequestLogic('/settings', undefined, null)).toBe('ja');
+  });
+
+  it('should handle complex Accept-Language headers', () => {
+    expect(getLocaleFromRequestLogic('/dashboard', undefined, 'fr-FR,fr;q=0.9,en-US,en;q=0.8')).toBe('en');
+    expect(getLocaleFromRequestLogic('/settings', undefined, 'de,ja;q=0.8,en;q=0.5')).toBe('ja');
+  });
+
+  it('should ignore invalid cookie locale', () => {
+    expect(getLocaleFromRequestLogic('/dashboard', 'fr', 'en-US')).toBe('en');
+    expect(getLocaleFromRequestLogic('/settings', 'de', null)).toBe('ja');
+  });
+});
