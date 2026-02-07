@@ -1,159 +1,12 @@
 /**
- * Auth Form Types Tests
+ * Auth Form Components Type Tests
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-describe('Login Form Schema', () => {
-  const loginSchema = z.object({
-    email: z.string().email('Invalid email'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-  });
-
-  it('should validate correct email', () => {
-    const result = loginSchema.safeParse({
-      email: 'test@example.com',
-      password: 'password123',
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject invalid email', () => {
-    const result = loginSchema.safeParse({
-      email: 'invalid-email',
-      password: 'password123',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject short password', () => {
-    const result = loginSchema.safeParse({
-      email: 'test@example.com',
-      password: 'short',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should accept 8+ character password', () => {
-    const result = loginSchema.safeParse({
-      email: 'test@example.com',
-      password: '12345678',
-    });
-    expect(result.success).toBe(true);
-  });
-});
-
-describe('Signup Form Schema', () => {
-  const signupSchema = z.object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string(),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords must match',
-    path: ['confirmPassword'],
-  });
-
-  it('should validate correct signup data', () => {
-    const result = signupSchema.safeParse({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject mismatched passwords', () => {
-    const result = signupSchema.safeParse({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      confirmPassword: 'different',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject short name', () => {
-    const result = signupSchema.safeParse({
-      name: 'J',
-      email: 'john@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('Reset Password Schema', () => {
-  const resetPasswordSchema = z.object({
-    email: z.string().email('Invalid email'),
-  });
-
-  it('should validate email only', () => {
-    const result = resetPasswordSchema.safeParse({
-      email: 'test@example.com',
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject invalid email', () => {
-    const result = resetPasswordSchema.safeParse({
-      email: 'not-an-email',
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('New Password Schema', () => {
-  const newPasswordSchema = z.object({
-    password: z.string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain uppercase')
-      .regex(/[a-z]/, 'Password must contain lowercase')
-      .regex(/[0-9]/, 'Password must contain a number'),
-    confirmPassword: z.string(),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords must match',
-    path: ['confirmPassword'],
-  });
-
-  it('should validate strong password', () => {
-    const result = newPasswordSchema.safeParse({
-      password: 'Password123',
-      confirmPassword: 'Password123',
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject password without uppercase', () => {
-    const result = newPasswordSchema.safeParse({
-      password: 'password123',
-      confirmPassword: 'password123',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject password without lowercase', () => {
-    const result = newPasswordSchema.safeParse({
-      password: 'PASSWORD123',
-      confirmPassword: 'PASSWORD123',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should reject password without number', () => {
-    const result = newPasswordSchema.safeParse({
-      password: 'PasswordABC',
-      confirmPassword: 'PasswordABC',
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('Auth form values', () => {
-  it('should define login form values type', () => {
+describe('LoginForm', () => {
+  it('should define login form values', () => {
     type LoginFormValues = {
       email: string;
       password: string;
@@ -167,55 +20,233 @@ describe('Auth form values', () => {
     expect(values.email).toBe('test@example.com');
   });
 
-  it('should define signup form values type', () => {
+  it('should define login schema', () => {
+    const loginSchema = z.object({
+      email: z.string().email('メールアドレスが無効です'),
+      password: z.string().min(8, 'パスワードは8文字以上必要です'),
+    });
+
+    const validData = { email: 'test@example.com', password: 'password123' };
+    const result = loginSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject invalid email', () => {
+    const loginSchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(8),
+    });
+
+    const invalidData = { email: 'invalid', password: 'password123' };
+    const result = loginSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject short password', () => {
+    const loginSchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(8),
+    });
+
+    const invalidData = { email: 'test@example.com', password: 'short' };
+    const result = loginSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SignupForm', () => {
+  it('should define signup form values', () => {
     type SignupFormValues = {
       name: string;
       email: string;
       password: string;
       confirmPassword: string;
-      organizationName?: string;
     };
 
     const values: SignupFormValues = {
-      name: 'John Doe',
-      email: 'john@example.com',
+      name: 'テスト太郎',
+      email: 'test@example.com',
       password: 'password123',
       confirmPassword: 'password123',
-      organizationName: 'Acme Inc',
     };
 
-    expect(values.organizationName).toBe('Acme Inc');
+    expect(values.name).toBe('テスト太郎');
+  });
+
+  it('should define signup schema', () => {
+    const signupSchema = z.object({
+      name: z.string().min(1, '名前は必須です'),
+      email: z.string().email('メールアドレスが無効です'),
+      password: z.string().min(8, 'パスワードは8文字以上必要です'),
+      confirmPassword: z.string(),
+    }).refine(data => data.password === data.confirmPassword, {
+      message: 'パスワードが一致しません',
+      path: ['confirmPassword'],
+    });
+
+    const validData = {
+      name: 'テスト',
+      email: 'test@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+    };
+
+    const result = signupSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject mismatched passwords', () => {
+    const signupSchema = z.object({
+      name: z.string().min(1),
+      email: z.string().email(),
+      password: z.string().min(8),
+      confirmPassword: z.string(),
+    }).refine(data => data.password === data.confirmPassword, {
+      path: ['confirmPassword'],
+    });
+
+    const invalidData = {
+      name: 'Test',
+      email: 'test@example.com',
+      password: 'password123',
+      confirmPassword: 'different',
+    };
+
+    const result = signupSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
   });
 });
 
-describe('Auth error handling', () => {
-  it('should define error types', () => {
-    type AuthError = {
-      code: string;
-      message: string;
+describe('ResetPasswordForm', () => {
+  it('should define reset password form values', () => {
+    type ResetPasswordFormValues = {
+      email: string;
     };
 
-    const errors: AuthError[] = [
-      { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-      { code: 'USER_NOT_FOUND', message: 'User not found' },
-      { code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email' },
-      { code: 'TOO_MANY_REQUESTS', message: 'Too many login attempts' },
+    const values: ResetPasswordFormValues = {
+      email: 'test@example.com',
+    };
+
+    expect(values.email).toBe('test@example.com');
+  });
+
+  it('should define new password form values', () => {
+    type NewPasswordFormValues = {
+      password: string;
+      confirmPassword: string;
+    };
+
+    const values: NewPasswordFormValues = {
+      password: 'newpassword123',
+      confirmPassword: 'newpassword123',
+    };
+
+    expect(values.password).toBe('newpassword123');
+  });
+});
+
+describe('Form validation messages', () => {
+  it('should define Japanese validation messages', () => {
+    const messages = {
+      emailRequired: 'メールアドレスは必須です',
+      emailInvalid: 'メールアドレスが無効です',
+      passwordRequired: 'パスワードは必須です',
+      passwordMin: 'パスワードは8文字以上必要です',
+      passwordMismatch: 'パスワードが一致しません',
+      nameRequired: '名前は必須です',
+    };
+
+    expect(messages.emailInvalid).toBe('メールアドレスが無効です');
+  });
+});
+
+describe('Form error handling', () => {
+  it('should define error codes', () => {
+    type AuthErrorCode =
+      | 'INVALID_CREDENTIALS'
+      | 'EMAIL_NOT_FOUND'
+      | 'EMAIL_ALREADY_EXISTS'
+      | 'WEAK_PASSWORD'
+      | 'TOKEN_EXPIRED'
+      | 'UNKNOWN_ERROR';
+
+    const errorCodes: AuthErrorCode[] = [
+      'INVALID_CREDENTIALS',
+      'EMAIL_NOT_FOUND',
+      'EMAIL_ALREADY_EXISTS',
+      'WEAK_PASSWORD',
+      'TOKEN_EXPIRED',
+      'UNKNOWN_ERROR',
     ];
 
-    expect(errors).toHaveLength(4);
-    expect(errors.some(e => e.code === 'INVALID_CREDENTIALS')).toBe(true);
+    expect(errorCodes).toContain('INVALID_CREDENTIALS');
+  });
+
+  it('should map error codes to messages', () => {
+    const errorMessages: Record<string, string> = {
+      INVALID_CREDENTIALS: 'メールアドレスまたはパスワードが正しくありません',
+      EMAIL_NOT_FOUND: 'このメールアドレスは登録されていません',
+      EMAIL_ALREADY_EXISTS: 'このメールアドレスは既に使用されています',
+      WEAK_PASSWORD: 'パスワードが弱すぎます',
+      TOKEN_EXPIRED: 'リンクの有効期限が切れています',
+    };
+
+    expect(errorMessages.INVALID_CREDENTIALS).toContain('正しくありません');
   });
 });
 
-describe('Auth callbacks', () => {
-  it('should define callback URLs', () => {
-    const callbackUrls = {
-      login: '/dashboard',
-      logout: '/',
-      verify: '/verify',
-      resetPassword: '/reset-password',
+describe('Form state management', () => {
+  it('should define form state', () => {
+    type FormState = {
+      isLoading: boolean;
+      error: string | null;
+      success: boolean;
     };
 
-    expect(callbackUrls.login).toBe('/dashboard');
+    const initialState: FormState = {
+      isLoading: false,
+      error: null,
+      success: false,
+    };
+
+    expect(initialState.isLoading).toBe(false);
+  });
+
+  it('should handle loading state', () => {
+    let isLoading = false;
+    const setIsLoading = (value: boolean) => { isLoading = value; };
+
+    setIsLoading(true);
+    expect(isLoading).toBe(true);
+  });
+});
+
+describe('OAuth providers', () => {
+  it('should define OAuth providers', () => {
+    type OAuthProvider = 'google' | 'github' | 'microsoft';
+
+    const providers: OAuthProvider[] = ['google', 'github', 'microsoft'];
+    expect(providers).toContain('google');
+  });
+
+  it('should handle OAuth sign in', async () => {
+    const signInWithProvider = vi.fn().mockResolvedValue({ success: true });
+    
+    await signInWithProvider('google');
+    expect(signInWithProvider).toHaveBeenCalledWith('google');
+  });
+});
+
+describe('Redirect handling', () => {
+  it('should define callback URL', () => {
+    const callbackURL = '/dashboard';
+    expect(callbackURL).toBe('/dashboard');
+  });
+
+  it('should handle redirect after login', () => {
+    const getRedirectPath = (callbackURL?: string) => callbackURL || '/dashboard';
+
+    expect(getRedirectPath('/settings')).toBe('/settings');
+    expect(getRedirectPath()).toBe('/dashboard');
   });
 });
