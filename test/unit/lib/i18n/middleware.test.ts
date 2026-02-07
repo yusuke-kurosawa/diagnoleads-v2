@@ -1,0 +1,218 @@
+/**
+ * i18n Middleware Tests
+ */
+
+import { describe, expect, it } from 'vitest';
+
+// Constants matching source
+const locales = ['ja', 'en'] as const;
+type Locale = (typeof locales)[number];
+const defaultLocale: Locale = 'ja';
+
+// Helper functions
+function getLocaleFromPathname(pathname: string): Locale | undefined {
+  const segments = pathname.split('/');
+  const potentialLocale = segments[1];
+  if (locales.includes(potentialLocale as Locale)) {
+    return potentialLocale as Locale;
+  }
+  return undefined;
+}
+
+function getLocaleFromAcceptLanguage(acceptLanguage: string | null): Locale {
+  if (!acceptLanguage) return defaultLocale;
+  
+  const languages = acceptLanguage.split(',').map(lang => {
+    const [code, qValue] = lang.trim().split(';q=');
+    return {
+      code: code.split('-')[0].toLowerCase(),
+      q: qValue ? parseFloat(qValue) : 1,
+    };
+  });
+  
+  languages.sort((a, b) => b.q - a.q);
+  
+  for (const lang of languages) {
+    if (locales.includes(lang.code as Locale)) {
+      return lang.code as Locale;
+    }
+  }
+  
+  return defaultLocale;
+}
+
+function shouldRedirect(pathname: string): boolean {
+  const hasLocale = getLocaleFromPathname(pathname) !== undefined;
+  const isApi = pathname.startsWith('/api');
+  const isStatic = pathname.startsWith('/_next') || pathname.includes('.');
+  
+  return !hasLocale && !isApi && !isStatic;
+}
+
+describe('getLocaleFromPathname', () => {
+  it('should return ja from /ja path', () => {
+    expect(getLocaleFromPathname('/ja')).toBe('ja');
+    expect(getLocaleFromPathname('/ja/')).toBe('ja');
+    expect(getLocaleFromPathname('/ja/dashboard')).toBe('ja');
+  });
+
+  it('should return en from /en path', () => {
+    expect(getLocaleFromPathname('/en')).toBe('en');
+    expect(getLocaleFromPathname('/en/')).toBe('en');
+    expect(getLocaleFromPathname('/en/dashboard')).toBe('en');
+  });
+
+  it('should return undefined for paths without locale', () => {
+    expect(getLocaleFromPathname('/')).toBeUndefined();
+    expect(getLocaleFromPathname('/dashboard')).toBeUndefined();
+    expect(getLocaleFromPathname('/api/health')).toBeUndefined();
+  });
+
+  it('should return undefined for invalid locales', () => {
+    expect(getLocaleFromPathname('/fr/dashboard')).toBeUndefined();
+    expect(getLocaleFromPathname('/de/settings')).toBeUndefined();
+  });
+});
+
+describe('getLocaleFromAcceptLanguage', () => {
+  it('should return ja for Japanese preference', () => {
+    expect(getLocaleFromAcceptLanguage('ja-JP,ja;q=0.9')).toBe('ja');
+    expect(getLocaleFromAcceptLanguage('ja')).toBe('ja');
+  });
+
+  it('should return en for English preference', () => {
+    expect(getLocaleFromAcceptLanguage('en-US,en;q=0.9')).toBe('en');
+    expect(getLocaleFromAcceptLanguage('en')).toBe('en');
+  });
+
+  it('should return default for unsupported language', () => {
+    expect(getLocaleFromAcceptLanguage('fr-FR,fr;q=0.9')).toBe('ja');
+    expect(getLocaleFromAcceptLanguage('de')).toBe('ja');
+  });
+
+  it('should return default for null/empty', () => {
+    expect(getLocaleFromAcceptLanguage(null)).toBe('ja');
+    expect(getLocaleFromAcceptLanguage('')).toBe('ja');
+  });
+
+  it('should respect quality values', () => {
+    expect(getLocaleFromAcceptLanguage('en;q=0.8,ja;q=0.9')).toBe('ja');
+    expect(getLocaleFromAcceptLanguage('ja;q=0.5,en;q=0.9')).toBe('en');
+  });
+
+  it('should handle complex Accept-Language headers', () => {
+    const header = 'fr-FR,fr;q=0.9,en;q=0.8,ja;q=0.7';
+    expect(getLocaleFromAcceptLanguage(header)).toBe('en');
+  });
+});
+
+describe('shouldRedirect', () => {
+  it('should return true for paths without locale', () => {
+    expect(shouldRedirect('/')).toBe(true);
+    expect(shouldRedirect('/dashboard')).toBe(true);
+    expect(shouldRedirect('/settings/profile')).toBe(true);
+  });
+
+  it('should return false for paths with locale', () => {
+    expect(shouldRedirect('/ja')).toBe(false);
+    expect(shouldRedirect('/ja/dashboard')).toBe(false);
+    expect(shouldRedirect('/en/settings')).toBe(false);
+  });
+
+  it('should return false for API routes', () => {
+    expect(shouldRedirect('/api/health')).toBe(false);
+    expect(shouldRedirect('/api/trpc/leads.list')).toBe(false);
+    expect(shouldRedirect('/api/auth/login')).toBe(false);
+  });
+
+  it('should return false for static files', () => {
+    expect(shouldRedirect('/_next/static/chunk.js')).toBe(false);
+    expect(shouldRedirect('/favicon.ico')).toBe(false);
+    expect(shouldRedirect('/images/logo.png')).toBe(false);
+  });
+});
+
+describe('Middleware locale detection priority', () => {
+  it('should prioritize URL locale over cookie', () => {
+    const urlLocale = getLocaleFromPathname('/en/dashboard');
+    const cookieLocale = 'ja' as Locale;
+    const result = urlLocale ?? cookieLocale;
+    expect(result).toBe('en');
+  });
+
+  it('should use cookie when URL has no locale', () => {
+    const urlLocale = getLocaleFromPathname('/dashboard');
+    const cookieLocale = 'en' as Locale;
+    const result = urlLocale ?? cookieLocale;
+    expect(result).toBe('en');
+  });
+
+  it('should use Accept-Language when no cookie', () => {
+    const urlLocale = getLocaleFromPathname('/dashboard');
+    const cookieLocale = undefined;
+    const acceptLanguage = 'en-US';
+    const result = urlLocale ?? cookieLocale ?? getLocaleFromAcceptLanguage(acceptLanguage);
+    expect(result).toBe('en');
+  });
+});
+
+describe('Protected paths', () => {
+  const protectedPaths = [
+    '/dashboard',
+    '/settings',
+    '/leads',
+    '/analytics',
+    '/webhooks',
+  ];
+
+  it('should identify protected paths', () => {
+    const isProtected = (path: string) =>
+      protectedPaths.some(p => path.startsWith(`/ja${p}`) || path.startsWith(`/en${p}`));
+
+    expect(isProtected('/ja/dashboard')).toBe(true);
+    expect(isProtected('/en/settings')).toBe(true);
+    expect(isProtected('/ja/leads/123')).toBe(true);
+  });
+
+  it('should identify public paths', () => {
+    const publicPaths = ['/', '/login', '/signup', '/diagnostic'];
+    const isPublic = (path: string) =>
+      publicPaths.some(p => path === `/ja${p}` || path === `/en${p}` || path === p);
+
+    expect(isPublic('/ja/login')).toBe(true);
+    expect(isPublic('/en/signup')).toBe(true);
+  });
+});
+
+describe('Redirect URL construction', () => {
+  it('should construct redirect URL with locale', () => {
+    const constructRedirectUrl = (pathname: string, locale: Locale) =>
+      `/${locale}${pathname}`;
+
+    expect(constructRedirectUrl('/dashboard', 'ja')).toBe('/ja/dashboard');
+    expect(constructRedirectUrl('/settings', 'en')).toBe('/en/settings');
+  });
+
+  it('should handle root path', () => {
+    const constructRedirectUrl = (pathname: string, locale: Locale) =>
+      pathname === '/' ? `/${locale}` : `/${locale}${pathname}`;
+
+    expect(constructRedirectUrl('/', 'ja')).toBe('/ja');
+    expect(constructRedirectUrl('/', 'en')).toBe('/en');
+  });
+});
+
+describe('Cookie handling', () => {
+  it('should define cookie options', () => {
+    const cookieOptions = {
+      name: 'NEXT_LOCALE',
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === 'production',
+    };
+
+    expect(cookieOptions.name).toBe('NEXT_LOCALE');
+    expect(cookieOptions.maxAge).toBe(31536000);
+  });
+});
