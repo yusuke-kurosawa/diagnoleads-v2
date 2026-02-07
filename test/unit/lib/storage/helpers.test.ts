@@ -252,3 +252,150 @@ describe('URL generation', () => {
       .toBe('https://my-bucket.s3.amazonaws.com/uploads/test.jpg');
   });
 });
+
+// Integration tests with actual module
+import {
+  generateFileKey as actualGenerateFileKey,
+  getFileExtension as actualGetFileExtension,
+  sanitizeFilename as actualSanitizeFilename,
+  getContentType as actualGetContentType,
+  validateFileType as actualValidateFileType,
+  validateFileSize as actualValidateFileSize,
+  validateFile,
+  formatFileSize,
+} from '@/lib/storage/helpers';
+import { ALLOWED_FILE_TYPES, FILE_SIZE_LIMITS } from '@/lib/storage/types';
+
+describe('Integration: generateFileKey (actual)', () => {
+  it('should generate unique key with timestamp', () => {
+    const key = actualGenerateFileKey('uploads', 'document.pdf');
+    expect(key).toMatch(/^uploads\/\d+-[a-z0-9]+-document\.pdf$/);
+  });
+
+  it('should handle complex filenames', () => {
+    const key = actualGenerateFileKey('files', 'My Report (Final) - Copy.xlsx');
+    expect(key).toMatch(/^files\/\d+-[a-z0-9]+-my-report-final-copy\.xlsx$/);
+  });
+
+  it('should handle files without extension', () => {
+    const key = actualGenerateFileKey('docs', 'LICENSE');
+    expect(key).toMatch(/^docs\/\d+-[a-z0-9]+-license$/);
+  });
+});
+
+describe('Integration: getFileExtension (actual)', () => {
+  it('should extract extension correctly', () => {
+    expect(actualGetFileExtension('image.jpg')).toBe('jpg');
+    expect(actualGetFileExtension('document.PDF')).toBe('pdf');
+    expect(actualGetFileExtension('archive.tar.gz')).toBe('gz');
+  });
+
+  it('should return empty for no extension', () => {
+    expect(actualGetFileExtension('README')).toBe('');
+  });
+});
+
+describe('Integration: sanitizeFilename (actual)', () => {
+  it('should sanitize special characters', () => {
+    expect(actualSanitizeFilename('My File (1).jpg')).toBe('my-file-1');
+    expect(actualSanitizeFilename('日本語ファイル.txt')).toBe('');
+    expect(actualSanitizeFilename('file---name.pdf')).toBe('file-name');
+  });
+
+  it('should limit length', () => {
+    const longName = 'a'.repeat(200) + '.txt';
+    expect(actualSanitizeFilename(longName).length).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('Integration: getContentType (actual)', () => {
+  it('should return correct MIME types', () => {
+    expect(actualGetContentType('image.jpg')).toBe('image/jpeg');
+    expect(actualGetContentType('document.pdf')).toBe('application/pdf');
+    expect(actualGetContentType('data.json')).toBe('application/json');
+    expect(actualGetContentType('file.csv')).toBe('text/csv');
+  });
+
+  it('should return octet-stream for unknown types', () => {
+    expect(actualGetContentType('file.xyz')).toBe('application/octet-stream');
+  });
+});
+
+describe('Integration: validateFileType (actual)', () => {
+  it('should validate allowed types', () => {
+    expect(actualValidateFileType('image/jpeg', ALLOWED_FILE_TYPES.images)).toBe(true);
+    expect(actualValidateFileType('image/png', ALLOWED_FILE_TYPES.images)).toBe(true);
+    expect(actualValidateFileType('application/pdf', ALLOWED_FILE_TYPES.images)).toBe(false);
+  });
+
+  it('should validate document types', () => {
+    expect(actualValidateFileType('application/pdf', ALLOWED_FILE_TYPES.documents)).toBe(true);
+    expect(actualValidateFileType('text/csv', ALLOWED_FILE_TYPES.documents)).toBe(true);
+  });
+});
+
+describe('Integration: validateFileSize (actual)', () => {
+  it('should validate size within limits', () => {
+    expect(actualValidateFileSize(1024 * 1024, FILE_SIZE_LIMITS.default)).toBe(true);
+    expect(actualValidateFileSize(100 * 1024 * 1024, FILE_SIZE_LIMITS.default)).toBe(false);
+  });
+
+  it('should use avatar limit', () => {
+    expect(actualValidateFileSize(3 * 1024 * 1024, FILE_SIZE_LIMITS.avatar)).toBe(true);
+    expect(actualValidateFileSize(10 * 1024 * 1024, FILE_SIZE_LIMITS.avatar)).toBe(false);
+  });
+
+  it('should use attachment limit', () => {
+    expect(actualValidateFileSize(20 * 1024 * 1024, FILE_SIZE_LIMITS.attachment)).toBe(true);
+    expect(actualValidateFileSize(30 * 1024 * 1024, FILE_SIZE_LIMITS.attachment)).toBe(false);
+  });
+});
+
+describe('Integration: validateFile (actual)', () => {
+  it('should validate valid file', () => {
+    const result = validateFile(
+      { contentType: 'image/jpeg', size: 1024 * 1024 },
+      { allowedTypes: ALLOWED_FILE_TYPES.images, maxSize: FILE_SIZE_LIMITS.avatar }
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('should reject invalid content type', () => {
+    const result = validateFile(
+      { contentType: 'application/exe', size: 1024 },
+      { allowedTypes: ALLOWED_FILE_TYPES.images }
+    );
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('type not allowed');
+  });
+
+  it('should reject oversized file', () => {
+    const result = validateFile(
+      { contentType: 'image/jpeg', size: 100 * 1024 * 1024 },
+      { maxSize: FILE_SIZE_LIMITS.avatar }
+    );
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('too large');
+  });
+});
+
+describe('Integration: formatFileSize (actual)', () => {
+  it('should format bytes', () => {
+    expect(formatFileSize(0)).toBe('0 Bytes');
+    expect(formatFileSize(500)).toBe('500 Bytes');
+  });
+
+  it('should format KB', () => {
+    expect(formatFileSize(1024)).toBe('1 KB');
+    expect(formatFileSize(2048)).toBe('2 KB');
+  });
+
+  it('should format MB', () => {
+    expect(formatFileSize(1024 * 1024)).toBe('1 MB');
+    expect(formatFileSize(5 * 1024 * 1024)).toBe('5 MB');
+  });
+
+  it('should format GB', () => {
+    expect(formatFileSize(1024 * 1024 * 1024)).toBe('1 GB');
+  });
+});
