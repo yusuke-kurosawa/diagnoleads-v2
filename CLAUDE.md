@@ -189,6 +189,7 @@ Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.g
 | ドキュメント | 内容 |
 |-------------|------|
 | `docs/SPRINTPATH.md` | SprintPathフレームワーク |
+| `docs/TESTING.md` | **テスト戦略ガイド（種別別原則・ルール）** |
 | `docs/WORKFLOW.md` | 詳細ワークフロー |
 | `docs/AGILE_PROCESS.md` | スクラムプロセス |
 | `CONTRIBUTING.md` | 開発者ガイド |
