@@ -513,3 +513,185 @@ describe('Integration: getCache (singleton)', () => {
     expect(cache1).not.toBe(cache2);
   });
 });
+
+describe('Integration: CacheClient interface', () => {
+  let cache: ActualCacheClient;
+
+  beforeEach(() => {
+    resetCacheInstance();
+    cache = createCacheClient({ prefix: 'iface-test', defaultTTL: 60 });
+  });
+
+  it('should implement all CacheClient methods', () => {
+    expect(typeof cache.get).toBe('function');
+    expect(typeof cache.set).toBe('function');
+    expect(typeof cache.del).toBe('function');
+    expect(typeof cache.delPattern).toBe('function');
+    expect(typeof cache.exists).toBe('function');
+    expect(typeof cache.ttl).toBe('function');
+    expect(typeof cache.keys).toBe('function');
+    expect(typeof cache.flush).toBe('function');
+    expect(typeof cache.getStats).toBe('function');
+  });
+
+  it('should return proper CacheStats structure', () => {
+    const stats = cache.getStats();
+    expect(stats).toHaveProperty('hits');
+    expect(stats).toHaveProperty('misses');
+    expect(stats).toHaveProperty('sets');
+    expect(stats).toHaveProperty('deletes');
+    expect(stats).toHaveProperty('hitRate');
+    expect(typeof stats.hits).toBe('number');
+    expect(typeof stats.misses).toBe('number');
+    expect(typeof stats.sets).toBe('number');
+    expect(typeof stats.deletes).toBe('number');
+    expect(typeof stats.hitRate).toBe('number');
+  });
+});
+
+describe('Integration: MemoryCache edge cases', () => {
+  let cache: ActualCacheClient;
+
+  beforeEach(() => {
+    resetCacheInstance();
+    cache = createCacheClient({ prefix: 'edge', defaultTTL: 60 });
+  });
+
+  it('should handle empty pattern delete', async () => {
+    const deleted = await cache.delPattern('nonexistent:*');
+    expect(deleted).toBe(0);
+  });
+
+  it('should handle special characters in keys', async () => {
+    await cache.set('key:with:colons', 'value');
+    await cache.set('key-with-dashes', 'value');
+    await cache.set('key_with_underscores', 'value');
+
+    expect(await cache.get('key:with:colons')).toBe('value');
+    expect(await cache.get('key-with-dashes')).toBe('value');
+    expect(await cache.get('key_with_underscores')).toBe('value');
+  });
+
+  it('should handle null and undefined values', async () => {
+    await cache.set('null-value', null);
+    await cache.set('undefined-value', undefined);
+
+    expect(await cache.get('null-value')).toBeNull();
+    expect(await cache.get('undefined-value')).toBeUndefined();
+  });
+
+  it('should handle empty string key', async () => {
+    await cache.set('', 'empty-key-value');
+    expect(await cache.get('')).toBe('empty-key-value');
+  });
+
+  it('should update hit rate correctly', async () => {
+    // All misses
+    await cache.get('miss1');
+    await cache.get('miss2');
+    let stats = cache.getStats();
+    expect(stats.hitRate).toBe(0);
+
+    // One hit
+    await cache.set('hit-key', 'value');
+    await cache.get('hit-key');
+    stats = cache.getStats();
+    expect(stats.hitRate).toBeGreaterThan(0);
+  });
+
+  it('should handle multiple delPattern calls', async () => {
+    await cache.set('multi:a:1', 'val');
+    await cache.set('multi:a:2', 'val');
+    await cache.set('multi:b:1', 'val');
+    await cache.set('multi:b:2', 'val');
+
+    const deleted1 = await cache.delPattern('multi:a:*');
+    const deleted2 = await cache.delPattern('multi:b:*');
+
+    expect(deleted1).toBe(2);
+    expect(deleted2).toBe(2);
+  });
+
+  it('should handle large number of keys', async () => {
+    const count = 100;
+    for (let i = 0; i < count; i++) {
+      await cache.set(`bulk:${i}`, i);
+    }
+
+    const keys = await cache.keys('bulk:*');
+    expect(keys.length).toBe(count);
+
+    await cache.flush();
+    const keysAfterFlush = await cache.keys('bulk:*');
+    expect(keysAfterFlush.length).toBe(0);
+  });
+});
+
+describe('Integration: Cache with complex objects', () => {
+  let cache: ActualCacheClient;
+
+  beforeEach(() => {
+    resetCacheInstance();
+    cache = createCacheClient({ prefix: 'complex', defaultTTL: 60 });
+  });
+
+  it('should cache and retrieve lead data', async () => {
+    const lead = {
+      id: 'lead-123',
+      name: 'Test Lead',
+      email: 'test@example.com',
+      score: 85,
+      tags: ['hot', 'qualified'],
+      metadata: {
+        source: 'web',
+        campaign: 'summer-2024',
+      },
+    };
+
+    await cache.set('lead:123', lead);
+    const retrieved = await cache.get<typeof lead>('lead:123');
+
+    expect(retrieved).toEqual(lead);
+    expect(retrieved?.tags).toContain('hot');
+    expect(retrieved?.metadata.source).toBe('web');
+  });
+
+  it('should cache and retrieve organization data', async () => {
+    const org = {
+      id: 'org-456',
+      name: 'Test Org',
+      plan: 'enterprise',
+      members: [
+        { id: 'user-1', role: 'owner' },
+        { id: 'user-2', role: 'admin' },
+      ],
+    };
+
+    await cache.set('org:456', org);
+    const retrieved = await cache.get<typeof org>('org:456');
+
+    expect(retrieved).toEqual(org);
+    expect(retrieved?.members.length).toBe(2);
+  });
+
+  it('should cache arrays correctly', async () => {
+    const ids = ['id-1', 'id-2', 'id-3'];
+    await cache.set('ids', ids);
+
+    const retrieved = await cache.get<string[]>('ids');
+    expect(retrieved).toEqual(ids);
+  });
+
+  it('should cache dates as strings', async () => {
+    const data = {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await cache.set('dates', data);
+    const retrieved = await cache.get<typeof data>('dates');
+
+    expect(retrieved?.createdAt).toBe(data.createdAt);
+    expect(typeof retrieved?.createdAt).toBe('string');
+  });
+});
