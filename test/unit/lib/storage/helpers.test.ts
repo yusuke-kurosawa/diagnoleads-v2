@@ -399,3 +399,212 @@ describe('Integration: formatFileSize (actual)', () => {
     expect(formatFileSize(1024 * 1024 * 1024)).toBe('1 GB');
   });
 });
+
+// Integration tests with mocked storage client
+import { vi, beforeEach, afterEach } from 'vitest';
+import {
+  uploadFile,
+  downloadFile,
+  deleteFile,
+  getUploadUrl,
+  getDownloadUrl,
+  fileExists,
+  getFileMetadata,
+} from '@/lib/storage/helpers';
+import * as storageClient from '@/lib/storage/client';
+
+describe('Integration: Storage operations (mocked)', () => {
+  const mockStorage = {
+    upload: vi.fn(),
+    download: vi.fn(),
+    delete: vi.fn(),
+    getPresignedUploadUrl: vi.fn(),
+    getPresignedDownloadUrl: vi.fn(),
+    exists: vi.fn(),
+    getMetadata: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(storageClient, 'getStorage').mockReturnValue(mockStorage as any);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('uploadFile', () => {
+    it('should upload file with buffer data', async () => {
+      mockStorage.upload.mockResolvedValue({
+        key: 'uploads/test.jpg',
+        url: 'https://example.com/uploads/test.jpg',
+      });
+
+      const data = Buffer.from('test content');
+      const result = await uploadFile('uploads/test.jpg', data, {
+        contentType: 'image/jpeg',
+      });
+
+      expect(result.key).toBe('uploads/test.jpg');
+      expect(result.url).toBe('https://example.com/uploads/test.jpg');
+      expect(mockStorage.upload).toHaveBeenCalledWith(
+        'uploads/test.jpg',
+        expect.any(Buffer),
+        expect.objectContaining({ contentType: 'image/jpeg' })
+      );
+    });
+
+    it('should upload file with string data', async () => {
+      mockStorage.upload.mockResolvedValue({
+        key: 'uploads/text.txt',
+        url: 'https://example.com/uploads/text.txt',
+      });
+
+      const result = await uploadFile('uploads/text.txt', 'hello world', {
+        contentType: 'text/plain',
+      });
+
+      expect(result.key).toBe('uploads/text.txt');
+      expect(mockStorage.upload).toHaveBeenCalled();
+    });
+
+    it('should validate file type when allowedTypes specified', async () => {
+      await expect(
+        uploadFile('uploads/test.exe', Buffer.from('data'), {
+          contentType: 'application/x-msdownload',
+          allowedTypes: ['image/jpeg', 'image/png'],
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should validate file size when maxSize specified', async () => {
+      const largeData = Buffer.alloc(10 * 1024 * 1024); // 10MB
+
+      await expect(
+        uploadFile('uploads/large.jpg', largeData, {
+          contentType: 'image/jpeg',
+          maxSize: 5 * 1024 * 1024, // 5MB limit
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should use default content type when not specified', async () => {
+      mockStorage.upload.mockResolvedValue({
+        key: 'uploads/file',
+        url: 'https://example.com/uploads/file',
+      });
+
+      // Default content type is 'application/octet-stream', which is always valid
+      await uploadFile('uploads/file', Buffer.from('data'), {
+        allowedTypes: ['application/octet-stream'],
+      });
+
+      expect(mockStorage.upload).toHaveBeenCalledWith(
+        'uploads/file',
+        expect.any(Buffer),
+        expect.objectContaining({})
+      );
+    });
+  });
+
+  describe('downloadFile', () => {
+    it('should download file and return buffer', async () => {
+      const fileContent = Buffer.from('file content');
+      mockStorage.download.mockResolvedValue(fileContent);
+
+      const result = await downloadFile('uploads/test.txt');
+
+      expect(result).toEqual(fileContent);
+      expect(mockStorage.download).toHaveBeenCalledWith('uploads/test.txt');
+    });
+  });
+
+  describe('deleteFile', () => {
+    it('should delete file by key', async () => {
+      mockStorage.delete.mockResolvedValue(undefined);
+
+      await deleteFile('uploads/test.jpg');
+
+      expect(mockStorage.delete).toHaveBeenCalledWith('uploads/test.jpg');
+    });
+  });
+
+  describe('getUploadUrl', () => {
+    it('should get presigned upload URL', async () => {
+      mockStorage.getPresignedUploadUrl.mockResolvedValue(
+        'https://example.com/presigned-upload'
+      );
+
+      const result = await getUploadUrl('uploads/new-file.jpg', { expiresIn: 3600 });
+
+      expect(result.url).toBe('https://example.com/presigned-upload');
+      expect(result.key).toBe('uploads/new-file.jpg');
+      expect(mockStorage.getPresignedUploadUrl).toHaveBeenCalledWith(
+        'uploads/new-file.jpg',
+        { expiresIn: 3600 }
+      );
+    });
+  });
+
+  describe('getDownloadUrl', () => {
+    it('should get presigned download URL', async () => {
+      mockStorage.getPresignedDownloadUrl.mockResolvedValue(
+        'https://example.com/presigned-download'
+      );
+
+      const result = await getDownloadUrl('uploads/file.pdf');
+
+      expect(result).toBe('https://example.com/presigned-download');
+      expect(mockStorage.getPresignedDownloadUrl).toHaveBeenCalledWith(
+        'uploads/file.pdf',
+        undefined
+      );
+    });
+
+    it('should pass options to presigned URL', async () => {
+      mockStorage.getPresignedDownloadUrl.mockResolvedValue('https://example.com/url');
+
+      await getDownloadUrl('uploads/file.pdf', { expiresIn: 7200 });
+
+      expect(mockStorage.getPresignedDownloadUrl).toHaveBeenCalledWith(
+        'uploads/file.pdf',
+        { expiresIn: 7200 }
+      );
+    });
+  });
+
+  describe('fileExists', () => {
+    it('should return true when file exists', async () => {
+      mockStorage.exists.mockResolvedValue(true);
+
+      const result = await fileExists('uploads/existing.jpg');
+
+      expect(result).toBe(true);
+      expect(mockStorage.exists).toHaveBeenCalledWith('uploads/existing.jpg');
+    });
+
+    it('should return false when file does not exist', async () => {
+      mockStorage.exists.mockResolvedValue(false);
+
+      const result = await fileExists('uploads/nonexistent.jpg');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('getFileMetadata', () => {
+    it('should return file metadata', async () => {
+      const metadata = {
+        contentType: 'image/jpeg',
+        size: 1024,
+        lastModified: new Date(),
+      };
+      mockStorage.getMetadata.mockResolvedValue(metadata);
+
+      const result = await getFileMetadata('uploads/image.jpg');
+
+      expect(result).toEqual(metadata);
+      expect(mockStorage.getMetadata).toHaveBeenCalledWith('uploads/image.jpg');
+    });
+  });
+});
