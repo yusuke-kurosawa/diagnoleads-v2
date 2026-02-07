@@ -4,8 +4,35 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// Constants matching source
-const CMS_CACHE_CONFIG = {
+// Mock next/cache before importing
+vi.mock('next/cache', () => ({
+  unstable_cache: vi.fn((fn, _keys, _opts) => fn),
+  revalidateTag: vi.fn(),
+}));
+
+// Import actual module
+import {
+  CMS_CACHE_CONFIG,
+  getCollectionTag,
+  getDocumentTag,
+  getSlugTag,
+  getOrganizationTag,
+  generateCacheKey,
+  invalidateCollection,
+  invalidateDocument,
+  invalidateBySlug,
+  invalidateOrganization,
+  invalidateAllCMS,
+  createCachedQuery,
+  createCachedFindById,
+  createCachedFindBySlug,
+  getCacheStats,
+  resetCacheStats,
+} from '@/lib/cms/core/cache';
+import { revalidateTag } from 'next/cache';
+
+// Constants matching source (for reference)
+const CONFIG = {
   defaultRevalidate: 60,
   collections: {
     'diagnostic-forms': 300,
@@ -324,5 +351,146 @@ describe('resetCacheStats', () => {
     resetCacheStats();
     expect(hits).toBe(0);
     expect(misses).toBe(0);
+  });
+});
+
+// Integration tests with actual module
+describe('Integration: getCollectionTag', () => {
+  it('should generate collection tag', () => {
+    expect(getCollectionTag('blog-posts')).toBe('cms:blog-posts');
+  });
+});
+
+describe('Integration: getDocumentTag', () => {
+  it('should generate document tag', () => {
+    expect(getDocumentTag('blog-posts', 'post-123')).toBe('cms:blog-posts:post-123');
+  });
+});
+
+describe('Integration: getSlugTag', () => {
+  it('should generate slug tag', () => {
+    expect(getSlugTag('blog-posts', 'hello-world')).toBe('cms:blog-posts:slug:hello-world');
+  });
+});
+
+describe('Integration: getOrganizationTag', () => {
+  it('should generate organization tag', () => {
+    expect(getOrganizationTag('org-123')).toBe('cms:org:org-123');
+  });
+});
+
+describe('Integration: generateCacheKey', () => {
+  it('should generate key from params', () => {
+    const key = generateCacheKey({ limit: 10, status: 'published' });
+    expect(key).toContain('limit');
+    expect(key).toContain('status');
+  });
+});
+
+describe('Integration: invalidateCollection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call revalidateTag', async () => {
+    await invalidateCollection('blog-posts');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:blog-posts');
+  });
+});
+
+describe('Integration: invalidateDocument', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call revalidateTag for document and collection', async () => {
+    await invalidateDocument('blog-posts', 'post-123');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:blog-posts:post-123');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:blog-posts');
+  });
+});
+
+describe('Integration: invalidateBySlug', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call revalidateTag for slug and collection', async () => {
+    await invalidateBySlug('blog-posts', 'hello-world');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:blog-posts:slug:hello-world');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:blog-posts');
+  });
+});
+
+describe('Integration: invalidateOrganization', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call revalidateTag for organization', async () => {
+    await invalidateOrganization('org-123');
+    expect(revalidateTag).toHaveBeenCalledWith('cms:org:org-123');
+  });
+});
+
+describe('Integration: invalidateAllCMS', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call revalidateTag for cms root', async () => {
+    await invalidateAllCMS();
+    expect(revalidateTag).toHaveBeenCalledWith('cms');
+  });
+});
+
+describe('Integration: createCachedQuery', () => {
+  it('should return function that calls queryFn', async () => {
+    const queryFn = vi.fn().mockResolvedValue([{ id: 1 }]);
+    const cached = createCachedQuery('posts', queryFn);
+    
+    const result = await cached({ limit: 10 });
+    expect(queryFn).toHaveBeenCalled();
+    expect(result).toEqual([{ id: 1 }]);
+  });
+});
+
+describe('Integration: createCachedFindById', () => {
+  it('should return function that calls findFn', async () => {
+    const findFn = vi.fn().mockResolvedValue({ id: '123' });
+    const cached = createCachedFindById('posts', findFn);
+    
+    const result = await cached('123');
+    expect(findFn).toHaveBeenCalled();
+    expect(result).toEqual({ id: '123' });
+  });
+});
+
+describe('Integration: createCachedFindBySlug', () => {
+  it('should return function that calls findFn', async () => {
+    const findFn = vi.fn().mockResolvedValue({ slug: 'test' });
+    const cached = createCachedFindBySlug('posts', findFn);
+    
+    const result = await cached('test');
+    expect(findFn).toHaveBeenCalled();
+    expect(result).toEqual({ slug: 'test' });
+  });
+});
+
+describe('Integration: getCacheStats', () => {
+  it('should return stats object', () => {
+    const stats = getCacheStats();
+    expect(stats).toHaveProperty('hits');
+    expect(stats).toHaveProperty('misses');
+    expect(stats).toHaveProperty('hitRate');
+  });
+});
+
+describe('Integration: resetCacheStats', () => {
+  it('should reset stats', () => {
+    resetCacheStats();
+    const stats = getCacheStats();
+    expect(stats.hits).toBe(0);
+    expect(stats.misses).toBe(0);
   });
 });
