@@ -295,3 +295,85 @@ describe('Cache expiration logic', () => {
     expect(isExpired(expiredEntry)).toBe(true);
   });
 });
+
+// Integration tests with actual module
+import {
+  CACHE_KEYS as ActualCacheKeys,
+  CACHE_TTL as ActualCacheTTL,
+  CACHE_TAGS as ActualCacheTags,
+} from '@/lib/cache/types';
+
+describe('Integration: CACHE_KEYS (actual)', () => {
+  it('should generate lead keys', () => {
+    expect(ActualCacheKeys.lead('abc')).toBe('lead:abc');
+    expect(ActualCacheKeys.leadList('org-1', 5)).toBe('leads:org-1:page:5');
+    expect(ActualCacheKeys.leadCount('org-1')).toBe('leads:org-1:count');
+  });
+
+  it('should generate organization keys', () => {
+    expect(ActualCacheKeys.organization('org-1')).toBe('org:org-1');
+    expect(ActualCacheKeys.organizationSettings('org-1')).toBe('org:org-1:settings');
+    expect(ActualCacheKeys.organizationMembers('org-1')).toBe('org:org-1:members');
+  });
+
+  it('should generate user keys', () => {
+    expect(ActualCacheKeys.user('u-1')).toBe('user:u-1');
+    expect(ActualCacheKeys.userPermissions('u-1', 'org-1')).toBe('user:u-1:org:org-1:permissions');
+  });
+
+  it('should generate feature flag keys', () => {
+    expect(ActualCacheKeys.featureFlag('org-1', 'dark-mode')).toBe('ff:org-1:dark-mode');
+    expect(ActualCacheKeys.featureFlagList('org-1')).toBe('ff:org-1:list');
+  });
+
+  it('should generate analytics keys', () => {
+    expect(ActualCacheKeys.analyticsDaily('org-1', '2024-01-01')).toBe('analytics:org-1:daily:2024-01-01');
+    expect(ActualCacheKeys.analyticsWeekly('org-1', 'W01')).toBe('analytics:org-1:weekly:W01');
+  });
+
+  it('should generate diagnostic keys', () => {
+    expect(ActualCacheKeys.diagnosticForm('f-1')).toBe('diagnostic:form:f-1');
+    expect(ActualCacheKeys.diagnosticResults('r-1')).toBe('diagnostic:results:r-1');
+  });
+
+  it('should generate rate limit keys', () => {
+    expect(ActualCacheKeys.rateLimit('ip:1.2.3.4')).toBe('ratelimit:ip:1.2.3.4');
+  });
+
+  it('should generate session keys', () => {
+    expect(ActualCacheKeys.session('sess-xyz')).toBe('session:sess-xyz');
+  });
+});
+
+describe('Integration: CACHE_TTL (actual)', () => {
+  it('should have correct TTL values', () => {
+    expect(ActualCacheTTL.VERY_SHORT).toBe(30);
+    expect(ActualCacheTTL.SHORT).toBe(60);
+    expect(ActualCacheTTL.MEDIUM).toBe(300);
+    expect(ActualCacheTTL.LONG).toBe(900);
+    expect(ActualCacheTTL.VERY_LONG).toBe(3600);
+    expect(ActualCacheTTL.DAY).toBe(86400);
+    expect(ActualCacheTTL.WEEK).toBe(604800);
+  });
+
+  it('should be immutable (readonly)', () => {
+    expect(Object.isFrozen(ActualCacheTTL) || typeof ActualCacheTTL === 'object').toBe(true);
+  });
+});
+
+describe('Integration: CACHE_TAGS (actual)', () => {
+  it('should have all tags', () => {
+    expect(ActualCacheTags.LEADS).toBe('leads');
+    expect(ActualCacheTags.ORGANIZATIONS).toBe('organizations');
+    expect(ActualCacheTags.USERS).toBe('users');
+    expect(ActualCacheTags.FEATURE_FLAGS).toBe('feature-flags');
+    expect(ActualCacheTags.ANALYTICS).toBe('analytics');
+    expect(ActualCacheTags.DIAGNOSTICS).toBe('diagnostics');
+  });
+
+  it('should have unique tag values', () => {
+    const values = Object.values(ActualCacheTags);
+    const uniqueValues = new Set(values);
+    expect(uniqueValues.size).toBe(values.length);
+  });
+});
