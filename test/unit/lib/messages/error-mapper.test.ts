@@ -12,6 +12,7 @@ import {
   getErrorCodeFromStatus,
   createErrorResponse,
   mapTRPCErrorToErrorResponse,
+  mapFetchErrorToErrorResponse,
   getLocalizedErrorMessage,
   getToastMessageKey,
   type ErrorCode,
@@ -511,5 +512,130 @@ describe('Integration: getToastMessageKey (actual)', () => {
     expect(getToastMessageKey('create', 'lead', true)).toBe('toast.lead.createError');
     expect(getToastMessageKey('update', 'organization', true)).toBe('toast.organization.updateError');
     expect(getToastMessageKey('delete', 'member', true)).toBe('toast.member.deleteError');
+  });
+});
+
+describe('Integration: mapFetchErrorToErrorResponse (actual)', () => {
+  it('should handle TypeError for network error', async () => {
+    const error = new TypeError('Failed to fetch');
+    const response = await mapFetchErrorToErrorResponse(error);
+    expect(response.code).toBe('NETWORK_ERROR');
+    expect(response.message).toBe('api.network');
+  });
+
+  it('should handle unknown error types', async () => {
+    const error = new Error('Unknown error');
+    const response = await mapFetchErrorToErrorResponse(error);
+    expect(response.code).toBe('UNKNOWN_ERROR');
+    expect(response.message).toBe('api.unknown');
+  });
+
+  it('should handle null/undefined error', async () => {
+    const response = await mapFetchErrorToErrorResponse(null);
+    expect(response.code).toBe('UNKNOWN_ERROR');
+  });
+
+  it('should handle string error', async () => {
+    const response = await mapFetchErrorToErrorResponse('Some error');
+    expect(response.code).toBe('UNKNOWN_ERROR');
+  });
+});
+
+describe('Integration: All error codes coverage', () => {
+  const allErrorCodes: ErrorCode[] = [
+    'AUTH_REQUIRED', 'AUTH_INVALID_CREDENTIALS', 'AUTH_SESSION_EXPIRED',
+    'AUTH_TOKEN_INVALID', 'AUTH_ACCOUNT_LOCKED', 'FORBIDDEN',
+    'INSUFFICIENT_PERMISSIONS', 'ORGANIZATION_ACCESS_DENIED', 'VALIDATION_ERROR',
+    'INVALID_EMAIL', 'INVALID_PHONE', 'INVALID_URL', 'REQUIRED_FIELD',
+    'FIELD_TOO_LONG', 'FIELD_TOO_SHORT', 'NUMBER_TOO_SMALL', 'NUMBER_TOO_LARGE',
+    'INVALID_PATTERN', 'DUPLICATE_VALUE', 'NOT_FOUND', 'LEAD_NOT_FOUND',
+    'ORGANIZATION_NOT_FOUND', 'USER_NOT_FOUND', 'MEMBER_NOT_FOUND',
+    'DUPLICATE_EMAIL', 'LEAD_CREATE_FAILED', 'LEAD_UPDATE_FAILED',
+    'LEAD_DELETE_FAILED', 'LEAD_INVALID_STATUS', 'ORGANIZATION_CREATE_FAILED',
+    'ORGANIZATION_UPDATE_FAILED', 'ORGANIZATION_DELETE_FAILED',
+    'MEMBER_INVITE_FAILED', 'MEMBER_REMOVE_FAILED', 'MEMBER_ALREADY_EXISTS',
+    'SERVER_ERROR', 'DATABASE_ERROR', 'NETWORK_ERROR', 'TIMEOUT',
+    'BAD_GATEWAY', 'SERVICE_UNAVAILABLE', 'GATEWAY_TIMEOUT', 'UNKNOWN_ERROR',
+  ];
+
+  it('should have message mapping for all error codes', () => {
+    for (const code of allErrorCodes) {
+      const key = getErrorMessageKey(code);
+      expect(key).toBeDefined();
+      expect(typeof key).toBe('string');
+      expect(key.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('should create valid error response for all codes', () => {
+    for (const code of allErrorCodes) {
+      const response = createErrorResponse(code);
+      expect(response.code).toBe(code);
+      expect(response.message).toBeDefined();
+    }
+  });
+});
+
+describe('Integration: HTTP status mapping coverage', () => {
+  const statusCodes = [400, 401, 403, 404, 500, 502, 503, 504];
+
+  it('should map all defined HTTP status codes', () => {
+    for (const status of statusCodes) {
+      const errorCode = getErrorCodeFromStatus(status);
+      expect(errorCode).not.toBe('UNKNOWN_ERROR');
+      expect(typeof errorCode).toBe('string');
+    }
+  });
+
+  it('should return UNKNOWN_ERROR for unmapped statuses', () => {
+    const unmappedStatuses = [100, 200, 201, 204, 301, 302, 418, 422, 429];
+    for (const status of unmappedStatuses) {
+      expect(getErrorCodeFromStatus(status)).toBe('UNKNOWN_ERROR');
+    }
+  });
+});
+
+describe('Integration: tRPC error mapping coverage', () => {
+  const trpcCodes = ['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'BAD_REQUEST', 'INTERNAL_SERVER_ERROR', 'TIMEOUT'];
+
+  it('should map all defined tRPC error codes', () => {
+    for (const code of trpcCodes) {
+      const response = mapTRPCErrorToErrorResponse({
+        code,
+        message: `Test ${code} error`,
+      });
+      expect(response.code).not.toBe('UNKNOWN_ERROR');
+    }
+  });
+
+  it('should handle unknown tRPC codes', () => {
+    const response = mapTRPCErrorToErrorResponse({
+      code: 'UNKNOWN_TRPC_CODE',
+      message: 'Unknown error',
+    });
+    expect(response.code).toBe('UNKNOWN_ERROR');
+  });
+
+  it('should preserve message from tRPC error', () => {
+    const response = mapTRPCErrorToErrorResponse({
+      code: 'UNAUTHORIZED',
+      message: 'Custom auth message',
+    });
+    expect(response.message).toBe('Custom auth message');
+  });
+
+  it('should handle tRPC error with details', () => {
+    const response = mapTRPCErrorToErrorResponse({
+      code: 'BAD_REQUEST',
+      message: 'Validation failed',
+      data: {
+        code: 'VALIDATION_ERROR' as ErrorCode,
+        field: 'email',
+        details: { format: 'invalid', expected: 'email' },
+      },
+    });
+    expect(response.code).toBe('VALIDATION_ERROR');
+    expect(response.field).toBe('email');
+    expect(response.details).toEqual({ format: 'invalid', expected: 'email' });
   });
 });
