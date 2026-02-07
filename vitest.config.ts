@@ -26,12 +26,12 @@ export default defineConfig({
         '**/*.css',
       ],
       thresholds: {
-        // Global thresholds - set to current baseline for gradual improvement
-        // Current: 15.65% statements, 9.82% branches, 9.42% functions, 15.96% lines
-        lines: 15,
-        functions: 9,
-        branches: 9,
-        statements: 15,
+        // Global thresholds - enforced in CI
+        // Updated: 2026-02-07 based on current coverage
+        lines: 30,
+        functions: 25,
+        branches: 20,
+        statements: 30,
       },
     },
   },
