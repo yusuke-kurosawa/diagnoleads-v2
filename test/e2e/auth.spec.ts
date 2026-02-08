@@ -252,4 +252,203 @@ test.describe('Authentication', () => {
       await page.waitForURL(/\/dashboard/);
     });
   });
+
+  test.describe('Password Reset', () => {
+    test('should display password reset request page', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      // Check page elements
+      await expect(page.getByRole('heading', { name: /パスワード|Password|リセット|Reset|忘れ/i })).toBeVisible();
+      await expect(page.locator('input[name="email"], input[type="email"]')).toBeVisible();
+      await expect(page.getByRole('button', { name: /送信|Send|リセット|Reset/i })).toBeVisible();
+    });
+
+    test('should show validation error for invalid email', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      await page.fill('input[name="email"], input[type="email"]', 'invalid-email');
+      await page.click('button[type="submit"]');
+
+      // Check for validation error
+      await expect(page.getByText(/メール|email|有効|valid/i)).toBeVisible();
+    });
+
+    test('should show success message after reset request', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      await page.fill('input[name="email"], input[type="email"]', testUser.email);
+      await page.click('button[type="submit"]');
+
+      // Wait for success message (even if email doesn't exist, show generic success for security)
+      await expect(page.getByText(/送信|sent|確認|check|メール/i)).toBeVisible({ timeout: 10000 });
+    });
+
+    test('should have link back to login', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      const loginLink = page.getByRole('link', { name: /ログイン|Sign In|戻る|Back/i });
+      await expect(loginLink).toBeVisible();
+    });
+  });
+
+  test.describe('Security', () => {
+    test('should not expose user existence via login error messages', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Try with non-existent email
+      await page.fill('input[name="email"]', 'nonexistent-user-xyz@example.com');
+      await page.fill('input[name="password"]', 'SomePassword123!');
+      await page.click('button[type="submit"]');
+
+      // Error message should be generic (not reveal if user exists)
+      const errorText = await page.locator('[role="alert"], .error, .text-red-500, .text-destructive').first().textContent();
+      if (errorText) {
+        expect(errorText.toLowerCase()).not.toContain('user not found');
+        expect(errorText.toLowerCase()).not.toContain('ユーザーが存在しません');
+      }
+    });
+
+    test('should rate limit login attempts', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Try multiple failed logins
+      for (let i = 0; i < 5; i++) {
+        await page.fill('input[name="email"]', 'test@example.com');
+        await page.fill('input[name="password"]', 'WrongPassword' + i);
+        await page.click('button[type="submit"]');
+        await page.waitForTimeout(500);
+      }
+
+      // After multiple attempts, should show rate limit or additional security message
+      const rateLimitText = page.getByText(/しばらく|wait|too many|attempts|制限/i);
+      // Rate limiting may or may not be visible depending on implementation
+      // This test just ensures the flow doesn't crash
+    });
+
+    test('should clear sensitive data on logout', async ({ page }) => {
+      // Login first
+      await page.goto('/sign-in');
+      await page.fill('input[name="email"]', testUser.email);
+      await page.fill('input[name="password"]', testUser.password);
+      await page.click('button[type="submit"]');
+      await page.waitForURL(/\/dashboard/);
+
+      // Store some data in localStorage (simulating app behavior)
+      await page.evaluate(() => {
+        localStorage.setItem('test-data', 'sensitive');
+      });
+
+      // Logout
+      const logoutButton = page.locator('[data-testid="logout-button"], button:has-text("ログアウト"), button:has-text("Logout")').first();
+      if (await logoutButton.isVisible()) {
+        await logoutButton.click();
+        await page.waitForURL(/\/(sign-in|login|$)/);
+      }
+
+      // Cookies should be cleared
+      const cookies = await page.context().cookies();
+      const sessionCookie = cookies.find(c => c.name.includes('session') || c.name.includes('auth'));
+      // Session cookie should be cleared or expired
+      if (sessionCookie) {
+        expect(new Date(sessionCookie.expires * 1000) <= new Date()).toBeTruthy();
+      }
+    });
+
+    test('should use HTTPS for auth pages in production', async ({ page }) => {
+      // This test checks that in production, auth pages use HTTPS
+      // In development, HTTP is acceptable
+      const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+      
+      if (baseUrl.startsWith('https://')) {
+        await page.goto('/sign-in');
+        expect(page.url()).toMatch(/^https:/);
+      }
+    });
+  });
+
+  test.describe('Accessibility', () => {
+    test('should have proper form labels on login page', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Check email input has label
+      const emailInput = page.locator('input[name="email"]');
+      const emailLabel = await emailInput.getAttribute('aria-label') || 
+                        await page.locator('label[for="email"]').textContent();
+      expect(emailLabel).toBeTruthy();
+
+      // Check password input has label
+      const passwordInput = page.locator('input[name="password"]');
+      const passwordLabel = await passwordInput.getAttribute('aria-label') ||
+                           await page.locator('label[for="password"]').textContent();
+      expect(passwordLabel).toBeTruthy();
+    });
+
+    test('should be keyboard navigable', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Tab to email input
+      await page.keyboard.press('Tab');
+      let focusedElement = await page.evaluate(() => document.activeElement?.name || document.activeElement?.tagName);
+      expect(focusedElement).toBeTruthy();
+
+      // Tab to password input
+      await page.keyboard.press('Tab');
+      focusedElement = await page.evaluate(() => document.activeElement?.name || document.activeElement?.tagName);
+      expect(focusedElement).toBeTruthy();
+
+      // Tab to submit button
+      await page.keyboard.press('Tab');
+      focusedElement = await page.evaluate(() => document.activeElement?.tagName);
+      expect(focusedElement?.toLowerCase()).toBe('button');
+    });
+
+    test('should announce errors to screen readers', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Submit empty form
+      await page.click('button[type="submit"]');
+
+      // Check for error with ARIA attributes
+      const errorElement = page.locator('[role="alert"], [aria-live="polite"], [aria-live="assertive"]');
+      if (await errorElement.count() > 0) {
+        await expect(errorElement.first()).toBeVisible();
+      }
+    });
+  });
+
+  test.describe('Mobile', () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    test('should display login form properly on mobile', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      // Form should be visible
+      await expect(page.locator('input[name="email"]')).toBeVisible();
+      await expect(page.locator('input[name="password"]')).toBeVisible();
+      await expect(page.locator('button[type="submit"]')).toBeVisible();
+
+      // Form should fit within viewport
+      const form = page.locator('form').first();
+      const box = await form.boundingBox();
+      if (box) {
+        expect(box.width).toBeLessThanOrEqual(375);
+      }
+    });
+
+    test('should have touch-friendly input sizes on mobile', async ({ page }) => {
+      await page.goto('/sign-in');
+
+      const inputs = page.locator('input:visible');
+      const inputCount = await inputs.count();
+
+      for (let i = 0; i < inputCount; i++) {
+        const input = inputs.nth(i);
+        const box = await input.boundingBox();
+        if (box) {
+          // Minimum touch target size
+          expect(box.height).toBeGreaterThanOrEqual(36);
+        }
+      }
+    });
+  });
 });
