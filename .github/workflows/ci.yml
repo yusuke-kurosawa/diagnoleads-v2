@@ -195,6 +195,11 @@ jobs:
           name: nextjs-build
           path: .next
 
+      - name: Create database schemas
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE SCHEMA IF NOT EXISTS auth;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE SCHEMA IF NOT EXISTS drizzle;"
+
       - name: Run database migrations
         run: bun run db:migrate
         env:
