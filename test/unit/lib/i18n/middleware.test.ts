@@ -2,7 +2,12 @@
  * i18n Middleware Tests
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Mock next-intl/middleware to avoid next/server import error
+vi.mock('next-intl/middleware', () => ({
+  default: vi.fn(() => vi.fn()),
+}));
 
 // Constants matching source
 const locales = ['ja', 'en'] as const;
