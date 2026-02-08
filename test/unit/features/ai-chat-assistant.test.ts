@@ -1,227 +1,273 @@
-/**
- * AI Chat Assistant Tests
- *
- * Unit tests for chat assistant service
- */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { ChatMessage } from '@/lib/features/ai/chat/assistant';
-
-// Mock AI SDK
+// Mock the AI SDK
 vi.mock('@ai-sdk/anthropic', () => ({
   createAnthropic: vi.fn(() => vi.fn()),
 }));
 
 vi.mock('ai', () => ({
-  streamText: vi.fn().mockResolvedValue({
-    toTextStreamResponse: vi.fn().mockReturnValue(new Response('AI response')),
-    textStream: (async function* () {
-      yield 'Test ';
-      yield 'summary';
-    })(),
-  }),
+  streamText: vi.fn(),
 }));
 
-describe('ChatMessage type', () => {
-  it('should have user role', () => {
-    const message: ChatMessage = {
-      role: 'user',
-      content: 'Hello, help me with my leads',
-    };
+import { streamText } from 'ai';
+import {
+  type ChatMessage,
+  generateChatResponse,
+  generateLeadSummary,
+} from '@/lib/features/ai/chat/assistant';
 
-    expect(message.role).toBe('user');
-    expect(message.content).toBeTruthy();
+describe('ai-chat-assistant', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should have assistant role', () => {
-    const message: ChatMessage = {
-      role: 'assistant',
-      content: 'I can help you analyze your leads.',
-    };
+  describe('generateChatResponse', () => {
+    it('should generate chat response with messages', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Hello!')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    expect(message.role).toBe('assistant');
-    expect(message.content).toBeTruthy();
+      const messages: ChatMessage[] = [{ role: 'user', content: 'Hello' }];
+
+      const result = await generateChatResponse(messages);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [{ role: 'user', content: 'Hello' }],
+          temperature: 0.7,
+        })
+      );
+      expect(result).toBeInstanceOf(Response);
+    });
+
+    it('should include organization context in system prompt', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Response with context')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const messages: ChatMessage[] = [{ role: 'user', content: 'Tell me about leads' }];
+      const context = {
+        organizationName: 'Acme Corp',
+      };
+
+      await generateChatResponse(messages, context);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('Acme Corp'),
+        })
+      );
+    });
+
+    it('should include recent leads in context', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Response with leads')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const messages: ChatMessage[] = [{ role: 'user', content: 'What are my recent leads?' }];
+      const context = {
+        recentLeads: [
+          { name: 'John Doe', company: 'Tech Inc', status: 'contacted' },
+          { name: 'Jane Smith', company: 'Sales Co', status: 'new' },
+        ],
+      };
+
+      await generateChatResponse(messages, context);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('John Doe'),
+        })
+      );
+    });
+
+    it('should handle leads with null fields', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Response')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const messages: ChatMessage[] = [{ role: 'user', content: 'Check leads' }];
+      const context = {
+        recentLeads: [
+          { name: null, company: null, status: null },
+          { name: 'Test', company: undefined, status: 'new' },
+        ],
+      };
+
+      await generateChatResponse(messages, context);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('Unknown'),
+        })
+      );
+    });
+
+    it('should handle empty context', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Response')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const messages: ChatMessage[] = [{ role: 'user', content: 'Hello' }];
+
+      await generateChatResponse(messages, {});
+
+      expect(streamText).toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      (streamText as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
+
+      const messages: ChatMessage[] = [{ role: 'user', content: 'Hello' }];
+
+      await expect(generateChatResponse(messages)).rejects.toThrow('Failed to generate chat response');
+    });
+
+    it('should handle multiple messages in conversation', async () => {
+      const mockResponse = {
+        toTextStreamResponse: vi.fn().mockReturnValue(new Response('Response')),
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+
+      const messages: ChatMessage[] = [
+        { role: 'user', content: 'Hello' },
+        { role: 'assistant', content: 'Hi there!' },
+        { role: 'user', content: 'How are you?' },
+      ];
+
+      await generateChatResponse(messages);
+
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: expect.arrayContaining([
+            { role: 'user', content: 'Hello' },
+            { role: 'assistant', content: 'Hi there!' },
+            { role: 'user', content: 'How are you?' },
+          ]),
+        })
+      );
+    });
   });
 
-  it('should support conversation history', () => {
-    const messages: ChatMessage[] = [
-      { role: 'user', content: 'What are my top leads?' },
-      { role: 'assistant', content: 'Based on your data, your top leads are...' },
-      { role: 'user', content: 'Tell me more about the first one' },
-    ];
+  describe('generateLeadSummary', () => {
+    it('should generate summary for a lead', async () => {
+      const mockTextStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield 'This is ';
+          yield 'a lead ';
+          yield 'summary.';
+        },
+      };
+      const mockResponse = {
+        textStream: mockTextStream,
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    expect(messages).toHaveLength(3);
-    expect(messages[0].role).toBe('user');
-    expect(messages[1].role).toBe('assistant');
-    expect(messages[2].role).toBe('user');
-  });
-});
+      const lead = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        company: 'Tech Inc',
+        industry: 'Technology',
+        position: 'CEO',
+        notes: 'Interested in product',
+        status: 'contacted',
+      };
 
-describe('Chat context', () => {
-  it('should accept organization name', () => {
-    const context = {
-      organizationName: 'Acme Corp',
-    };
+      const result = await generateLeadSummary(lead);
 
-    expect(context.organizationName).toBe('Acme Corp');
-  });
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: expect.stringContaining('John Doe'),
+        })
+      );
+      expect(result).toBe('This is a lead summary.');
+    });
 
-  it('should accept recent leads', () => {
-    const context = {
-      recentLeads: [
-        { name: 'John Doe', company: 'TechCo', status: 'new' },
-        { name: 'Jane Smith', company: 'FinCo', status: 'contacted' },
-      ],
-    };
+    it('should handle lead with null fields', async () => {
+      const mockTextStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield 'Summary for unknown lead.';
+        },
+      };
+      const mockResponse = {
+        textStream: mockTextStream,
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    expect(context.recentLeads).toHaveLength(2);
-    expect(context.recentLeads[0].name).toBe('John Doe');
-  });
+      const lead = {
+        name: null,
+        email: null,
+        company: null,
+        industry: null,
+        position: null,
+        notes: null,
+        status: null,
+      };
 
-  it('should handle null fields in recent leads', () => {
-    const context = {
-      recentLeads: [
-        { name: null, company: null, status: null },
-        { name: 'Test', company: undefined, status: 'new' },
-      ],
-    };
+      const result = await generateLeadSummary(lead);
 
-    expect(context.recentLeads[0].name).toBeNull();
-    expect(context.recentLeads[1].company).toBeUndefined();
-  });
+      expect(streamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: expect.stringContaining('N/A'),
+        })
+      );
+      expect(result).toBe('Summary for unknown lead.');
+    });
 
-  it('should be optional', () => {
-    const context: {
-      organizationName?: string;
-      recentLeads?: Array<{ name?: string | null }>;
-    } = {};
+    it('should handle partial lead data', async () => {
+      const mockTextStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield 'Partial summary.';
+        },
+      };
+      const mockResponse = {
+        textStream: mockTextStream,
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-    expect(context.organizationName).toBeUndefined();
-    expect(context.recentLeads).toBeUndefined();
-  });
-});
+      const lead = {
+        name: 'Jane',
+        company: 'Acme',
+      };
 
-describe('Lead summary generation', () => {
-  it('should accept lead data for summary', () => {
-    const lead = {
-      name: 'John Doe',
-      email: 'john@example.com',
-      company: 'TechCorp',
-      industry: 'technology',
-      position: 'CTO',
-      notes: 'Interested in enterprise plan',
-      status: 'qualified',
-    };
+      const result = await generateLeadSummary(lead);
 
-    expect(lead.name).toBe('John Doe');
-    expect(lead.company).toBe('TechCorp');
-    expect(lead.status).toBe('qualified');
-  });
+      expect(result).toBe('Partial summary.');
+    });
 
-  it('should handle missing optional fields', () => {
-    const lead = {
-      name: null,
-      email: null,
-      company: null,
-      industry: null,
-      position: null,
-      notes: null,
-      status: null,
-    };
+    it('should return error message on API failure', async () => {
+      (streamText as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
 
-    const name = lead.name || 'N/A';
-    const company = lead.company || 'N/A';
+      const lead = {
+        name: 'Test Lead',
+      };
 
-    expect(name).toBe('N/A');
-    expect(company).toBe('N/A');
-  });
-});
+      const result = await generateLeadSummary(lead);
 
-describe('System prompt building', () => {
-  it('should include organization name when provided', () => {
-    const context = { organizationName: 'TestOrg' };
-    const promptPart = context.organizationName
-      ? `Organization: ${context.organizationName}`
-      : '';
+      expect(result).toBe('Unable to generate summary');
+    });
 
-    expect(promptPart).toBe('Organization: TestOrg');
-  });
+    it('should trim whitespace from summary', async () => {
+      const mockTextStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield '  Summary with spaces  ';
+        },
+      };
+      const mockResponse = {
+        textStream: mockTextStream,
+      };
+      (streamText as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
-  it('should include recent leads when provided', () => {
-    const recentLeads = [
-      { name: 'Lead 1', company: 'Company A', status: 'new' },
-      { name: 'Lead 2', company: 'Company B', status: 'contacted' },
-    ];
+      const lead = { name: 'Test' };
 
-    const leadsSection = recentLeads
-      .map(
-        (lead, i) =>
-          `${i + 1}. ${lead.name || 'Unknown'} from ${lead.company || 'Unknown Company'} (${lead.status || 'new'})`
-      )
-      .join('\n');
+      const result = await generateLeadSummary(lead);
 
-    expect(leadsSection).toContain('1. Lead 1 from Company A (new)');
-    expect(leadsSection).toContain('2. Lead 2 from Company B (contacted)');
-  });
-
-  it('should handle empty recent leads', () => {
-    const recentLeads: Array<{ name?: string | null }> = [];
-
-    const hasLeads = recentLeads && recentLeads.length > 0;
-    expect(hasLeads).toBe(false);
-  });
-});
-
-describe('Chat assistant capabilities', () => {
-  it('should describe lead analysis capability', () => {
-    const capabilities = [
-      'Analyzing lead data and providing insights',
-      'Suggesting follow-up actions',
-      'Answering questions about leads',
-      'Providing sales recommendations',
-    ];
-
-    expect(capabilities).toHaveLength(4);
-    expect(capabilities).toContain('Analyzing lead data and providing insights');
-  });
-});
-
-describe('Error handling', () => {
-  it('should return fallback summary on error', () => {
-    const fallbackSummary = 'Unable to generate summary';
-    expect(fallbackSummary).toBe('Unable to generate summary');
-  });
-
-  it('should throw error for chat generation failure', () => {
-    const errorMessage = 'Failed to generate chat response';
-    expect(() => {
-      throw new Error(errorMessage);
-    }).toThrow('Failed to generate chat response');
-  });
-});
-
-describe('Streaming response', () => {
-  it('should support text stream response', () => {
-    const response = new Response('AI response');
-    expect(response).toBeInstanceOf(Response);
-  });
-
-  it('should accumulate stream text', async () => {
-    const textParts = ['Hello', ' ', 'World'];
-    let result = '';
-
-    for (const part of textParts) {
-      result += part;
-    }
-
-    expect(result).toBe('Hello World');
-  });
-});
-
-describe('Temperature setting', () => {
-  it('should use temperature 0.7 for creative responses', () => {
-    const temperature = 0.7;
-    expect(temperature).toBeGreaterThan(0);
-    expect(temperature).toBeLessThan(1);
+      expect(result).toBe('Summary with spaces');
+    });
   });
 });
