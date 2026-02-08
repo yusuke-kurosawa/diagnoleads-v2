@@ -50,3 +50,4 @@ drizzle/meta/*
 
 *.db
 *.db-journal
+.env*.local
