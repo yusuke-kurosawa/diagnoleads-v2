@@ -1,6 +1,7 @@
 import { LoginForm } from '@/components/auth/LoginForm';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 /**
  * ログインページ
@@ -32,7 +33,9 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
         </div>
       )}
 
-      <LoginForm />
+      <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
+        <LoginForm />
+      </Suspense>
 
       <div className="mt-6">
         <div className="flex items-center justify-between text-sm">

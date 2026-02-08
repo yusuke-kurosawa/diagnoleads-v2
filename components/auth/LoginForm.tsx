@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -26,9 +26,14 @@ type LoginFormValues = {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('settings.auth.login');
   const tv = useTranslations('settings.auth.validation');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get callback URL from query params, default to /dashboard
+  const callbackUrl =
+    searchParams.get('callbackUrl') || searchParams.get('redirect') || '/dashboard';
 
   const loginSchema = z.object({
     email: z.string().email(tv('emailInvalid')),
@@ -49,11 +54,10 @@ export function LoginForm() {
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
-        callbackURL: '/dashboard',
+        callbackURL: callbackUrl,
       });
 
       if (result.error) {
-        // Handle specific error codes/messages from BetterAuth
         const errorCode = result.error.code;
         const errorMessage = result.error.message?.toLowerCase() || '';
 
@@ -76,7 +80,8 @@ export function LoginForm() {
       }
 
       toast.success(t('successToast'));
-      router.push('/dashboard');
+      // Use the callback URL for redirection
+      router.push(callbackUrl);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(t('errorToast'));

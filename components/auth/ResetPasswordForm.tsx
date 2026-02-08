@@ -43,16 +43,25 @@ export function ResetPasswordForm() {
   async function onSubmit(data: ResetPasswordFormValues) {
     setIsLoading(true);
     try {
-      await (authClient as any).forgetPassword({
+      // Use BetterAuth's requestPasswordReset API
+      const result = await authClient.requestPasswordReset({
         email: data.email,
         redirectTo: '/reset-password/confirm',
       });
 
+      if (result.error) {
+        // Don't reveal if email exists or not (security)
+        console.error('Reset password error:', result.error);
+      }
+
+      // Always show success (security - don't reveal if email exists)
       toast.success(t('successToast'));
       setIsSuccess(true);
     } catch (error) {
       console.error('Reset password error:', error);
-      toast.error(t('errorToast'));
+      // Still show success to avoid email enumeration
+      toast.success(t('successToast'));
+      setIsSuccess(true);
     } finally {
       setIsLoading(false);
     }

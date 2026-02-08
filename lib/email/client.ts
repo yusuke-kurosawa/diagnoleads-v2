@@ -10,13 +10,15 @@ type SendEmailOptions =
       to: string | string[];
       subject: string;
       react: React.ReactElement;
-      text?: never;
+      text?: string;
+      html?: never;
     }
   | {
       to: string | string[];
       subject: string;
       react?: never;
       text: string;
+      html?: string;
     };
 
 /**

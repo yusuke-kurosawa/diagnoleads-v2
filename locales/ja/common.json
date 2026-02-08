@@ -801,6 +801,25 @@
         "successToast": "パスワードリセットメールを送信しました",
         "errorToast": "パスワードリセットメールの送信に失敗しました。メールアドレスを確認してください。"
       },
+      "resetPasswordConfirm": {
+        "title": "新しいパスワードを設定",
+        "description": "新しいパスワードを入力してください。",
+        "newPasswordLabel": "新しいパスワード",
+        "newPasswordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "新しいパスワード（確認）",
+        "confirmPasswordPlaceholder": "••••••••",
+        "submitButton": "パスワードを変更",
+        "submittingButton": "変更中...",
+        "successTitle": "パスワードを変更しました",
+        "successMessage": "新しいパスワードでログインできます。",
+        "successToast": "パスワードを変更しました",
+        "errorTitle": "エラー",
+        "errorToast": "パスワードの変更に失敗しました。",
+        "invalidToken": "リンクの有効期限が切れているか、無効です。新しいリセットリンクをリクエストしてください。",
+        "missingToken": "リセットトークンが見つかりません。パスワードリセットページから再度お試しください。",
+        "requestNewLink": "新しいリセットリンクをリクエスト",
+        "backToLogin": "← ログインページに戻る"
+      },
       "validation": {
         "emailInvalid": "有効なメールアドレスを入力してください",
         "passwordMin": "パスワードは8文字以上である必要があります",

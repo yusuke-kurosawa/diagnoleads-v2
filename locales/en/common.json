@@ -791,6 +791,25 @@
         "successToast": "Password reset email sent successfully",
         "errorToast": "Failed to send password reset email. Please check your email address."
       },
+      "resetPasswordConfirm": {
+        "title": "Set New Password",
+        "description": "Enter your new password below.",
+        "newPasswordLabel": "New Password",
+        "newPasswordPlaceholder": "••••••••",
+        "confirmPasswordLabel": "Confirm New Password",
+        "confirmPasswordPlaceholder": "••••••••",
+        "submitButton": "Change Password",
+        "submittingButton": "Changing...",
+        "successTitle": "Password Changed",
+        "successMessage": "You can now log in with your new password.",
+        "successToast": "Password changed successfully",
+        "errorTitle": "Error",
+        "errorToast": "Failed to change password.",
+        "invalidToken": "The reset link has expired or is invalid. Please request a new one.",
+        "missingToken": "Reset token not found. Please try again from the password reset page.",
+        "requestNewLink": "Request a new reset link",
+        "backToLogin": "← Back to login"
+      },
       "validation": {
         "emailInvalid": "Please enter a valid email address",
         "passwordMin": "Password must be at least 8 characters",
