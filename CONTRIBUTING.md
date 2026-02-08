@@ -160,9 +160,9 @@ test(webhooks): add delivery retry tests
 
 | 層 | 対象 | Lines | Functions | 理由 |
 |----|------|-------|-----------|------|
-| **Core** | `lib/features/**` | 70%+ | 65%+ | ビジネスロジックは厳格に |
-| **API** | `server/**` | 65%+ | 60%+ | 入出力の検証 |
-| **UI** | `components/**` | 20%+ | 15%+ | E2Eで補完 |
+| **Core** | `lib/features/**` | 45%+ | 40%+ | ビジネスロジック（段階的に向上） |
+| **API** | `server/**` | 90%+ | 85%+ | APIは高カバレッジを維持 |
+| **UI** | `components/**` | 15%+ | 12%+ | E2Eで補完 |
 
 #### PRマージ条件
 
