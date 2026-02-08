@@ -21,7 +21,7 @@ test.describe('Authentication', () => {
   };
 
   test.describe('Sign Up', () => {
-    test('should display signup page correctly', async ({ page }) => {
+    test('should display signup page correctly @smoke', async ({ page }) => {
       await page.goto('/sign-up');
 
       // Check page elements
@@ -97,7 +97,7 @@ test.describe('Authentication', () => {
   });
 
   test.describe('Sign In', () => {
-    test('should display login page correctly', async ({ page }) => {
+    test('should display login page correctly @smoke', async ({ page }) => {
       await page.goto('/sign-in');
 
       // Check page elements

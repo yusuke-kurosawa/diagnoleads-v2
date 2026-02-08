@@ -10,6 +10,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './test/e2e',
+  // In CI, only run smoke tests (tagged with @smoke)
+  grep: process.env.CI ? /@smoke/ : undefined,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

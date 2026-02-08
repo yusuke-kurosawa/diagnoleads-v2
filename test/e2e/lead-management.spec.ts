@@ -23,7 +23,7 @@ test.describe('Lead Management', () => {
     await setupAuthenticatedTest(page, TEST_USERS.owner);
   });
 
-  test('should display leads list page', async ({ page }) => {
+  test('should display leads list page @smoke', async ({ page }) => {
     // Navigate to leads page
     await page.goto(`/dashboard/${TEST_USERS.owner.organizationId}/leads`);
 

@@ -17,7 +17,7 @@ test.describe('Dashboard', () => {
   });
 
   test.describe('Dashboard Display', () => {
-    test('should display dashboard page', async ({ page }) => {
+    test('should display dashboard page @smoke', async ({ page }) => {
       await page.goto(`/dashboard/${TEST_USERS.owner.organizationId}`);
 
       // Check page loaded

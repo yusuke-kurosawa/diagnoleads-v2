@@ -19,7 +19,7 @@ test.describe('Diagnostic Form', () => {
   };
 
   test.describe('Form Display', () => {
-    test('should display diagnostic form page', async ({ page }) => {
+    test('should display diagnostic form page @smoke', async ({ page }) => {
       await page.goto('/diagnostic/sample');
 
       // Check form is visible
