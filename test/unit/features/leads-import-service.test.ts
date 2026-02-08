@@ -1,323 +1,363 @@
-/**
- * Lead Import Service Tests
- */
-
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import {
+  type ColumnMapping,
+  type ImportLeadRow,
+  defaultColumnMappings,
+  detectColumnMappings,
+  generateImportTemplate,
+  parseCSV,
+  parseExcel,
+  processImport,
+  validateRow,
+} from '@/lib/features/leads/import-service';
 
-// Schema definition (matches source)
-const importLeadRowSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  name: z.string().optional(),
-  company: z.string().optional(),
-  phone: z.string().optional(),
-  status: z.enum(['new', 'contacted', 'qualified', 'converted']).default('new'),
-  source: z.enum(['website', 'embed', 'api']).optional(),
-  score: z.coerce.number().int().min(0).max(100).optional(),
-});
+// Mock XLSX
+vi.mock('xlsx', () => ({
+  read: vi.fn((data, options) => ({
+    SheetNames: ['Sheet1'],
+    Sheets: {
+      Sheet1: {},
+    },
+  })),
+  utils: {
+    sheet_to_json: vi.fn(() => [
+      { email: 'test1@example.com', name: 'Test User 1', company: 'Company A' },
+      { email: 'test2@example.com', name: 'Test User 2', company: 'Company B' },
+    ]),
+  },
+}));
 
-type ImportLeadRow = z.infer<typeof importLeadRowSchema>;
-
-interface ImportRowResult {
-  row: number;
-  success: boolean;
-  data?: ImportLeadRow;
-  error?: string;
-}
-
-interface ImportSummary {
-  totalRows: number;
-  successCount: number;
-  errorCount: number;
-  results: ImportRowResult[];
-}
-
-interface ColumnMapping {
-  email: string;
-  name?: string;
-  company?: string;
-  phone?: string;
-  status?: string;
-  source?: string;
-  score?: string;
-}
-
-const defaultColumnMappings: ColumnMapping = {
-  email: 'email',
-  name: 'name',
-  company: 'company',
-  phone: 'phone',
-  status: 'status',
-  source: 'source',
-  score: 'score',
-};
-
-const columnAliases: Record<string, string[]> = {
-  email: ['email', 'e-mail', 'mail', 'email_address', 'メールアドレス', 'メール'],
-  name: ['name', 'full_name', 'fullname', 'contact_name', '名前', '氏名'],
-  company: ['company', 'company_name', 'organization', '会社名', '会社', '企業名'],
-  phone: ['phone', 'phone_number', 'tel', 'telephone', '電話番号', '電話'],
-  status: ['status', 'lead_status', 'ステータス'],
-  source: ['source', 'lead_source', 'channel', 'ソース', '流入元'],
-  score: ['score', 'lead_score', 'rating', 'スコア'],
-};
-
-function findColumnName(headers: string[], field: string): string | undefined {
-  const aliases = columnAliases[field] || [field];
-  const normalizedHeaders = headers.map((h) => h.toLowerCase().trim());
-
-  for (const alias of aliases) {
-    const index = normalizedHeaders.indexOf(alias.toLowerCase());
-    if (index !== -1) {
-      return headers[index];
-    }
-  }
-  return undefined;
-}
-
-describe('importLeadRowSchema', () => {
-  it('should validate valid lead data', () => {
-    const result = importLeadRowSchema.safeParse({
-      email: 'test@example.com',
-      name: 'Test User',
-      company: 'Test Corp',
+describe('leads-import-service', () => {
+  describe('defaultColumnMappings', () => {
+    it('should have required email mapping', () => {
+      expect(defaultColumnMappings.email).toBe('email');
     });
-    expect(result.success).toBe(true);
+
+    it('should have optional field mappings', () => {
+      expect(defaultColumnMappings.name).toBe('name');
+      expect(defaultColumnMappings.company).toBe('company');
+      expect(defaultColumnMappings.phone).toBe('phone');
+      expect(defaultColumnMappings.status).toBe('status');
+      expect(defaultColumnMappings.source).toBe('source');
+      expect(defaultColumnMappings.score).toBe('score');
+    });
   });
 
-  it('should reject invalid email', () => {
-    const result = importLeadRowSchema.safeParse({
-      email: 'invalid-email',
+  describe('detectColumnMappings', () => {
+    it('should detect standard English column names', () => {
+      const headers = ['email', 'name', 'company', 'phone', 'status', 'source', 'score'];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('email');
+      expect(mapping.name).toBe('name');
+      expect(mapping.company).toBe('company');
     });
-    expect(result.success).toBe(false);
+
+    it('should detect column name aliases', () => {
+      const headers = ['e-mail', 'full_name', 'organization', 'telephone'];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('e-mail');
+      expect(mapping.name).toBe('full_name');
+      expect(mapping.company).toBe('organization');
+      expect(mapping.phone).toBe('telephone');
+    });
+
+    it('should detect Japanese column names', () => {
+      const headers = ['メールアドレス', '氏名', '会社名', '電話番号'];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('メールアドレス');
+      expect(mapping.name).toBe('氏名');
+      expect(mapping.company).toBe('会社名');
+      expect(mapping.phone).toBe('電話番号');
+    });
+
+    it('should handle case-insensitive matching', () => {
+      const headers = ['EMAIL', 'NAME', 'COMPANY'];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('EMAIL');
+      expect(mapping.name).toBe('NAME');
+      expect(mapping.company).toBe('COMPANY');
+    });
+
+    it('should return undefined for missing columns', () => {
+      const headers = ['email'];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('email');
+      expect(mapping.name).toBeUndefined();
+      expect(mapping.company).toBeUndefined();
+    });
+
+    it('should handle empty headers', () => {
+      const headers: string[] = [];
+      const mapping = detectColumnMappings(headers);
+
+      expect(mapping.email).toBe('email'); // Default fallback
+    });
   });
 
-  it('should default status to new', () => {
-    const result = importLeadRowSchema.parse({
-      email: 'test@example.com',
-    });
-    expect(result.status).toBe('new');
-  });
+  describe('validateRow', () => {
+    const mapping: ColumnMapping = {
+      email: 'email',
+      name: 'name',
+      company: 'company',
+      phone: 'phone',
+      status: 'status',
+      source: 'source',
+      score: 'score',
+    };
 
-  it('should validate status enum', () => {
-    const validStatuses = ['new', 'contacted', 'qualified', 'converted'];
-    for (const status of validStatuses) {
-      const result = importLeadRowSchema.safeParse({
+    it('should validate valid row', () => {
+      const row = {
         email: 'test@example.com',
-        status,
-      });
+        name: 'John Doe',
+        company: 'Acme Corp',
+      };
+
+      const result = validateRow(row, mapping, 1);
+
       expect(result.success).toBe(true);
-    }
-  });
-
-  it('should reject invalid status', () => {
-    const result = importLeadRowSchema.safeParse({
-      email: 'test@example.com',
-      status: 'invalid',
+      expect(result.data?.email).toBe('test@example.com');
+      expect(result.data?.name).toBe('John Doe');
     });
-    expect(result.success).toBe(false);
-  });
 
-  it('should validate source enum', () => {
-    const validSources = ['website', 'embed', 'api'];
-    for (const source of validSources) {
-      const result = importLeadRowSchema.safeParse({
+    it('should fail for invalid email', () => {
+      const row = {
+        email: 'invalid-email',
+        name: 'Test User',
+      };
+
+      const result = validateRow(row, mapping, 1);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid email');
+    });
+
+    it('should fail for missing email', () => {
+      const row = {
+        name: 'Test User',
+      };
+
+      const result = validateRow(row, mapping, 1);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should validate status field', () => {
+      const validStatuses = ['new', 'contacted', 'qualified', 'converted'];
+
+      for (const status of validStatuses) {
+        const row = {
+          email: 'test@example.com',
+          status,
+        };
+        const result = validateRow(row, mapping, 1);
+        expect(result.success).toBe(true);
+        expect(result.data?.status).toBe(status);
+      }
+    });
+
+    it('should fail for invalid status', () => {
+      const row = {
         email: 'test@example.com',
-        source,
-      });
+        status: 'invalid_status',
+      };
+
+      const result = validateRow(row, mapping, 1);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should validate source field', () => {
+      const validSources = ['website', 'embed', 'api'];
+
+      for (const source of validSources) {
+        const row = {
+          email: 'test@example.com',
+          source,
+        };
+        const result = validateRow(row, mapping, 1);
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it('should validate score range', () => {
+      // Valid scores
+      const validScores = [0, 50, 100];
+      for (const score of validScores) {
+        const row = { email: 'test@example.com', score };
+        const result = validateRow(row, mapping, 1);
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it('should fail for score out of range', () => {
+      const row = {
+        email: 'test@example.com',
+        score: 150,
+      };
+
+      const result = validateRow(row, mapping, 1);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should trim whitespace from string fields', () => {
+      const row = {
+        email: 'test@example.com',
+        name: '  John Doe  ',
+        company: '  Acme Corp  ',
+      };
+
+      const result = validateRow(row, mapping, 1);
+
       expect(result.success).toBe(true);
-    }
-  });
-
-  it('should coerce and validate score', () => {
-    const result = importLeadRowSchema.parse({
-      email: 'test@example.com',
-      score: '85',
+      expect(result.data?.name).toBe('John Doe');
+      expect(result.data?.company).toBe('Acme Corp');
     });
-    expect(result.score).toBe(85);
-  });
 
-  it('should reject score out of range', () => {
-    const result = importLeadRowSchema.safeParse({
-      email: 'test@example.com',
-      score: 150,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('should accept optional fields as undefined', () => {
-    const result = importLeadRowSchema.parse({
-      email: 'test@example.com',
-    });
-    expect(result.name).toBeUndefined();
-    expect(result.company).toBeUndefined();
-    expect(result.phone).toBeUndefined();
-  });
-});
-
-describe('findColumnName', () => {
-  it('should find exact match', () => {
-    const headers = ['email', 'name', 'company'];
-    expect(findColumnName(headers, 'email')).toBe('email');
-  });
-
-  it('should find alias match', () => {
-    const headers = ['e-mail', 'full_name', 'company_name'];
-    expect(findColumnName(headers, 'email')).toBe('e-mail');
-    expect(findColumnName(headers, 'name')).toBe('full_name');
-    expect(findColumnName(headers, 'company')).toBe('company_name');
-  });
-
-  it('should find Japanese column names', () => {
-    const headers = ['メールアドレス', '氏名', '会社名', '電話番号'];
-    expect(findColumnName(headers, 'email')).toBe('メールアドレス');
-    expect(findColumnName(headers, 'name')).toBe('氏名');
-    expect(findColumnName(headers, 'company')).toBe('会社名');
-    expect(findColumnName(headers, 'phone')).toBe('電話番号');
-  });
-
-  it('should be case insensitive', () => {
-    const headers = ['EMAIL', 'Name', 'COMPANY'];
-    expect(findColumnName(headers, 'email')).toBe('EMAIL');
-    expect(findColumnName(headers, 'name')).toBe('Name');
-  });
-
-  it('should return undefined for missing column', () => {
-    const headers = ['email', 'name'];
-    expect(findColumnName(headers, 'phone')).toBeUndefined();
-  });
-
-  it('should trim whitespace', () => {
-    const headers = [' email ', ' name '];
-    expect(findColumnName(headers, 'email')).toBe(' email ');
-  });
-});
-
-describe('defaultColumnMappings', () => {
-  it('should have all required mappings', () => {
-    expect(defaultColumnMappings.email).toBe('email');
-    expect(defaultColumnMappings.name).toBe('name');
-    expect(defaultColumnMappings.company).toBe('company');
-    expect(defaultColumnMappings.phone).toBe('phone');
-    expect(defaultColumnMappings.status).toBe('status');
-    expect(defaultColumnMappings.source).toBe('source');
-    expect(defaultColumnMappings.score).toBe('score');
-  });
-});
-
-describe('columnAliases', () => {
-  it('should have email aliases', () => {
-    expect(columnAliases.email).toContain('email');
-    expect(columnAliases.email).toContain('e-mail');
-    expect(columnAliases.email).toContain('メールアドレス');
-  });
-
-  it('should have name aliases', () => {
-    expect(columnAliases.name).toContain('name');
-    expect(columnAliases.name).toContain('full_name');
-    expect(columnAliases.name).toContain('氏名');
-  });
-
-  it('should have company aliases', () => {
-    expect(columnAliases.company).toContain('company');
-    expect(columnAliases.company).toContain('会社名');
-  });
-
-  it('should have phone aliases', () => {
-    expect(columnAliases.phone).toContain('phone');
-    expect(columnAliases.phone).toContain('tel');
-    expect(columnAliases.phone).toContain('電話番号');
-  });
-});
-
-describe('ImportRowResult', () => {
-  it('should define success result', () => {
-    const result: ImportRowResult = {
-      row: 1,
-      success: true,
-      data: { email: 'test@example.com', status: 'new' },
-    };
-    expect(result.success).toBe(true);
-    expect(result.data?.email).toBe('test@example.com');
-  });
-
-  it('should define error result', () => {
-    const result: ImportRowResult = {
-      row: 2,
-      success: false,
-      error: 'Invalid email format',
-    };
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Invalid email format');
-  });
-});
-
-describe('ImportSummary', () => {
-  it('should calculate totals', () => {
-    const summary: ImportSummary = {
-      totalRows: 10,
-      successCount: 8,
-      errorCount: 2,
-      results: [],
-    };
-    expect(summary.totalRows).toBe(summary.successCount + summary.errorCount);
-  });
-});
-
-describe('CSV parsing scenarios', () => {
-  it('should handle standard CSV format', () => {
-    const csvData = [
-      { email: 'user1@example.com', name: 'User 1', company: 'Corp 1' },
-      { email: 'user2@example.com', name: 'User 2', company: 'Corp 2' },
-    ];
-
-    const results: ImportRowResult[] = csvData.map((row, index) => {
-      const parsed = importLeadRowSchema.safeParse(row);
-      return {
-        row: index + 1,
-        success: parsed.success,
-        data: parsed.success ? parsed.data : undefined,
-        error: parsed.success ? undefined : 'Validation failed',
+    it('should handle missing optional fields', () => {
+      const row = {
+        email: 'test@example.com',
       };
+
+      const result = validateRow(row, mapping, 1);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.name).toBeUndefined();
+      expect(result.data?.company).toBeUndefined();
     });
 
-    expect(results.every(r => r.success)).toBe(true);
+    it('should include row number in result', () => {
+      const row = { email: 'test@example.com' };
+
+      const result = validateRow(row, mapping, 5);
+
+      expect(result.row).toBe(5);
+    });
   });
 
-  it('should handle mixed valid/invalid rows', () => {
-    const csvData = [
-      { email: 'valid@example.com', name: 'Valid User' },
-      { email: 'invalid-email', name: 'Invalid User' },
-      { email: 'another@example.com', name: 'Another User' },
-    ];
+  describe('processImport', () => {
+    const mapping: ColumnMapping = {
+      email: 'email',
+      name: 'name',
+      company: 'company',
+    };
 
-    const results: ImportRowResult[] = csvData.map((row, index) => {
-      const parsed = importLeadRowSchema.safeParse(row);
-      return {
-        row: index + 1,
-        success: parsed.success,
-        data: parsed.success ? parsed.data : undefined,
-        error: parsed.success ? undefined : 'Validation failed',
-      };
+    it('should process multiple valid rows', () => {
+      const rows = [
+        { email: 'user1@example.com', name: 'User 1' },
+        { email: 'user2@example.com', name: 'User 2' },
+        { email: 'user3@example.com', name: 'User 3' },
+      ];
+
+      const summary = processImport(rows, mapping);
+
+      expect(summary.totalRows).toBe(3);
+      expect(summary.successCount).toBe(3);
+      expect(summary.errorCount).toBe(0);
     });
 
-    expect(results[0].success).toBe(true);
-    expect(results[1].success).toBe(false);
-    expect(results[2].success).toBe(true);
-  });
+    it('should track errors for invalid rows', () => {
+      const rows = [
+        { email: 'valid@example.com', name: 'Valid User' },
+        { email: 'invalid-email', name: 'Invalid User' },
+        { email: 'another@example.com', name: 'Another User' },
+      ];
 
-  it('should handle empty rows gracefully', () => {
-    const result = importLeadRowSchema.safeParse({});
-    expect(result.success).toBe(false);
-  });
+      const summary = processImport(rows, mapping);
 
-  it('should handle rows with extra columns', () => {
-    const result = importLeadRowSchema.safeParse({
-      email: 'test@example.com',
-      name: 'Test',
-      extraColumn: 'ignored',
-      anotherExtra: 123,
+      expect(summary.totalRows).toBe(3);
+      expect(summary.successCount).toBe(2);
+      expect(summary.errorCount).toBe(1);
     });
-    expect(result.success).toBe(true);
+
+    it('should return results for each row', () => {
+      const rows = [
+        { email: 'user1@example.com' },
+        { email: 'user2@example.com' },
+      ];
+
+      const summary = processImport(rows, mapping);
+
+      expect(summary.results.length).toBe(2);
+      expect(summary.results[0].row).toBe(1);
+      expect(summary.results[1].row).toBe(2);
+    });
+
+    it('should handle empty rows array', () => {
+      const summary = processImport([], mapping);
+
+      expect(summary.totalRows).toBe(0);
+      expect(summary.successCount).toBe(0);
+      expect(summary.errorCount).toBe(0);
+      expect(summary.results).toEqual([]);
+    });
+
+    it('should handle all invalid rows', () => {
+      const rows = [
+        { email: 'invalid1' },
+        { email: 'invalid2' },
+      ];
+
+      const summary = processImport(rows, mapping);
+
+      expect(summary.totalRows).toBe(2);
+      expect(summary.successCount).toBe(0);
+      expect(summary.errorCount).toBe(2);
+    });
+  });
+
+  describe('parseCSV', () => {
+    it('should parse CSV content', () => {
+      const result = parseCSV('email,name\ntest@example.com,Test User');
+
+      expect(result.headers).toBeDefined();
+      expect(result.rows).toBeDefined();
+    });
+  });
+
+  describe('parseExcel', () => {
+    it('should parse Excel buffer', () => {
+      const buffer = new ArrayBuffer(100);
+      const result = parseExcel(buffer);
+
+      expect(result.headers).toBeDefined();
+      expect(result.rows).toBeDefined();
+    });
+  });
+
+  describe('generateImportTemplate', () => {
+    it('should generate CSV template with headers', () => {
+      const template = generateImportTemplate();
+
+      expect(template).toContain('email');
+      expect(template).toContain('name');
+      expect(template).toContain('company');
+      expect(template).toContain('phone');
+      expect(template).toContain('status');
+      expect(template).toContain('source');
+      expect(template).toContain('score');
+    });
+
+    it('should include example row', () => {
+      const template = generateImportTemplate();
+
+      expect(template).toContain('example@company.com');
+      expect(template).toContain('John Doe');
+      expect(template).toContain('Acme Corp');
+    });
+
+    it('should be valid CSV format', () => {
+      const template = generateImportTemplate();
+      const lines = template.split('\n');
+
+      expect(lines.length).toBe(2);
+      expect(lines[0].split(',').length).toBe(7);
+      expect(lines[1].split(',').length).toBe(7);
+    });
   });
 });
