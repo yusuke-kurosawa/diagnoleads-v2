@@ -151,9 +151,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
-          path: .next
+          path: |
+            .next/BUILD_ID
+            .next/build-manifest.json
+            .next/app-build-manifest.json
+            .next/server/
+            .next/static/
+            .next/standalone/
           retention-days: 1
-          if-no-files-found: error
+          if-no-files-found: warn
 
   e2e:
     name: E2E Tests

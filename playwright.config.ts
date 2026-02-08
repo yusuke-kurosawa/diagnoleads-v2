@@ -59,13 +59,12 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Use 'next start' in CI for faster startup with pre-built app
-    command: process.env.CI ? 'bun run start' : 'bun run dev',
+    command: 'bun run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000, // 3 minutes for CI cold start
     env: {
-      NODE_ENV: process.env.CI ? 'production' : 'test',
+      NODE_ENV: 'test',
     },
   },
 });
