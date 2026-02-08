@@ -87,9 +87,9 @@ jobs:
         run: |
           echo "Coverage thresholds enforced (vitest.config.ts):"
           echo "Global: lines 35%, functions 30%, branches 25%"
-          echo "lib/features/**: lines 45%, functions 40%"
-          echo "server/**: lines 90%, functions 85%"
-          echo "components/**: lines 15%, functions 12%"
+          echo "lib/features/**: lines 70%, functions 65%"
+          echo "server/**: lines 65%, functions 60%"
+          echo "components/**: lines 20%, functions 15%"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

@@ -108,8 +108,7 @@ describe('sleep', () => {
     const start = Date.now();
     await sleep(10);
     const elapsed = Date.now() - start;
-    // Allow 1ms tolerance for timing variations
-    expect(elapsed).toBeGreaterThanOrEqual(9);
+    expect(elapsed).toBeGreaterThanOrEqual(10);
   });
 });
 

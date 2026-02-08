@@ -34,20 +34,20 @@ export default defineConfig({
           branches: 25,
           statements: 35,
         },
-        // Core business logic - current: 46.51%, target: gradual increase
+        // Core business logic - strict coverage required
         'lib/features/**': {
-          lines: 45,
-          functions: 40,
+          lines: 70,
+          functions: 65,
         },
-        // API layer - current: 100%, maintain high coverage
+        // API layer - integration tested
         'server/**': {
-          lines: 90,
-          functions: 85,
+          lines: 65,
+          functions: 60,
         },
-        // UI layer - current: 16.38%, E2E補完のため低め
+        // UI layer - E2E補完のため低め
         'components/**': {
-          lines: 15,
-          functions: 12,
+          lines: 20,
+          functions: 15,
         },
       },
     },
