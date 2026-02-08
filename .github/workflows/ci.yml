@@ -274,6 +274,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           github-comment: true
+          github-deployment: false
 
   deploy-production:
     name: Deploy Production
@@ -298,3 +299,4 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-deployment: false
