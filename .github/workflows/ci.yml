@@ -164,6 +164,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 15
     services:
       postgres:
         image: pgvector/pgvector:pg16
