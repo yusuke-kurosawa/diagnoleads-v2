@@ -1,0 +1,65 @@
+# Codecov Configuration
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  precision: 2
+  round: down
+  range: "35...80"
+
+  status:
+    # プロジェクト全体のカバレッジ
+    project:
+      default:
+        target: auto        # 前回のカバレッジを基準
+        threshold: 1%       # 1%以上下がったら失敗
+        if_ci_failed: error
+
+      # Core層は厳格に
+      lib-features:
+        paths:
+          - "lib/features/**"
+        target: 70%
+        threshold: 2%
+
+      # API層
+      server:
+        paths:
+          - "server/**"
+        target: 65%
+        threshold: 2%
+
+    # PRで追加されたコードのカバレッジ
+    patch:
+      default:
+        target: 70%         # 新規コードは70%以上必須
+        threshold: 5%
+        if_ci_failed: error
+
+# PRコメント設定
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+
+# ファイル無視設定
+ignore:
+  - "**/*.config.*"
+  - "**/*.d.ts"
+  - "**/types/**"
+  - "test/**"
+  - ".next/**"
+  - "node_modules/**"
+  - "**/*.md"
+  - "**/*.json"
+  - "**/*.css"
+
+# フラグ設定
+flags:
+  unittests:
+    paths:
+      - lib/
+      - server/
+      - components/
+    carryforward: true

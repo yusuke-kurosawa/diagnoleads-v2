@@ -85,18 +85,19 @@ jobs:
 
       - name: Check coverage thresholds
         run: |
-          echo "Coverage thresholds enforced:"
-          echo "- Lines: 30%"
-          echo "- Statements: 30%"
-          echo "- Functions: 25%"
-          echo "- Branches: 20%"
-          echo "Thresholds are configured in vitest.config.ts"
+          echo "Coverage thresholds enforced (vitest.config.ts):"
+          echo "Global: lines 35%, functions 30%, branches 25%"
+          echo "lib/features/**: lines 70%, functions 65%"
+          echo "server/**: lines 65%, functions 60%"
+          echo "components/**: lines 20%, functions 15%"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage/lcov.info
-          fail_ci_if_error: false
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
 
   build:
     name: Build
