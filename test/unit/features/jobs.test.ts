@@ -132,7 +132,7 @@ describe('JobQueue', () => {
       const jobId = await queue.enqueue('test-job', {});
       queue.start();
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(capturedContext).not.toBeNull();
       expect(capturedContext?.jobId).toBe(jobId);
@@ -140,7 +140,7 @@ describe('JobQueue', () => {
       expect(typeof capturedContext?.log).toBe('function');
       expect(typeof capturedContext?.progress).toBe('function');
       expect(typeof capturedContext?.isCancelled).toBe('function');
-    });
+    }, 10000);
 
     it('should retry failed jobs', async () => {
       let attempts = 0;
@@ -157,13 +157,13 @@ describe('JobQueue', () => {
       const jobId = await queue.enqueue('test-job', {});
       queue.start();
 
-      // Wait for retries
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Wait for retries (increased for coverage overhead)
+      await new Promise((resolve) => setTimeout(resolve, 4000));
 
       const job = queue.getJob(jobId);
       expect(job?.status).toBe('completed');
       expect(attempts).toBe(2);
-    }, 5000);
+    }, 10000);
 
     it('should mark job as failed after max retries', async () => {
       const handler = vi.fn().mockRejectedValue(new Error('Persistent failure'));
@@ -176,14 +176,14 @@ describe('JobQueue', () => {
       const jobId = await queue.enqueue('test-job', {});
       queue.start();
 
-      // Wait for all retries
-      await new Promise((resolve) => setTimeout(resolve, 4000));
+      // Wait for all retries (increased for coverage overhead)
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const job = queue.getJob(jobId);
       expect(job?.status).toBe('failed');
       expect(job?.error).toBe('Persistent failure');
       expect(handler).toHaveBeenCalledTimes(2);
-    }, 6000);
+    }, 10000);
 
     it('should process jobs by priority', async () => {
       const processed: string[] = [];

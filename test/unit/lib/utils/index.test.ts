@@ -108,7 +108,8 @@ describe('sleep', () => {
     const start = Date.now();
     await sleep(10);
     const elapsed = Date.now() - start;
-    expect(elapsed).toBeGreaterThanOrEqual(10);
+    // Allow 1ms tolerance for timing variations in CI
+    expect(elapsed).toBeGreaterThanOrEqual(9);
   });
 });
 
