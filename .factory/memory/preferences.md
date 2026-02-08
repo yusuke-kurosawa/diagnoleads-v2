@@ -79,4 +79,18 @@
 
 ---
 
-*最終更新: 2026-02-06*
+## Supabase データベース情報
+
+| 項目 | 値 |
+|------|------|
+| プロジェクト名 | diagnoleads-v2 |
+| Project Ref | uifikyigoqmzfqxzwgfz |
+| Organization | mumfbjxtqqtgyznaexqx |
+| Database Password | NCMRi8gNjn8gD5Eg |
+| Direct Connection | postgresql://postgres:NCMRi8gNjn8gD5Eg@db.uifikyigoqmzfqxzwgfz.supabase.co:5432/postgres |
+| Transaction Mode (Vercel用) | postgresql://postgres.uifikyigoqmzfqxzwgfz:NCMRi8gNjn8gD5Eg@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres |
+| Personal Access Token (PAT) | sbp_bcced7f6bdc7599f3ec73160bc4033eb67408b2f |
+
+---
+
+*最終更新: 2026-02-08*

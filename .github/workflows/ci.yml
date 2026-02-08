@@ -161,7 +161,7 @@ jobs:
     needs: build
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -195,8 +195,10 @@ jobs:
           name: nextjs-build
           path: .next
 
-      - name: Create database schemas
+      - name: Create database schemas and extensions
         run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE EXTENSION IF NOT EXISTS ltree;"
           PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE SCHEMA IF NOT EXISTS auth;"
           PGPASSWORD=postgres psql -h localhost -U postgres -d diagnoleads_test -c "CREATE SCHEMA IF NOT EXISTS drizzle;"
 
