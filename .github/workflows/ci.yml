@@ -134,11 +134,24 @@ jobs:
           echo "Checking for standalone output..."
           ls -la .next/standalone || echo ".next/standalone not found"
 
+      - name: Verify build output
+        run: |
+          echo "Current directory: $(pwd)"
+          echo ".next contents:"
+          find .next -type f | head -20
+          echo "Total files in .next:"
+          find .next -type f | wc -l
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
+          path: |
+            .next/BUILD_ID
+            .next/build-manifest.json
+            .next/app-build-manifest.json
+            .next/server/
+            .next/static/
           retention-days: 1
           if-no-files-found: error
 
